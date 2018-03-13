@@ -1,0 +1,29 @@
+# dein_lazy.toml
+
+
+[[plugins]]
+repo = 'Shougo/deoplete.nvim'
+hook_add = '''
+    let g:deoplete#auto_complete_delay = 0
+    let g:deoplete#enable_at_startup = 1
+    let g:deoplete#enable_smart_case = 1
+    let g:deoplete#max_list = 1000
+    let g:deoplete#file#enable_buffer_path = 1
+    set completeopt+=noinsert
+'''
+on_i = 1
+
+
+[[plugins]]
+repo = 'Shougo/neosnippet'
+hook_add = '''
+    imap <C-e> <Plug>(neosnippet_expand_or_jump)
+    imap <expr><Tab> neosnippet#jumpable() ? "\<Plug>(neosnippet_jump)" :
+        \ pumvisible() ? "\<C-n>" : "\<Tab>"
+    if has('conceal')
+        set conceallevel=2 concealcursor=niv
+    endif
+'''
+on_ft = ['snippet', 'python']
+depends = ['neosnippet-snippets']
+on_i = 1

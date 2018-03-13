@@ -1,0 +1,24 @@
+# dein.toml
+
+[[plugins]]
+repo = 'Shougo/dein.vim'
+
+
+# [[plugins]]
+# repo = 'joshdick/onedark.vim'
+
+# style
+[[plugins]]
+repo = 'rakr/vim-one'
+
+
+# filer
+[[plugins]]
+repo = 'Shougo/denite.nvim'
+
+
+# snippet
+[[plugins]]
+repo = 'Shougo/neosnippet-snippets'
+
+

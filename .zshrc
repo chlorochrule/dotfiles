@@ -1,3 +1,5 @@
+autoload -Uz terminfo
+
 # zplug
 source ~/.zplug/init.zsh
 zplug 'zsh-users/zsh-completions'
@@ -10,10 +12,23 @@ zplug load
 
 # env
 export LANG=ja_JP.UTF-8
+export XDG_CONFIG_HOME=$HOME/.config
+export XDG_CACHE_HOME=$HOME/.cache
+export XDG_DATA_HOME=$HOME/.local/share
+#export TERM=xterm-256color-italic
 
 
-# emacs-like keybind
+# chlorochrule's original keybind (emacs-like)
 bindkey -e
+bindkey -r '\C-g'
+bindkey '\C-o' backward-delete-char
+bindkey '\C-h' backward-char
+bindkey '\C-j' down-line-or-history
+bindkey '\C-k' up-line-or-history
+bindkey '\C-l' forward-char
+bindkey '\C-q' expand-or-complete
+bindkey '\C-i' backward-delete-char
+bindkey '\t' expand-or-complete
 
 
 # history
@@ -65,7 +80,6 @@ function _update_vcs_info_msg() {
 }
 add-zsh-hook precmd _update_vcs_info_msg
 
-
 # option
 ## general
 setopt print_eight_bit
@@ -100,7 +114,6 @@ unsetopt caseglob
 alias la='ls -a'
 alias ll='ls -l'
 
-alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 
@@ -156,4 +169,26 @@ xkbcomp -I$HOME/.xkb $HOME/.xkb/keymap/mykbd $DISPLAY 2> /dev/null
 # torch
 . /home/minami/torch/install/bin/torch-activate
 
-[[ -z "$TMUX" && ! -z "$PS1" ]] && exec tmux
+
+# api keys env
+source ~/.apiinfo
+
+# key repeat
+xset r rate 230 50
+
+# golang
+export PATH=$PATH:/usr/local/go/bin
+export GOPATH=$HOME
+
+# exec tmux
+if ! (( $+commands[tmux] )); then
+    echo "tmux not found" 1>&2
+else
+    if [[ -z $TMUX && ! -z $PS1 ]]; then
+        if tmux has-session &> /dev/null && [[ -z `tmux ls | grep attached` ]]; then
+            : #exec tmux a
+        else
+            : #exec tmux
+        fi
+    fi
+fi

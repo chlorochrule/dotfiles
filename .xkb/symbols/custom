@@ -1,0 +1,17 @@
+xkb_symbols "caps" {
+	replace key <CAPS> { [ Control_L ] };
+	modifier_map Control { <CAPS> };
+};
+
+xkb_symbols "henkan" {
+	replace key <HENK> { [ Escape ] };
+};
+
+xkb_symbols "muhenkan" {
+	replace key <MUHE> { [ Alt_R ] };
+};
+
+xkb_symbols "hhk" {
+	replace key <HENK> { [ Escape ] };
+	replace key <MUHE> { [ Alt_R ] };
+};
