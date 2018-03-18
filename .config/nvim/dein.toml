@@ -4,21 +4,99 @@
 repo = 'Shougo/dein.vim'
 
 
-# [[plugins]]
-# repo = 'joshdick/onedark.vim'
-
 # style
 [[plugins]]
-repo = 'rakr/vim-one'
+repo = 'joshdick/onedark.vim'
+
+# [[plugins]]
+# repo = 'rakr/vim-one'
+
+# [[plugins]]
+# repo = 'asilvadesigns/atom-theif'
+
 
 
 # filer
 [[plugins]]
 repo = 'Shougo/denite.nvim'
+hook_add = '''
+    nnoremap <Leader>o :Denite -mode=normal -default-action=tabopen file_rec<CR>
+    nnoremap <Leader>O :DeniteBufferDir -mode=normal -default-action=tabopen file_rec<CR>
+    nnoremap <Leader>g :Denite -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
+    nnoremap <Leader>G :Denite -resume -buffer-name=search-buffer-denite<CR>
+    nnoremap <Leader>s :DeniteCursorWord -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
+    nnoremap <Leader>b :Denite -mode=normal buffer<CR>
+'''
+
+# [[plugins]]
+# repo = 'Shougo/vimfiler.vim'
+
+# [[plugins]]
+# repo = 'Shougo/unite.vim'
+
+[[plugins]]
+repo = 'cocopon/vaffle.vim'
+hook_add = '''
+    let g:vaffle_force_delete = 1
+    let g:vaffle_show_hidden_files = 1
+'''
 
 
 # snippet
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
 
+
+# bracket completion
+[[plugins]]
+repo = 'cohama/lexima.vim'
+
+
+# git sign column
+[[plugins]]
+repo = 'airblade/vim-gitgutter'
+hook_add = '''
+    set signcolumn=yes
+    set updatetime=200
+'''
+
+
+# comment out
+[[plugins]]
+repo = 'tyru/caw.vim'
+hook_add = '''
+    let g:caw_no_default_keymappings = 1
+    nmap <C-_> <Plug>(caw:hatpos:toggle)
+    vmap <C-_> <Plug>(caw:hatpos:toggle)
+    imap <expr><C-_> "\<ESC>\<Plug>(caw:hatpos:toggle)a"
+'''
+
+
+# quickrun
+[[plugins]]
+repo = 'thinca/vim-quickrun'
+hook_add = '''
+    let g:quickrun_config = get(g:, 'quickrun_config', {})
+    let g:quickrun_config._ = {
+        \ 'runner'    : 'vimproc',
+        \ 'runner/vimproc/updatetime' : 60,
+        \ 'outputter' : 'error',
+        \ 'outputter/error/success' : 'buffer',
+        \ 'outputter/error/error'   : 'quickfix',
+        \ 'outputter/buffer/split'  : ':rightbelow 8sp',
+        \ 'outputter/buffer/close_on_empty' : 1,
+        \ }
+'''
+
+
+# vim-surround
+[[plugins]]
+repo = 'tpope/vim-surround'
+hook_add = '''
+'''
+
+
+# git
+[[plugins]]
+repo = 'tpope/vim-fugitive'
 

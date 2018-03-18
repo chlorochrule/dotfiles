@@ -13,11 +13,6 @@ augroup MyAutoCmd
 augroup END
 
 
-" vim-one setting
-set background=dark
-let g:airline_theme='one'
-let g:one_allow_italics = 1
-
 " true color setting
 set termguicolors
 set t_8b=^[[48;2;%lu;%lu;%lum
@@ -25,21 +20,26 @@ set t_8f=^[[38;2;%lu;%lu;%lum
 
 
 " dein settings
-let s:config = expand($XDG_CONFIG_HOME . '/nvim')
-let s:cache = expand($XDG_CACHE_HOME . '/nvim')
+let s:config_dir = expand($XDG_CONFIG_HOME . '/nvim')
+let s:cache_dir = expand($XDG_CACHE_HOME . '/nvim')
+let s:dein_dir = s:cache_dir . '/dein'
 
-let s:dein_cache = s:cache . '/dein/repos/github.com/Shougo/dein.vim'
+let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
 
-if !isdirectory(s:dein_cache)
-    execute '!git clone https://github.com/Shougo/dein.vim' . s:dein_cache
+if !isdirectory(s:dein_repo_dir)
+    execute '!mkdir -p ' . s:dein_repo_dir
+    execute '!git clone https://github.com/Shougo/dein.vim ' . s:dein_repo_dir
 endif
-execute 'set runtimepath^=' . s:dein_cache
 
-if dein#load_state(s:dein_cache)
-  call dein#begin(s:dein_cache)
+execute 'set runtimepath^=' . s:dein_repo_dir
 
-  let s:toml = s:config . '/dein.toml'
-  let s:lazy_toml = s:config . '/dein_lazy.toml'
+if dein#load_state(s:dein_dir)
+  call dein#begin(s:dein_dir)
+
+  call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
+
+  let s:toml = s:config_dir . '/dein.toml'
+  let s:lazy_toml = s:config_dir . '/dein_lazy.toml'
 
   call dein#load_toml(s:toml, {'lazy': 0})
   call dein#load_toml(s:lazy_toml, {'lazy': 1})
@@ -53,8 +53,11 @@ if dein#check_install()
 endif
 
 
-" set vim-one colorscheme
-colorscheme one
+filetype plugin indent on
+
+
+" set onedark.vim colorscheme
+colorscheme onedark
 
 
 " option settings
@@ -97,6 +100,8 @@ set nowritebackup
 set noswapfile
 set undodir=~/.cache/nvim/undo
 set undofile
+set modifiable
+set write
 
 " misc
 set clipboard=unnamedplus
@@ -124,7 +129,7 @@ nnoremap <Space> <Nop>
 nnoremap <C-g> <Nop>
 
 " nnoremap
-nnoremap <silent> <ESC><ESC> :nohlsearch<CR>
+nnoremap <silent> <ESC><ESC> :<C-u>nohlsearch<CR>
 nnoremap > >>
 nnoremap < <<
 nnoremap <C-r> r
@@ -143,45 +148,42 @@ nnoremap L gt
 nnoremap K 5k
 nnoremap J 5j
 nnoremap Y y$
-nnoremap t g;
-nnoremap T g,
+nnoremap z g;
+nnoremap Z g,
+nnoremap m :<C-u>Denite -mode=normal -immediately buffer<CR>
+nnoremap t :<C-u>tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
+nnoremap T :<C-u>-tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
 nnoremap <Tab> %
 vnoremap <Tab> %
-nnoremap <Leader>w :w<CR>
-nnoremap <Leader>q :q<CR>
-nnoremap <Leader>Q :q!<CR>
-nnoremap <Leader>h <C-w>h
-nnoremap <Leader>j <C-w>j
-nnoremap <Leader>k <C-w>k
-nnoremap <Leader>l <C-w>l
-nnoremap <Leader>- :split<CR>
-nnoremap <Leader>\| :vsplit<CR>
-nnoremap <Leader>t :tabnew<CR>
-nnoremap <Leader>; :!
-nnoremap <Leader>m <C-^>
-nnoremap <C-H> <C-w><
-nnoremap <C-J> <C-w>+
-nnoremap <C-K> <C-w>-
-nnoremap <C-L> <C-w>>
+nnoremap <Leader>w :<C-u>w<CR>
+nnoremap <Leader>q :<C-u>q<CR>
+nnoremap <Leader>Q :<C-u>bd<CR>
+nnoremap <Leader>- :<C-u>split<CR>
+nnoremap <Leader>\| :<C-u>vsplit<CR>
+nnoremap <C-h> <C-w>k
+nnoremap <C-j> <C-w>+
+nnoremap <C-k> <C-w>-
+nnoremap <C-l> <C-w>j
 nnoremap <C-o> o<ESC>
 " denite
-nnoremap <Leader>o :Denite -mode=normal -default-action=tabopen file_rec<CR>
-nnoremap <Leader>O :DeniteBufferDir -mode=normal -default-action=tabopen file_rec<CR>
-nnoremap <Leader>g :Denite -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
-nnoremap <Leader>G :Denite -resume -buffer-name=search-buffer-denite<CR>
-nnoremap <Leader>s :DeniteCursorWord -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
-nnoremap <Leader>b :Denite -mode=normal buffer<CR>
+nnoremap <Leader>o :<C-u>Denite -mode=normal -default-action=tabopen file_rec<CR>
+nnoremap <Leader>O :<C-u>DeniteBufferDir -mode=normal -default-action=tabopen file_rec<CR>
+nnoremap <Leader>g :<C-u>Denite -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
+nnoremap <Leader>G :<C-u>Denite -resume -buffer-name=search-buffer-denite<CR>
+nnoremap <Leader>s :<C-u>DeniteCursorWord -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
+nnoremap <Leader>b :<C-u>Denite -mode=normal buffer<CR>
 
 " inoremap
 inoremap jj <ESC>
 inoremap <C-d> <Delete>
 inoremap <C-o> <BS>
 inoremap <C-h> <Left>
-inoremap <C-j> <Down>
-inoremap <C-k> <Up>
+inoremap <expr><C-j> pumvisible() ? "\<C-n>" : "\<Down>"
+inoremap <expr><C-k> pumvisible() ? "\<C-p>" : "\<Up>"
 inoremap <C-l> <Right>
-inoremap <C-m> <CR>
 inoremap <C-t> <ESC>g;
+inoremap <C-Space> <Space>
+inoremap <C-BS> <BS>
 
 " cnoremap
 cnoremap jj <C-c>
@@ -191,10 +193,39 @@ cnoremap <C-h> <Left>
 cnoremap <C-j> <Down>
 cnoremap <C-k> <Up>
 cnoremap <C-l> <Right>
-cnoremap <C-m> <CR>
 
 " vnoremap
 vnoremap ; <ESC>
 vnoremap > >gv
 vnoremap < <gv
 
+" quickfix
+autocmd FileType qf nnoremap <buffer>q :<C-u>q<CR>
+nnoremap <Leader>e :<C-u>cclose<CR>:w<CR>:QuickRun<CR>
+
+" plugin
+" neosnippet, deoplete
+" call deoplete#custom#source('jedi', 'matchers', ['matcher_fuzzy'])
+call lexima#init()
+imap <expr><CR> neosnippet#expandable() ?
+    \ "\<Plug>(neosnippet_expand)" : "\<CR>"
+imap <expr><Tab> neosnippet#jumpable() ? "\<Plug>(neosnippet_jump)" :
+    \ pumvisible() ? deoplete#mappings#close_popup() : "\<Tab>"
+
+" vaffle
+call lexima#init()
+nnoremap <Leader>f :<C-u>Vaffle<CR>
+
+" jedi-vim
+" autocmd FileType python setlocal completeopt-=preview
+autocmd Filetype python nnoremap <silent><buffer><Leader>k :<C-u>call jedi#show_documentation()<CR>
+autocmd Filetype python nnoremap <silent><buffer><Leader>a :<C-u>call jedi#goto_assignments()<CR>
+autocmd Filetype python nnoremap <silent><buffer><Leader>r :<C-u>call jedi#rename()<CR>
+
+" fugitive
+nmap [fugitive] <Nop>
+nmap <C-f> [fugitive]
+nnoremap [fugitive]b :<C-u>Gblame<CR>
+nnoremap [fugitive]d :<C-u>Gdiff<CR>
+nnoremap [fugitive]l :<C-u>Glog<CR>
+nnoremap [fugitive]s :<C-u>Gstatus<CR>
