@@ -15,7 +15,7 @@ export LANG=ja_JP.UTF-8
 export XDG_CONFIG_HOME=$HOME/.config
 export XDG_CACHE_HOME=$HOME/.cache
 export XDG_DATA_HOME=$HOME/.local/share
-#export TERM=xterm-256color-italic
+export TERM=xterm-256color-italic
 
 
 # chlorochrule's original keybind (emacs-like)
@@ -185,10 +185,10 @@ if ! (( $+commands[tmux] )); then
     echo "tmux not found" 1>&2
 else
     if [[ -z $TMUX && ! -z $PS1 ]]; then
-        if tmux has-session &> /dev/null && [[ -z `tmux ls | grep attached` ]]; then
-            : #exec tmux a
+        if tmux has-session &> /dev/null && [[ -n `tmux ls | grep -v attached` ]]; then
+            exec tmux a
         else
-            : #exec tmux
+            exec tmux
         fi
     fi
 fi

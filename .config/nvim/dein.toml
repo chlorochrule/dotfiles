@@ -15,18 +15,9 @@ repo = 'joshdick/onedark.vim'
 # repo = 'asilvadesigns/atom-theif'
 
 
-
 # filer
 [[plugins]]
 repo = 'Shougo/denite.nvim'
-hook_add = '''
-    nnoremap <Leader>o :Denite -mode=normal -default-action=tabopen file_rec<CR>
-    nnoremap <Leader>O :DeniteBufferDir -mode=normal -default-action=tabopen file_rec<CR>
-    nnoremap <Leader>g :Denite -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
-    nnoremap <Leader>G :Denite -resume -buffer-name=search-buffer-denite<CR>
-    nnoremap <Leader>s :DeniteCursorWord -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
-    nnoremap <Leader>b :Denite -mode=normal buffer<CR>
-'''
 
 # [[plugins]]
 # repo = 'Shougo/vimfiler.vim'
@@ -50,15 +41,6 @@ repo = 'Shougo/neosnippet-snippets'
 # bracket completion
 [[plugins]]
 repo = 'cohama/lexima.vim'
-
-
-# git sign column
-[[plugins]]
-repo = 'airblade/vim-gitgutter'
-hook_add = '''
-    set signcolumn=yes
-    set updatetime=200
-'''
 
 
 # comment out
@@ -92,11 +74,38 @@ hook_add = '''
 # vim-surround
 [[plugins]]
 repo = 'tpope/vim-surround'
-hook_add = '''
-'''
 
 
 # git
 [[plugins]]
 repo = 'tpope/vim-fugitive'
 
+[[plugins]]
+repo = 'airblade/vim-gitgutter'
+hook_add = '''
+    set signcolumn=yes
+    set updatetime=200
+'''
+
+
+# lint
+[[plugins]]
+repo = 'w0rp/ale'
+hook_add = '''
+    let g:ale_sign_column_always = 1
+    let g:ale_lint_on_text_changed = 0
+    let g:ale_fixers = {
+        \ 'python': ['autopep8', 'isort']
+        \ }
+'''
+
+
+# statusline
+[[plugins]]
+repo = 'itchyny/lightline.vim'
+hook_add = '''
+    set noshowmode 
+    let g:lightline = {
+        \ 'colorscheme': 'one',
+        \ }
+'''
