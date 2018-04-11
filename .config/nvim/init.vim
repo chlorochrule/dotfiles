@@ -30,7 +30,6 @@ set t_8f=^[[38;2;%lu;%lu;%lum
 let s:config_dir = expand($XDG_CONFIG_HOME . '/nvim')
 let s:cache_dir = expand($XDG_CACHE_HOME . '/nvim')
 let s:dein_dir = s:cache_dir . '/dein'
-
 let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
 
 if !isdirectory(s:dein_repo_dir)
@@ -58,6 +57,8 @@ endif
 if dein#check_install()
   call dein#install()
 endif
+
+" :UpdateRemotePlugins
 
 
 filetype plugin indent on
@@ -122,7 +123,7 @@ set showmatch
 set backspace=indent,eol,start
 set whichwrap=b,s,h,l,<,>,[,],~
 set matchpairs+=<:>
-set wildignore+=*.so,*.swp
+set wildignore+=*.so,*.swp,*.o
 set scrolloff=5
 set sidescrolloff=15
 set sidescroll=1
@@ -206,7 +207,7 @@ vnoremap < <gv
 vnoremap u <ESC>ugv
 
 
-Gautocmd BufWritePost ~/.config/nvim/init.vim source :~/.config/nvim/init.vim
+Gautocmd BufWritePost ~/.config/nvim/init.vim :source ~/.config/nvim/init.vim
 
 
 " quickfix
@@ -236,6 +237,7 @@ nnoremap <silent><Leader>b :<C-u>Denite -mode=normal buffer<CR>
 
 " vaffle
 nnoremap <silent><Leader>v :<C-u>Vaffle<CR>
+Gautocmdft vaffle nmap <silent><buffer><nowait> q <Plug>(vaffle-quit)
 
 " jedi-vim
 " MyAutoCmd FileType python setlocal completeopt-=preview
@@ -266,3 +268,7 @@ Gautocmd BufEnter * vmap <buffer><nowait> [ S[gv
 Gautocmd BufEnter * vmap <buffer><nowait> ] S]gv
 vmap { S{gv
 vmap } S}gv
+
+" vim-easy-align
+xmap ga <Plug>(EasyAlign)
+nmap ga <Plug>(EasyAlign)

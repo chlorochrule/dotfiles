@@ -109,3 +109,8 @@ hook_add = '''
         \ 'colorscheme': 'one',
         \ }
 '''
+
+# align
+[[plugins]]
+repo = 'junegunn/vim-easy-align'
+
