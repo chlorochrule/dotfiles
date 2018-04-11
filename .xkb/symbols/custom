@@ -15,3 +15,10 @@ xkb_symbols "hhk" {
 	replace key <HENK> { [ Escape ] };
 	replace key <MUHE> { [ Alt_R ] };
 };
+
+xkb_symbols "vi" {
+    key <AC06> { [ h, H, Left ] };
+    key <AC07> { [ j, J, Down ] };
+    key <AC08> { [ k, K, Up ] };
+    key <AC09> { [ l, L, Right ] };
+};

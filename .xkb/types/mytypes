@@ -1,0 +1,12 @@
+xkb_types "vi" {
+    type "VI" {
+        modifiers = Shift+Control;
+        map[None] = Level1;
+        map[Shift] = Level2;
+        map[Control] = Level3;
+        map[Control+Shift] = Level4;
+        level_name[Level1] = "Base";
+        level_name[Level2] = "Shift";
+        level_name[Level3] = "Control";
+    };
+};

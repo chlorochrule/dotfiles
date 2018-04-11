@@ -1,7 +1,7 @@
 xkb_keymap {
 	xkb_keycodes  { include "evdev+aliases(qwerty)"	};
-	xkb_types     { include "complete"	};
+	xkb_types     { include "complete+mytypes(vi)"	};
 	xkb_compat    { include "complete"	};
-	xkb_symbols   { include "pc+us+inet(evdev)+custom(hhk)"	};
+	xkb_symbols   { include "pc+us+inet(evdev)+custom(vi)"	};
 	xkb_geometry  { include "pc(pc102)"	};
 };
