@@ -13,7 +13,6 @@ hook_source = '''
     let g:deoplete#auto_refresh_delay = 100
     let g:deoplete#max_list = 1000
     let g:deoplete#auto_complete_start_length = 2
-    set completeopt=menu,longest,noinsert
 '''
 
 

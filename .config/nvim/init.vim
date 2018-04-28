@@ -131,7 +131,7 @@ set ambiwidth=single
 set synmaxcol=320
 set history=1000
 set fileformats=unix,dos,mac
-
+set completeopt=menu,longest,noinsert
 
 " keymapping
 
@@ -240,7 +240,6 @@ nnoremap <silent><Leader>v :<C-u>Vaffle<CR>
 Gautocmdft vaffle nmap <silent><buffer><nowait> q <Plug>(vaffle-quit)
 
 " jedi-vim
-" MyAutoCmd FileType python setlocal completeopt-=preview
 Gautocmdft python nnoremap <silent><buffer><Leader>k :<C-u>call jedi#show_documentation()<CR>
 Gautocmdft python nnoremap <silent><buffer><Leader>a :<C-u>call jedi#goto_assignments()<CR>
 Gautocmdft python nnoremap <silent><buffer><Leader>r :<C-u>call jedi#rename()<CR>
