@@ -12,11 +12,13 @@ case ${OSTYPE} in
         export ZPLUG_HOME=/home/linuxbrew/.linuxbrew/opt/zplug
         source $ZPLUG_HOME/init.zsh
         ;;
+esac
 
 zplug 'zsh-users/zsh-completions'
 zplug 'zsh-users/zaw'
-zplug 'zsh-users/zsh-syntax-highlighting', defer:2
+zplug 'zsh-users/zsh-syntax-highlighting'
 zplug check || zplug install
+
 
 zplug load
 
