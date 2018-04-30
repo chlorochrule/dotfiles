@@ -1,0 +1,8 @@
+[user]
+	email = minami.polly@gmail.com
+	name = chlorochrule
+[ghq]
+	root = ~/src
+[core]
+	editor = nvim
+
