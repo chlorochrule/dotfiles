@@ -8,6 +8,11 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
+# functions
+has() {
+    type "${1:?Missing argument}" &>/dev/null
+}
+
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
@@ -31,4 +36,4 @@ if [ -d "${BREWDIR}" ]; then
     export PATH='/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin':"$PATH"
 fi
 
-exec zsh
+has "zsh" && exec zsh

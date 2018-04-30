@@ -1,18 +1,17 @@
 autoload -Uz terminfo
 
 # zplug
-# source ~/.zplug/init.zsh
 case ${OSTYPE} in
     darwin*)
         # mac
-        :
+        export ZPLUG_HOME="${HOME}/.zplug"
         ;;
     linux*)
         # linux
         export ZPLUG_HOME=/home/linuxbrew/.linuxbrew/opt/zplug
-        source $ZPLUG_HOME/init.zsh
         ;;
 esac
+source $ZPLUG_HOME/init.zsh
 
 zplug 'zsh-users/zsh-completions'
 zplug 'zsh-users/zaw'
