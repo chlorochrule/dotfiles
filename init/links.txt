@@ -1,0 +1,7 @@
+.zshrc
+.tmux.conf
+.profile
+.gitconfig
+.xkb
+.config/nvim
+
