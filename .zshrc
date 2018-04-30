@@ -1,7 +1,18 @@
 autoload -Uz terminfo
 
 # zplug
-source ~/.zplug/init.zsh
+# source ~/.zplug/init.zsh
+case ${OSTYPE} in
+    darwin*)
+        # mac
+        :
+        ;;
+    linux*)
+        # linux
+        export ZPLUG_HOME=/home/linuxbrew/.linuxbrew/opt/zplug
+        source $ZPLUG_HOME/init.zsh
+        ;;
+
 zplug 'zsh-users/zsh-completions'
 zplug 'zsh-users/zaw'
 zplug 'zsh-users/zsh-syntax-highlighting', defer:2
@@ -9,9 +20,12 @@ zplug check || zplug install
 
 zplug load
 
+has() {
+    type "${1:?Missing argument}" &>/dev/null
+}
+
 
 # env
-export LANG=ja_JP.UTF-8
 export XDG_CONFIG_HOME=$HOME/.config
 export XDG_CACHE_HOME=$HOME/.cache
 export XDG_DATA_HOME=$HOME/.local/share
@@ -19,7 +33,7 @@ export TERM=xterm-256color-italic
 export GITHUB_USER=`git config user.name | tr -d '\n'`
 
 
-# chlorochrule's original keybind (emacs-like)
+# chlorochrule's original keybind
 bindkey -e
 bindkey -r '\C-g'
 bindkey '\C-o' backward-delete-char
@@ -138,20 +152,22 @@ if which pbcopy >/dev/null 2>&1 ; then
     # mac
     alias -g C='| pbcopy'
 elif which xsel >/dev/null 2>&1 ; then
-    # ubuntu
+    # linux
     alias -g C='| xsel --input --clipboard'
 fi
 
+has "nvim" && alias -g vi=nvim
 
-# mac or ubuntu
+
+# mac or linux
 case ${OSTYPE} in
     darwin*)
-        #mac
+        # mac
         export CLICOLOR=1
         alias ls='ls -G -F'
         ;;
     linux*)
-        #ubuntu
+        # linux
         alias ls='ls -F --color=auto'
         ;;
 esac
@@ -161,21 +177,10 @@ esac
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
-export PATH="$PYENV_ROOT/versions/anaconda3-4.4.0/bin:$PATH"
+export PATH="$PYENV_ROOT/anaconda/bin:$PATH"
 
 # load xkb config
 xkbcomp -I$HOME/.xkb $HOME/.xkb/keymap/mykbd $DISPLAY 2> /dev/null
-
-
-# torch
-. /home/minami/torch/install/bin/torch-activate
-
-
-# api keys env
-source ~/.apiinfo
-
-# key repeat
-xset r rate 230 50
 
 # golang
 export PATH=$PATH:/usr/local/go/bin
