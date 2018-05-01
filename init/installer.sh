@@ -7,7 +7,7 @@ export DOTHOME="${HOME}/.dotfiles"
 
 [[ ! has "git" ]] && echo "`git` is not installed" >&2 && exit 1
 
-git clone git@github.com:chlorochrule/dotfiles.git "${DOTHOME}"
+git clone https://github.com/chlorochrule/dotfiles
 
 mkdir -p "${HOME}/.config"
 mkdir -p "${HOME}/bin"
