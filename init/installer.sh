@@ -19,13 +19,13 @@ xargs -I OBJ ln -sf "${DOTHOME}/OBJ" "${HOME}/OBJ" < "${DOTHOME}/init/links.txt"
 case ${OSTYPE} in
     darwin*)
         # mac
+        # xcode
         xcode-select --install
+        # brew
         ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
         ;;
     linux*)
         # ubuntu
-        # apt
-        sudo apt install xsel xdotool build-essential
         # linuxbrew
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
         test -d ~/.linuxbrew && PATH="$HOME/.linuxbrew/bin:$HOME/.linuxbrew/sbin:$PATH"
@@ -64,5 +64,13 @@ export PATH="${PYENV_ROOT}/anaconda/bin:$PATH"
 pip install -r "${DOTHOME}/init/requrements.txt"
 
 tic ${DOTHOME}/init/xterm-256color-italic.terminfo
+
+# apt
+case ${OSTYPE} in
+    linux*)
+        # ubuntu
+        sudo apt install xsel xdotool build-essential
+        ;;
+esac
 
 has "nvim" && git config --global core.editor nvim && nvim
