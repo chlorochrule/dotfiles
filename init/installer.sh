@@ -19,11 +19,11 @@ xargs -I OBJ ln -sf "${DOTHOME}/OBJ" "${HOME}/OBJ" < "${DOTHOME}/init/links.txt"
 case ${OSTYPE} in
     darwin*)
         # mac
-        sh "${DOTHOME}/init/mac"
+        sh "${DOTHOME}/init/mac/prep.sh"
         ;;
     linux*)
         # ubuntu
-        sh "${DOTHOME}/init/ubuntu"
+        sh "${DOTHOME}/init/ubuntu/prep.sh"
         ;;
 esac
 
