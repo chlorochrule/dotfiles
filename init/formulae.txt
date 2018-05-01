@@ -2,7 +2,6 @@ fzf
 gcc
 ghostscript
 ghq
-git
 git-flow
 go
 hub
@@ -11,7 +10,6 @@ neovim
 patchelf
 peco
 pyenv
-python@2
 rbenv-gemset
 tig
 tmux
