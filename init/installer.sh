@@ -61,7 +61,7 @@ esac
 export PYENV_ROOT="${HOME}/.pyenv"
 export PATH="${PYENV_ROOT}/bin:${PATH}"
 eval "$(pyenv init -)"
-ANACONDA = $(pyenv install --list | grep anaconda | tail -n 1 | tr -d "\ ")
+ANACONDA=$(pyenv install --list | grep anaconda | tail -n 1 | tr -d "\ ")
 pyenv install ${ANACONDA}
 pyenv rehash
 ln -sf "${PYENV_ROOT}/versions/${ANACONDA}" "${PYENV_ROOT}/anaconda"
