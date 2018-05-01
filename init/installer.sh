@@ -19,11 +19,19 @@ xargs -I OBJ ln -sf "${DOTHOME}/OBJ" "${HOME}/OBJ" < "${DOTHOME}/init/links.txt"
 case ${OSTYPE} in
     darwin*)
         # mac
-        sh "${DOTHOME}/init/mac/prep.sh"
+        xcode-select --install
+        ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
         ;;
     linux*)
         # ubuntu
-        sh "${DOTHOME}/init/ubuntu/prep.sh"
+        # apt
+        sudo apt install xsel xdotool build-essential
+        # linuxbrew
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+        test -d ~/.linuxbrew && PATH="$HOME/.linuxbrew/bin:$HOME/.linuxbrew/sbin:$PATH"
+        test -d /home/linuxbrew/.linuxbrew && PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
+        test -r ~/.bash_profile && echo "export PATH='$(brew --prefix)/bin:$(brew --prefix)/sbin'":'"$PATH"' >>~/.bash_profile
+        echo "export PATH='$(brew --prefix)/bin:$(brew --prefix)/sbin'":'"$PATH"' >>~/.profile
         ;;
 esac
 
