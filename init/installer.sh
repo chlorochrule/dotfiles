@@ -5,7 +5,7 @@ has() {
 
 export DOTHOME="${HOME}/.dotfiles"
 
-[[ ! has "git" ]] && echo "`git` is not installed" >&2 && exit 1
+! has "git" && echo "`git` is not installed" >&2 && exit 1
 
 git clone https://github.com/chlorochrule/dotfiles "${DOTHOME}"
 
