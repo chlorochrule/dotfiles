@@ -61,7 +61,7 @@ pyenv rehash
 ln -sf "${PYENV_ROOT}/versions/${ANACONDA}" "${PYENV_ROOT}/anaconda"
 export PATH="${PYENV_ROOT}/anaconda/bin:$PATH"
 
-pip install -r "${DOTHOME}/init/requrements.txt"
+pip install -r "${DOTHOME}/init/requirements.txt"
 
 tic ${DOTHOME}/init/xterm-256color-italic.terminfo
 
