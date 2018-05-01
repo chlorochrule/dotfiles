@@ -3,15 +3,20 @@ has() {
     type "${1:?Missing argument}" &>/dev/null
 }
 
+mkdir -p "${HOME}/.config"
+mkdir -p "${HOME}/.cache"
+mkdir -p "${HOME}/.local/share"
+mkdir -p "${HOME}/bin"
+mkdir -p "${HOME}/src"
+
+export XDG_CONFIG_HOME=${HOME}/.config
+export XDG_CACHE_HOME=${HOME}/.cache
+export XDG_DATA_HOME=${HOME}/.local/share
 export DOTHOME="${HOME}/.dotfiles"
 
 ! has "git" && echo "`git` is not installed" >&2 && exit 1
 
 git clone https://github.com/chlorochrule/dotfiles "${DOTHOME}"
-
-mkdir -p "${HOME}/.config"
-mkdir -p "${HOME}/bin"
-mkdir -p "${HOME}/src"
 
 xargs -I OBJ ln -sf "${DOTHOME}/OBJ" "${HOME}/OBJ" < "${DOTHOME}/init/links.txt"
 
@@ -32,6 +37,7 @@ case ${OSTYPE} in
         test -d /home/linuxbrew/.linuxbrew && PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
         test -r ~/.bash_profile && echo "export PATH='$(brew --prefix)/bin:$(brew --prefix)/sbin'":'"$PATH"' >>~/.bash_profile
         echo "export PATH='$(brew --prefix)/bin:$(brew --prefix)/sbin'":'"$PATH"' >>~/.profile
+        export PATH="$(brew --prefix)/bin:$(brew --prefix)/sbin:$PATH"
         ;;
 esac
 
@@ -55,8 +61,8 @@ esac
 export PYENV_ROOT="${HOME}/.pyenv"
 export PATH="${PYENV_ROOT}/bin:${PATH}"
 eval "$(pyenv init -)"
-ANACONDA = "$(pyenv install --list | grep anaconda | tail -n 1)"
-pyenv install ${ANACONDA} | tr -d "\ "
+ANACONDA = $(pyenv install --list | grep anaconda | tail -n 1 | tr -d "\ ")
+pyenv install ${ANACONDA}
 pyenv rehash
 ln -sf "${PYENV_ROOT}/versions/${ANACONDA}" "${PYENV_ROOT}/anaconda"
 export PATH="${PYENV_ROOT}/anaconda/bin:$PATH"
