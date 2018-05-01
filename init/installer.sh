@@ -73,7 +73,7 @@ pip install -r "${DOTHOME}/init/requirements.txt"
 case ${OSTYPE} in
     linux*)
         # ubuntu
-        sudo apt install xsel xdotool build-essential
+        xargs sudo apt install < "${DOTHOME}/init/aptpackages.txt"
         ;;
 esac
 
