@@ -30,7 +30,7 @@ has() {
 export XDG_CONFIG_HOME=$HOME/.config
 export XDG_CACHE_HOME=$HOME/.cache
 export XDG_DATA_HOME=$HOME/.local/share
-export TERM=xterm-256color-italic
+export TERM=xterm-256color
 export GITHUB_USER=`git config user.name | tr -d '\n'`
 
 
@@ -179,9 +179,6 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 export PATH="$PYENV_ROOT/anaconda/bin:$PATH"
-
-# load xkb config
-xkbcomp -I$HOME/.xkb $HOME/.xkb/keymap/mykbd $DISPLAY 2> /dev/null
 
 # golang
 export PATH=$PATH:/usr/local/go/bin

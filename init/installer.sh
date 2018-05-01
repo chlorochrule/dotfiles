@@ -69,8 +69,6 @@ export PATH="${PYENV_ROOT}/anaconda/bin:$PATH"
 
 pip install -r "${DOTHOME}/init/requirements.txt"
 
-tic ${DOTHOME}/init/xterm-256color-italic.terminfo
-
 # apt
 case ${OSTYPE} in
     linux*)
