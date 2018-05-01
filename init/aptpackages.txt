@@ -1,0 +1,3 @@
+xsel
+xdotool
+build-essential
