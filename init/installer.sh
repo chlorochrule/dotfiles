@@ -28,7 +28,7 @@ case ${OSTYPE} in
 esac
 
 # brew install
-xargs brew install < formulae.txt
+xargs brew install < "${DOTHOME}/init/formulae.txt"
 
 # brew hook
 case ${OSTYPE} in
