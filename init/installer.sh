@@ -73,7 +73,7 @@ pip install -r "${DOTHOME}/init/requirements.txt"
 case ${OSTYPE} in
     linux*)
         # ubuntu
-        xargs sudo apt install < "${DOTHOME}/init/aptpackages.txt"
+        xargs sudo apt install -y < "${DOTHOME}/init/aptpackages.txt"
         ;;
 esac
 
