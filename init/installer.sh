@@ -69,12 +69,4 @@ export PATH="${PYENV_ROOT}/anaconda/bin:$PATH"
 
 pip install -r "${DOTHOME}/init/requirements.txt"
 
-# apt
-case ${OSTYPE} in
-    linux*)
-        # ubuntu
-        xargs sudo apt install -y < "${DOTHOME}/init/aptpackages.txt"
-        ;;
-esac
-
 has "nvim" && git config --global core.editor nvim && nvim
