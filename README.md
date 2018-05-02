@@ -1,5 +1,6 @@
 # dotfiles
-## Ubuntu
+## Dependencies
+### Ubuntu
 ```bash
 sudo apt install -y build-essential
 ```
