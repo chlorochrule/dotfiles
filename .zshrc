@@ -8,7 +8,7 @@ case ${OSTYPE} in
         ;;
     linux*)
         # linux
-        export ZPLUG_HOME=/home/linuxbrew/.linuxbrew/opt/zplug
+        export ZPLUG_HOME="$(brew --prefix)/opt/zplug"
         ;;
 esac
 source $ZPLUG_HOME/init.zsh
