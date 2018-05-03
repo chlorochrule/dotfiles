@@ -3,3 +3,5 @@
 	name = chlorochrule
 [ghq]
 	root = ~/src
+[core]
+	editor = nvim
