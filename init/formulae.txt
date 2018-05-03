@@ -5,7 +5,6 @@ ghq
 git-flow
 go
 hub
-make
 neovim
 patchelf
 peco
@@ -15,3 +14,4 @@ tig
 tmux
 zplug
 zsh
+make
