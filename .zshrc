@@ -1,16 +1,12 @@
 autoload -Uz terminfo
 
+has() {
+    type "${1:?Missing argument}" &>/dev/null
+}
+
 # zplug
-case ${OSTYPE} in
-    darwin*)
-        # mac
-        export ZPLUG_HOME="${HOME}/.zplug"
-        ;;
-    linux*)
-        # linux
-        export ZPLUG_HOME="$(brew --prefix)/opt/zplug"
-        ;;
-esac
+has "brew" && export ZPLUG_HOME="$(brew --prefix)/opt/zplug"
+[ -z "${ZPLUG_HOME}" ] && export ZPLUG_HOME="${HOME}/.zplug"
 source $ZPLUG_HOME/init.zsh
 
 zplug 'zsh-users/zsh-completions'
@@ -18,20 +14,16 @@ zplug 'zsh-users/zaw'
 zplug 'zsh-users/zsh-syntax-highlighting'
 zplug check || zplug install
 
-
 zplug load
-
-has() {
-    type "${1:?Missing argument}" &>/dev/null
-}
 
 
 # env
-export XDG_CONFIG_HOME=$HOME/.config
-export XDG_CACHE_HOME=$HOME/.cache
-export XDG_DATA_HOME=$HOME/.local/share
-export TERM=xterm-256color
-export GITHUB_USER=`git config user.name | tr -d '\n'`
+export XDG_CONFIG_HOME="${HOME}/.config"
+export XDG_CACHE_HOME="${HOME}/.cache"
+export XDG_DATA_HOME="${HOME}/.local/share"
+export DLHOME="${HOME}/Download"
+export TERM="xterm-256color"
+export GITHUB_USER="$(git config user.name | tr -d '\n')"
 
 
 # chlorochrule's original keybind
@@ -42,9 +34,6 @@ bindkey '\C-h' backward-char
 bindkey '\C-j' down-line-or-history
 bindkey '\C-k' up-line-or-history
 bindkey '\C-l' forward-char
-bindkey '\C-q' expand-or-complete
-bindkey '\C-i' backward-delete-char
-bindkey '\t' expand-or-complete
 
 
 # history
@@ -138,13 +127,9 @@ alias mkdir='mkdir -p'
 alias p='pwd'
 alias gip='curl ipcheck.ieserver.net'
 
-alias idea='/opt/idea-IC-171.4694.70/bin/idea.sh'
-
 alias ...='../..'
 alias ....='../../..'
 alias .....='../../../..'
-
-alias sudo='sudo '
 
 alias -g L='| less'
 alias -g G='| grep'
@@ -181,15 +166,15 @@ eval "$(pyenv init -)"
 export PATH="$PYENV_ROOT/anaconda/bin:$PATH"
 
 # golang
-export PATH=$PATH:/usr/local/go/bin
-export GOPATH=$HOME
+export PATH="${PATH}:/usr/local/go/bin"
+export GOPATH="${HOME}"
 
 # exec tmux
-if ! (( $+commands[tmux] )); then
+if ! has "tmux"; then
     echo "tmux not found" 1>&2
 else
-    if [[ -z $TMUX && ! -z $PS1 ]]; then
-        if tmux has-session &> /dev/null && [[ -n `tmux ls | grep -v attached` ]]; then
+    if [[ -z "${TMUX}" && ! -z "${PS1}" ]]; then
+        if tmux has-session &> /dev/null && [[ -n "$(tmux ls | grep -v attached)" ]]; then
             exec tmux a
         else
             exec tmux
