@@ -2,7 +2,11 @@
 ## Dependencies
 ### Ubuntu
 ```bash
-sudo apt install -y build-essential
+sudo apt install -y build-essential curl git wget
+```
+if Desktop  
+```bash
+sudo apt install -y xsel xdotool fcitx fcitx-mozc libxss1 libappindicator1 libindicator7
 ```
 ## Install
 ```bash
