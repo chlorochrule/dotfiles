@@ -14,7 +14,7 @@ export XDG_CACHE_HOME=${HOME}/.cache
 export XDG_DATA_HOME=${HOME}/.local/share
 export DOTHOME="${HOME}/.dotfiles"
 
-! has "git" && echo "`git` is not installed" >&2 && exit 1
+! has "git" && echo "git is not installed" >&2 && exit 1
 
 git clone https://github.com/chlorochrule/dotfiles "${DOTHOME}"
 
@@ -35,8 +35,6 @@ case ${OSTYPE} in
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
         test -d ~/.linuxbrew && PATH="$HOME/.linuxbrew/bin:$HOME/.linuxbrew/sbin:$PATH"
         test -d /home/linuxbrew/.linuxbrew && PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
-        test -r ~/.bash_profile && echo "export PATH='$(brew --prefix)/bin:$(brew --prefix)/sbin'":'"$PATH"' >>~/.bash_profile
-        echo "export PATH='$(brew --prefix)/bin:$(brew --prefix)/sbin'":'"$PATH"' >>~/.profile
         export PATH="$(brew --prefix)/bin:$(brew --prefix)/sbin:$PATH"
         ;;
 esac
@@ -68,4 +66,4 @@ export PATH="${PYENV_ROOT}/anaconda/bin:$PATH"
 
 pip install -r "${DOTHOME}/init/requirements.txt"
 
-has "nvim" && git config --global core.editor nvim && nvim
+has "nvim" && nvim &
