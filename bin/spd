@@ -1,1 +1,1 @@
-dbus-send --system --print-reply=literal --dest=org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager.Suspend boolean:true
+/usr/bin/dbus-send --system --print-reply=literal --dest=org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager.Suspend boolean:true
