@@ -7,6 +7,15 @@ sudo apt install -y build-essential curl git wget
 Desktop  
 ```bash
 sudo apt install -y xsel xdotool fcitx fcitx-mozc libxss1 libappindicator1 libindicator7
+im-config -n fcitx
+```
+Home directory lang
+```bash
+LANG=C xdg-user-dirs-gtk-update
+```
+Disable overlay by Super key
+```bash
+gsettings set org.gnome.mutter overlay-key ''
 ```
 Google Chrome  
 ```bash
