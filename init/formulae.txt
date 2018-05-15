@@ -1,5 +1,4 @@
 fzf
-gcc
 ghostscript
 ghq
 git-flow
@@ -14,4 +13,3 @@ tig
 tmux
 zplug
 zsh
-make
