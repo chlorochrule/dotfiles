@@ -18,7 +18,7 @@ export DOTHOME="${HOME}/.dotfiles"
 
 git clone https://github.com/chlorochrule/dotfiles "${DOTHOME}"
 
-xargs -I OBJ ln -sf "${DOTHOME}/OBJ" "${HOME}/OBJ" < "${DOTHOME}/init/links.txt"
+xargs -I OBJ ln -nsf "${DOTHOME}/OBJ" "${HOME}/OBJ" < "${DOTHOME}/init/links.txt"
 
 # preparations
 case ${OSTYPE} in
