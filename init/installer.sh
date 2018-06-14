@@ -19,6 +19,7 @@ export DOTHOME="${HOME}/.dotfiles"
 git clone https://github.com/chlorochrule/dotfiles "${DOTHOME}"
 
 xargs -I OBJ ln -nsf "${DOTHOME}/OBJ" "${HOME}/OBJ" < "${DOTHOME}/init/links.txt"
+xargs -I BIN ln -nsf "${DOTHOME}/bin/BIN" "${HOME}/bin/BIN" < "${DOTHOME}/init/bins.txt"
 
 # preparations
 case ${OSTYPE} in
@@ -61,7 +62,7 @@ eval "$(pyenv init -)"
 ANACONDA=$(pyenv install --list | grep anaconda | tail -n 1 | tr -d "\ ")
 pyenv install ${ANACONDA}
 pyenv rehash
-ln -sf "${PYENV_ROOT}/versions/${ANACONDA}" "${PYENV_ROOT}/anaconda"
+ln -nsf "${PYENV_ROOT}/versions/${ANACONDA}" "${PYENV_ROOT}/anaconda"
 export PATH="${PYENV_ROOT}/anaconda/bin:$PATH"
 
 pip install -r "${DOTHOME}/init/requirements.txt"
