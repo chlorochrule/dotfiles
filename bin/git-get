@@ -5,8 +5,11 @@ if [[ -z $1 ]]; then
     exit 1
 fi
 
-if [[ $1 =~ ^(((https?|git)://)github.com/)?[A-Za-z0-9_-]+/[A-Za-z0-9_-]+(\.git)?$ ]]; then
+if [[ $1 =~ ^(((https?|git)://)github\.com/)?[A-Za-z0-9_-]+/[A-Za-z0-9_-]+(\.git)?$ ]]; then
     ghq get $1
 elif [[ $1 =~ ^[A-Za-z0-9_-]+$ ]]; then
     ghq get -p $1
+else
+    echo "invalid argment" 1>&2
+    exit 1
 fi
