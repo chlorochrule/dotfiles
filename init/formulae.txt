@@ -11,5 +11,6 @@ pyenv
 rbenv-gemset
 tig
 tmux
+tree
 zplug
 zsh
