@@ -26,6 +26,32 @@ export TERM="xterm-256color"
 export GITHUB_USER="$(git config user.name | tr -d '\n')"
 
 
+# function
+peco-src() {
+    local repos_root
+    local ghq_root
+    local ghq_list
+    local mru_list
+    ghq_root="$(git config ghq.root)"
+    ghq_list="$(ghq list)"
+    local peco_src_dir="$XDG_CACHE_HOME/peco-src"
+    mkdir -p $peco_src_dir
+    if [ ! -f "$peco_src_dir/mru_src.txt" ]; then
+        touch "$peco_src_dir/mru_src.txt"
+    fi
+    repos_root="$({cat $peco_src_dir/mru_src.txt ; ghq list ; } | awk '!a[$0]++' | peco --selection-prefix=\*)"
+    if [ -n "$repos_root" ]; then
+        BUFFER="builtin cd $ghq_root/$repos_root"
+        zle accept-line
+    fi
+    echo "`echo "$repos_root" | cat - ${peco_src_dir}/mru_src.txt | awk '!a[$0]++'`" > $peco_src_dir/mru_src.txt
+    zle reset-prompt
+}
+
+zle -N peco-src
+bindkey '\C-f' peco-src
+
+
 # chlorochrule's original keybind
 bindkey -e
 bindkey -r '\C-g'
