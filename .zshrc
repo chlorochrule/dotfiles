@@ -26,6 +26,23 @@ export TERM="xterm-256color"
 export GITHUB_USER="$(git config user.name | tr -d '\n')"
 
 
+# mac or linux
+case ${OSTYPE} in
+    darwin*)
+        # mac
+        export CLICOLOR=1
+        alias ls='ls -G -F'
+        alias tac='tail -r'
+        ;;
+    linux*)
+        # linux
+        alias ls='ls -F --color=auto'
+        ;;
+esac
+
+alias peco='peco --selection-prefix=\*'
+
+
 # function
 peco-src() {
     local repos_root
@@ -39,7 +56,7 @@ peco-src() {
     if [ ! -f "$peco_src_dir/mru_src.txt" ]; then
         touch "$peco_src_dir/mru_src.txt"
     fi
-    repos_root="$({cat $peco_src_dir/mru_src.txt ; ghq list ; } | awk '!a[$0]++' | peco --selection-prefix=\*)"
+    repos_root="$({cat $peco_src_dir/mru_src.txt ; ghq list ; } | awk '!a[$0]++' | peco)"
     if [ -n "$repos_root" ]; then
         BUFFER="builtin cd $ghq_root/$repos_root"
         zle accept-line
@@ -50,6 +67,15 @@ peco-src() {
 
 zle -N peco-src
 bindkey '\C-f' peco-src
+
+function peco-history-selection() {
+    BUFFER=`history -n 1 | tac | awk '!a[$0]++' | peco`
+    CURSOR=$#BUFFER
+    zle reset-prompt
+}
+
+zle -N peco-history-selection
+bindkey '\C-r' peco-history-selection
 
 
 # chlorochrule's original keybind
@@ -66,7 +92,6 @@ bindkey '\C-l' forward-char
 HISTFILE=~/.zsh_history
 HISTSIZE=100000
 SAVEHIST=100000
-bindkey '^R' history-incremental-pattern-search-backward
 
 
 # prompt style
@@ -169,20 +194,6 @@ elif which xsel >/dev/null 2>&1 ; then
 fi
 
 has "nvim" && alias -g vi=nvim
-
-
-# mac or linux
-case ${OSTYPE} in
-    darwin*)
-        # mac
-        export CLICOLOR=1
-        alias ls='ls -G -F'
-        ;;
-    linux*)
-        # linux
-        alias ls='ls -F --color=auto'
-        ;;
-esac
 
 
 # pyenv and anaconda3
