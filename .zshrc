@@ -60,8 +60,8 @@ peco-src() {
     if [ -n "$repos_root" ]; then
         BUFFER="builtin cd $ghq_root/$repos_root"
         zle accept-line
+        echo "`echo "$repos_root" | cat - ${peco_src_dir}/mru_src.txt | awk '!a[$0]++'`" > $peco_src_dir/mru_src.txt
     fi
-    echo "`echo "$repos_root" | cat - ${peco_src_dir}/mru_src.txt | awk '!a[$0]++'`" > $peco_src_dir/mru_src.txt
     zle reset-prompt
 }
 
