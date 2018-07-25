@@ -5,3 +5,6 @@
 	root = ~/src
 [core]
 	editor = nvim
+[alias]
+	pr = pull-request
+	open = browse
