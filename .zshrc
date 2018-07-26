@@ -24,7 +24,7 @@ export XDG_DATA_HOME="${HOME}/.local/share"
 export DLHOME="${HOME}/Download"
 export TERM="xterm-256color"
 export GITHUB_USER="$(git config user.name | tr -d '\n')"
-
+export WORDCHARS='*?_.[]~-=&;!#$%^(){}<>' 
 
 # mac or linux
 case ${OSTYPE} in
