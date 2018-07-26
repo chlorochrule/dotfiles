@@ -194,7 +194,7 @@ elif which xsel >/dev/null 2>&1 ; then
 fi
 
 has "nvim" && alias -g vi=nvim
-has "hub" && alias -g git=hub
+has "hub" && alias -g git=/home/chlorochrule/.linuxbrew/bin/hub
 
 
 # pyenv and anaconda3
