@@ -184,7 +184,11 @@ nnoremap <C-o> o<ESC>
 " inoremap
 inoremap jj <ESC>
 inoremap <C-d> <Delete>
-inoremap <C-o> <BS>
+inoremap <C-o> <C-o>o
+inoremap <C-w> <ESC>ciw
+inoremap <C-r> <C-o><C-r>
+inoremap <C-u> <C-o>u
+inoremap <C-d> <C-u>
 inoremap <C-h> <Left>
 inoremap <expr><C-j> pumvisible() ? "\<C-n>" : "\<Down>"
 inoremap <expr><C-k> pumvisible() ? "\<C-p>" : "\<Up>"
