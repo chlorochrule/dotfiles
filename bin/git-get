@@ -1,5 +1,9 @@
 #!/bin/bash
 
+has () {
+        type "${1:?Missing argument}" &> /dev/null
+}
+
 if [[ -z $1 ]]; then
     echo "Did not specified repos" 1>&2
     exit 1
