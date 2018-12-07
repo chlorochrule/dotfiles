@@ -28,6 +28,16 @@ Fonts
 ```bash
 bash -c "$(curl -fsSL https://github.com/hbin/top-programming-fonts/raw/master/install.sh)"
 ```
+Inherit PATH in sudo
+```bash
+visudo /etc/sudoers
+```
+visudo(/etc/sudoers)
+```
+Defaults    env_reset
+# Defaults   secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Defaults    env_keep += "PATH"
+```
 ## Install
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/chlorochrule/dotfiles/master/init/installer.sh)"
