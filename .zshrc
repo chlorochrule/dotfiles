@@ -26,6 +26,8 @@ export TERM="xterm-256color"
 export GITHUB_USER="$(git config user.name | tr -d '\n')"
 export WORDCHARS='*?_.[]~-=&;!#$%^(){}<>' 
 
+fpath=("${XDG_CONFIG_HOME}/zsh/completions" $fpath)
+
 # mac or linux
 case ${OSTYPE} in
     darwin*)
