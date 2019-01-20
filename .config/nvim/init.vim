@@ -13,11 +13,13 @@ if has('nvim')
     let $NVIM_TUI_ENABLE_TRUE_COLOR = 1
 endif
 
-augroup MyAutoCmd
+augroup vimrc_augroup
   autocmd!
 augroup END
-command! -nargs=* Gautocmd autocmd MyAutoCmd <args>
-command! -nargs=* Gautocmdft autocmd MyAutoCmd FileType <args>
+
+" command alias
+command! -nargs=* Gautocmd autocmd vimrc_augroup <args>
+command! -nargs=* Gautocmdft autocmd vimrc_augroup FileType <args>
 
 
 " true color setting
@@ -146,8 +148,8 @@ noremap <C-g> <Nop>
 let mapleader = "\<Space>"
 nnoremap <Space> <Nop>
 
-nnoremap qq <Nop>
-nnoremap <silent> <ESC><ESC> :<C-u>nohlsearch<CR>
+nnoremap q <Nop>
+nnoremap <silent><ESC> :<C-u>nohlsearch<CR>
 nnoremap > >>
 nnoremap < <<
 nnoremap <C-r> r
@@ -169,7 +171,6 @@ nnoremap Y y$
 nnoremap z g;
 nnoremap Z g,
 nnoremap <Tab> %
-vnoremap <Tab> %
 nnoremap <silent><Leader>w :<C-u>w<CR>
 nnoremap <silent><Leader>q :<C-u>q<CR>
 nnoremap <silent><Leader>Q :<C-u>bd<CR>
@@ -211,7 +212,14 @@ vnoremap ; <ESC>
 vnoremap > >gv
 vnoremap < <gv
 vnoremap u <ESC>ugv
+vnoremap s y/<C-r>"<CR>
+vnoremap <Tab> %
 
+" readonly
+Gautocmd BufReadPost *
+    \  if &readonly
+    \|     nnoremap <buffer>q :<C-u>bd<CR>
+    \| endif
 
 Gautocmd BufWritePost ~/.config/nvim/init.vim :source ~/.config/nvim/init.vim
 
@@ -269,10 +277,10 @@ vmap " S"gv
 vmap ` S`gv
 vmap ( S(gv
 vmap ) S)gv
-Gautocmd BufEnter * vmap <buffer><nowait> [ S[gv
-Gautocmd BufEnter * vmap <buffer><nowait> ] S]gv
 vmap { S{gv
 vmap } S}gv
+Gautocmd BufEnter * vmap <buffer><nowait> [ S[gv
+Gautocmd BufEnter * vmap <buffer><nowait> ] S]gv
 
 " vim-easy-align
 xmap ga <Plug>(EasyAlign)
