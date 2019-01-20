@@ -114,8 +114,7 @@ zstyle ':zle:*' word-style unspecified
 
 
 # complement
-autoload -Uz compinit
-compinit
+autoload -Uz compinit && compinit -u
 
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 zstyle ':completion:*' ignore-parents parent pwd ..
