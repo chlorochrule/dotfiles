@@ -81,10 +81,10 @@ bindkey '\C-r' peco-history-selection
 # chlorochrule's original keybind
 bindkey -e
 bindkey -r '\C-g'
+bindkey -r '\C-j'
+bindkey -r '\C-k'
 bindkey '\C-o' backward-delete-char
 bindkey '\C-h' backward-char
-bindkey '\C-j' down-line-or-history
-bindkey '\C-k' up-line-or-history
 bindkey '\C-l' forward-char
 
 
