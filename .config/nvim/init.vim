@@ -136,12 +136,14 @@ set synmaxcol=320
 set history=1000
 set fileformats=unix,dos,mac
 set completeopt=menu,longest,noinsert
+" set mouse=a
 
 " keymapping
 
 
-" tmux prefix
+" tmux ignore keys
 noremap <C-g> <Nop>
+noremap <C-t> <Nop>
 
 " nnoremap
 " leader
@@ -154,6 +156,7 @@ nnoremap > >>
 nnoremap < <<
 nnoremap <C-r> r
 nnoremap r <C-r>
+nnoremap <silent>R :<C-u>e!<CR>
 nnoremap : ;
 nnoremap ; :
 nnoremap j gj
@@ -175,11 +178,7 @@ nnoremap <silent><Leader>w :<C-u>w<CR>
 nnoremap <silent><Leader>q :<C-u>q<CR>
 nnoremap <silent><Leader>Q :<C-u>bd<CR>
 nnoremap <silent><Leader>- :<C-u>split<CR>
-nnoremap <silent><Leader>\| :<C-u>vsplit<CR>
-nnoremap <C-h> <C-w>k
-nnoremap <C-j> <C-w>+
-nnoremap <C-k> <C-w>-
-nnoremap <C-l> <C-w>j
+nnoremap <silent><Leader>\ :<C-u>vsplit<CR>
 nnoremap <C-o> o<ESC>
 
 " inoremap
@@ -194,7 +193,7 @@ inoremap <C-h> <Left>
 inoremap <expr><C-j> pumvisible() ? "\<C-n>" : "\<Down>"
 inoremap <expr><C-k> pumvisible() ? "\<C-p>" : "\<Up>"
 inoremap <C-l> <Right>
-inoremap <C-t> <ESC>g;
+" inoremap <C-t> <ESC>g;
 inoremap <C-Space> <Space>
 inoremap <C-BS> <BS>
 
