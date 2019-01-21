@@ -114,3 +114,6 @@ hook_add = '''
 [[plugins]]
 repo = 'junegunn/vim-easy-align'
 
+# vim-tmux-navigator
+[[plugins]]
+repo = 'christoomey/vim-tmux-navigator'
