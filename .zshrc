@@ -82,13 +82,15 @@ bindkey '\C-r' peco-history-selection
 
 # chlorochrule's original keybind
 bindkey -e
+bindkey '\C-o' backward-delete-char
+
+# tmux ignore keys
 bindkey -r '\C-g'
+bindkey -r '\C-t'
+bindkey -r '\C-h'
 bindkey -r '\C-j'
 bindkey -r '\C-k'
-bindkey '\C-o' backward-delete-char
-bindkey '\C-h' backward-char
-bindkey '\C-l' forward-char
-
+bindkey -r '\C-l'
 
 # history
 HISTFILE=~/.zsh_history
