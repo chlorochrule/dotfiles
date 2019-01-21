@@ -55,6 +55,10 @@ case ${OSTYPE} in
         ;;
 esac
 
+# tpm
+mkdir -p "${HOME}/.tmux/plugins"
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
 # anaconda init
 export PYENV_ROOT="${HOME}/.pyenv"
 export PATH="${PYENV_ROOT}/bin:${PATH}"
