@@ -136,7 +136,7 @@ set synmaxcol=320
 set history=1000
 set fileformats=unix,dos,mac
 set completeopt=menu,longest,noinsert
-" set mouse=a
+set mouse=a
 
 " keymapping
 
