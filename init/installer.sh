@@ -59,10 +59,6 @@ esac
 mkdir -p "${HOME}/.tmux/plugins"
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
-# powerline fonts
-git get powerline/fonts; wait
-sh "${HOME}/src/github.com/powerline/fonts/install.sh"
-
 # anaconda init
 export PYENV_ROOT="${HOME}/.pyenv"
 export PATH="${PYENV_ROOT}/bin:${PATH}"
