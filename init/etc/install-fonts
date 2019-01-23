@@ -1,2 +1,10 @@
 #!/bin/bash
+mkdir -p "${HOME}/.fonts"
 curl -L https://github.com/hbin/top-programming-fonts/raw/master/install.sh | bash
+
+# powerline fonts
+git get powerline/fonts; wait
+sh "${HOME}/src/github.com/powerline/fonts/install.sh"
+git get powerline/fontpatcher; wait
+fontforge -script "${HOME}/src/github.com/powerline/fontpatcher/scripts/powerline-fontpatcher" "${HOME}/.fonts/Menlo-Regular.ttf"
+mv -f "Menlo Regular for Powerline.ttf" "${HOME}/.fonts"
