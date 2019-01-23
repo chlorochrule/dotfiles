@@ -1,0 +1,8 @@
+#!/bin/bash
+if [[ $(tmux ls | wc -l) -ge 2 ]]; then
+    sess=$(tmux display-message -p "#S")
+    tmux switch-client -ln
+    tmux kill-session -t $sess
+else
+    tmux kill-session
+fi;
