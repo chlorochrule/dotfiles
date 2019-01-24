@@ -190,10 +190,10 @@ alias -g G='| grep'
 
 if which pbcopy >/dev/null 2>&1 ; then
     # mac
-    alias -g C='| pbcopy'
+    alias -g clipboard='pbcopy'
 elif which xsel >/dev/null 2>&1 ; then
     # linux
-    alias -g C='| xsel --input --clipboard'
+    alias -g clipboard='xsel --clipboard --input'
 fi
 
 has "nvim" && alias -g vi=nvim
