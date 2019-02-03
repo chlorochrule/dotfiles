@@ -28,49 +28,57 @@ set t_8b=^[[48;2;%lu;%lu;%lum
 set t_8f=^[[38;2;%lu;%lu;%lum
 
 
-" dein settings
-let s:config_dir = expand($XDG_CONFIG_HOME . '/nvim')
-let s:cache_dir = expand($XDG_CACHE_HOME . '/nvim')
-let s:dein_dir = s:cache_dir . '/dein'
-let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
+" vim-plug setting
+let s:nvim_home = expand($XDG_CACHE_HOME . '/nvim/vim-plug')
+let s:plug_dir = s:nvim_home . '/site'
+let g:plug = {
+    \ 'home':    s:plug_dir,
+    \ 'plug':    s:plug_dir . '/autoload/plug.vim',
+    \ 'base':    s:nvim_home . '/plugged',
+    \ 'url' :    'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim',
+    \ }
 
-if !isdirectory(s:dein_repo_dir)
-    execute '!mkdir -p ' . s:dein_repo_dir
-endif
-if !isdirectory(s:dein_repo_dir . '/.git')
-    execute '!git clone https://github.com/Shougo/dein.vim ' . s:dein_repo_dir
-endif
-
-execute 'set runtimepath^=' . s:dein_repo_dir
-
-if dein#load_state(s:dein_dir)
-  call dein#begin(s:dein_dir)
-
-  call dein#add('Shougo/vimproc.vim', {'build' : 'make'})
-
-  let s:toml = s:config_dir . '/dein.toml'
-  let s:lazy_toml = s:config_dir . '/dein_lazy.toml'
-
-  call dein#load_toml(s:toml, {'lazy': 0})
-  call dein#load_toml(s:lazy_toml, {'lazy': 1})
-
-  call dein#end()
-  call dein#save_state()
+if !filereadable(g:plug.plug)
+    execute '!mkdir -p ' . g:plug.home
+    execute '!curl -fLo ' . g:plug.plug . ' --create-dirs ' . g:plug.url
 endif
 
-if dein#check_install()
-  call dein#install()
+if !isdirectory(g:plug.base)
+    execute '!mkdir -p ' . g:plug.base
 endif
 
-" :UpdateRemotePlugins
+execute 'set runtimepath^=' . g:plug.home
+execute 'set runtimepath^=' . g:plug.base
+
+call plug#begin(g:plug.base)
+
+Plug 'airblade/vim-gitgutter'
+Plug 'christoomey/vim-tmux-navigator'
+Plug 'cocopon/vaffle.vim'
+Plug 'cohama/lexima.vim'
+Plug 'davidhalter/jedi-vim', {'for': 'python'}
+Plug 'itchyny/lightline.vim'
+Plug 'joshdick/onedark.vim'
+Plug 'junegunn/vim-easy-align'
+Plug 'Shougo/neosnippet'
+Plug 'Shougo/neosnippet-snippets'
+Plug 'Shougo/deoplete.nvim'
+Plug 'Shougo/denite.nvim'
+Plug 'thinca/vim-quickrun'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-fugitive'
+Plug 'tyru/caw.vim'
+Plug 'Vimjas/vim-python-pep8-indent', {'for': 'python'}
+Plug 'w0rp/ale'
+Plug 'zchee/deoplete-jedi', {'for': 'python'}
+
+call plug#end()
 
 
 filetype plugin indent on
 
-
 " set onedark.vim colorscheme
 colorscheme onedark
-
 
 " option settings
 
@@ -211,76 +219,172 @@ vnoremap ; <ESC>
 vnoremap > >gv
 vnoremap < <gv
 vnoremap u <ESC>ugv
-vnoremap s y/<C-r>"<CR>
+vnoremap s y/<C-r>"<CR>N
 vnoremap <Tab> %
 
 " readonly
-Gautocmd BufReadPost *
-    \  if &readonly
-    \|     nnoremap <buffer>q :<C-u>bd<CR>
-    \| endif
-
-Gautocmd BufWritePost ~/.config/nvim/init.vim :source ~/.config/nvim/init.vim
+Gautocmd BufReadPost * if &readonly | nnoremap <buffer>q :<C-u>bd<CR> | endif
+Gautocmd BufWritePost ~/.config/nvim/init.vim :<C-u>source ~/.config/nvim/init.vim<CR>
 
 
 " quickfix
-Gautocmdft qf nnoremap <buffer>q :<C-u>q<CR>
-nnoremap <silent><Leader>e :<C-u>cclose<CR>:w<CR>:QuickRun<CR>
+if has_key(g:plugs, 'vim-quickrun')
+    let g:quickrun_config = get(g:, 'quickrun_config', {})
+    let g:quickrun_config._ = {
+        \ 'runner'    : 'vimproc',
+        \ 'runner/vimproc/updatetime' : 60,
+        \ 'outputter' : 'error',
+        \ 'outputter/error/success' : 'buffer',
+        \ 'outputter/error/error'   : 'quickfix',
+        \ 'outputter/buffer/split'  : ':rightbelow 8sp',
+        \ 'outputter/buffer/close_on_empty' : 1,
+        \ }
+    nnoremap <silent><Leader>e :<C-u>cclose<CR>:w<CR>:QuickRun<CR>
+endif
 
 " plugin
 " neosnippet, deoplete
 " call deoplete#custom#source('jedi', 'matchers', ['matcher_fuzzy'])
-call lexima#init()
-imap <expr><CR> neosnippet#expandable() ?
-    \ "\<Plug>(neosnippet_expand)" : "\<CR>"
-imap <expr><Tab> neosnippet#jumpable() ? "\<Plug>(neosnippet_jump)" :
-    \ pumvisible() ? deoplete#mappings#close_popup() : "\<Tab>"
-smap <expr><Tab> neosnippet#jumpable() ? "\<Plug>(neosnippet_jump)" : "\<Tab>"
+if has_key(g:plugs, 'lexima.vim')
+    call lexima#init()
+endif
 
-" denite
-nnoremap <silent>m :<C-u>Denite -mode=normal -immediately buffer<CR>
-nnoremap <silent>t :<C-u>tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
-nnoremap <silent>T :<C-u>-tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
-nnoremap <silent><Leader>o :<C-u>Denite -mode=normal -default-action=tabopen file_rec<CR>
-nnoremap <silent><Leader>O :<C-u>DeniteBufferDir -mode=normal -default-action=tabopen file_rec<CR>
-nnoremap <silent><Leader>g :<C-u>Denite -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
-nnoremap <silent><Leader>G :<C-u>Denite -resume -buffer-name=search-buffer-denite<CR>
-nnoremap <silent><Leader>s :<C-u>DeniteCursorWord -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
-nnoremap <silent><Leader>b :<C-u>Denite -mode=normal buffer<CR>
+if has_key(g:plugs, 'neosnippet') 
+    imap <expr><CR> neosnippet#expandable() ?
+        \ "\<Plug>(neosnippet_expand)" : "\<CR>"
+    smap <expr><Tab> neosnippet#jumpable() ? "\<Plug>(neosnippet_jump)" : "\<Tab>"
+    if has_key(g:plugs, 'deoplete.nvim')
+        imap <expr><Tab> neosnippet#jumpable() ? "\<Plug>(neosnippet_jump)" :
+            \ pumvisible() ? deoplete#mappings#close_popup() : "\<Tab>"
+    endif
+endif
 
-" vaffle
-nnoremap <silent><Leader>v :<C-u>Vaffle<CR>
-Gautocmdft vaffle nmap <silent><buffer><nowait> q <Plug>(vaffle-quit)
+if has_key(g:plugs, 'deoplete.nvim')
+    let g:deoplete#auto_complete_delay = 0
+    let g:deoplete#enable_at_startup = 1
+    let g:deoplete#enable_smart_case = 1
+    let g:deoplete#enable_refresh_always = 0
+    let g:deoplete#auto_refresh_delay = 100
+    let g:deoplete#max_list = 1000
+    let g:deoplete#auto_complete_start_length = 2
+endif
 
-" jedi-vim
-Gautocmdft python nnoremap <silent><buffer><Leader>k :<C-u>call jedi#show_documentation()<CR>
-Gautocmdft python nnoremap <silent><buffer><Leader>a :<C-u>call jedi#goto_assignments()<CR>
-Gautocmdft python nnoremap <silent><buffer><Leader>r :<C-u>call jedi#rename()<CR>
+if has_key(g:plugs, 'denite.nvim')
+    nnoremap <silent>m :<C-u>Denite -mode=normal -immediately buffer<CR>
+    nnoremap <silent>t :<C-u>tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
+    nnoremap <silent>T :<C-u>-tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
+    nnoremap <silent><Leader>o :<C-u>Denite -mode=normal -default-action=tabopen file_rec<CR>
+    nnoremap <silent><Leader>O :<C-u>DeniteBufferDir -mode=normal -default-action=tabopen file_rec<CR>
+    nnoremap <silent><Leader>g :<C-u>Denite -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
+    nnoremap <silent><Leader>G :<C-u>Denite -resume -buffer-name=search-buffer-denite<CR>
+    nnoremap <silent><Leader>s :<C-u>DeniteCursorWord -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
+    nnoremap <silent><Leader>b :<C-u>Denite -mode=normal buffer<CR>
+endif
 
-" fugitive
-nmap [fugitive] <Nop>
-nmap <C-f> [fugitive]
-nnoremap <silent>[fugitive]b :<C-u>Gblame<CR>
-nnoremap <silent>[fugitive]d :<C-u>Gdiff<CR>
-nnoremap <silent>[fugitive]l :<C-u>Glog<CR>
-nnoremap <silent>[fugitive]s :<C-u>Gstatus<CR>
+if has_key(g:plugs, 'vaffle.vim')
+    let g:vaffle_force_delete = 1
+    let g:vaffle_show_hidden_files = 1
+    nnoremap <silent><Leader>v :<C-u>Vaffle<CR>
+    Gautocmdft vaffle nmap <silent><buffer><nowait> q <Plug>(vaffle-quit)
+endif
 
-" ale
-nnoremap <silent><Leader>f :<C-u>ALEFix<CR>
-nmap <C-n> <Plug>(ale_next)
-nmap <C-p> <Plug>(ale_previous)
+if has_key(g:plugs, 'jedi-vim')
+    let g:jedi#auto_initialization = 0
+    let g:jedi#auto_vim_configuration = 0
+    let g:jedi#completions_enabled = 0
+    let g:jedi#smart_auto_mappings = 0
+    let g:jedi#completions_command = ""
+    let g:jedi#goto_command = ""
+    let g:jedi#goto_assignments_command = "<Leader>a"
+    let g:jedi#documentation_command = "<Leader>k"
+    let g:jedi#rename_command = "<Leader>r"
+    let g:jedi#usages_command = ""
+    Gautocmdft python nnoremap <silent><buffer><Leader>k :<C-u>call jedi#show_documentation()<CR>
+    Gautocmdft python nnoremap <silent><buffer><Leader>a :<C-u>call jedi#goto_assignments()<CR>
+    Gautocmdft python nnoremap <silent><buffer><Leader>r :<C-u>call jedi#rename()<CR>
+endif
 
-" surround.vim
-vmap ' S'gv
-vmap " S"gv
-vmap ` S`gv
-vmap ( S(gv
-vmap ) S)gv
-vmap { S{gv
-vmap } S}gv
-Gautocmd BufEnter * vmap <buffer><nowait> [ S[gv
-Gautocmd BufEnter * vmap <buffer><nowait> ] S]gv
+if has_key(g:plugs, 'deoplete.jedi')
+    let g:deoplete#sources#jedi#statement_length = 0
+    let g:deoplete#sources#jedi#short_types = 0
+    let g:deoplete#sources#jedi#show_docstring = 0
+    let g:deoplete#sources#jedi#worker_threads = 2
+    let g:deoplete#sources#jedi#python_path = g:python3_host_prog
+endif
 
-" vim-easy-align
-xmap ga <Plug>(EasyAlign)
-nmap ga <Plug>(EasyAlign)
+if has_key(g:plugs, 'vim-fugitive')
+    nmap [fugitive] <Nop>
+    nmap <C-f> [fugitive]
+    nnoremap <silent>[fugitive]b :<C-u>Gblame<CR>
+    nnoremap <silent>[fugitive]d :<C-u>Gdiff<CR>
+    nnoremap <silent>[fugitive]l :<C-u>Glog<CR>
+    nnoremap <silent>[fugitive]s :<C-u>Gstatus<CR>
+endif
+
+if has_key(g:plugs, 'ale')
+    let g:ale_sign_column_always = 1
+    let g:ale_lint_on_text_changed = 0
+    let g:ale_fixers = {
+        \ 'python': ['autopep8', 'isort']
+        \ }
+    nnoremap <silent><Leader>f :<C-u>ALEFix<CR>
+    nmap <C-n> <Plug>(ale_next)
+    nmap <C-p> <Plug>(ale_previous)
+endif
+
+if has_key(g:plugs, 'vim-surround')
+    vmap ' S'gv
+    vmap " S"gv
+    vmap ` S`gv
+    vmap ( S)gv
+    vmap ) S(gv
+    vmap { S}gv
+    vmap } S{gv
+    Gautocmd BufEnter * vmap <buffer><nowait> [ S]gv
+    Gautocmd BufEnter * vmap <buffer><nowait> ] S[gv
+endif
+
+if has_key(g:plugs, 'vim-easy-align')
+    xmap ga <Plug>(EasyAlign)
+    nmap ga <Plug>(EasyAlign)
+endif
+
+if has_key(g:plugs, 'caw.vim')
+    let g:caw_no_default_keymappings = 1
+    nmap <C-_> <Plug>(caw:hatpos:toggle)
+    vmap <C-_> <Plug>(caw:hatpos:toggle)
+    imap <expr><C-_> "\<ESC>\<Plug>(caw:hatpos:toggle)a"
+endif
+
+if has_key(g:plugs, 'vim-gitgutter')
+    set signcolumn=yes
+    set updatetime=200
+endif
+
+if has_key(g:plugs, 'lightline.vim')
+	let g:lightline = {
+        \ 'colorscheme': 'one',
+        \ 'active': {
+        \     'left': [['mode', 'paste'], ['fugitive', 'filename', 'readonly', 'modified']]
+        \ }, 
+		\ 'component': {
+		\   'lineinfo': ' %3l:%-2v',
+		\ },
+		\ 'component_function': {
+		\   'readonly': 'LightlineReadonly',
+		\   'fugitive': 'LightlineFugitive'
+		\ },
+		\ 'separator': { 'left': '', 'right': '' },
+		\ 'subseparator': { 'left': '', 'right': '' }
+		\ }
+	function! LightlineReadonly()
+		return &readonly ? '' : ''
+	endfunction
+	function! LightlineFugitive()
+		if exists('*fugitive#head')
+			let branch = fugitive#head()
+			return branch !=# '' ? ''.branch : ''
+		endif
+		return ''
+	endfunction
+endif
