@@ -74,6 +74,12 @@ Plug 'zchee/deoplete-jedi', {'for': 'python'}
 
 call plug#end()
 
+for [name, spec] in items(g:plugs)
+    if !isdirectory(spec.dir)
+        PlugInstall
+        break
+    endif
+endfor
 
 filetype plugin indent on
 
@@ -365,14 +371,16 @@ if has_key(g:plugs, 'lightline.vim')
 	let g:lightline = {
         \ 'colorscheme': 'one',
         \ 'active': {
-        \     'left': [['mode', 'paste'], ['fugitive', 'filename', 'readonly', 'modified']]
+        \     'left' : [['mode', 'paste'], ['fugitive', 'filename', 'readonly', 'modified']],
+        \     'right': [['lineinfo'], ['percent'], ['ale', 'char_code', 'fileformat', 'fileencoding', 'filetype']]
         \ }, 
 		\ 'component': {
 		\   'lineinfo': ' %3l:%-2v',
 		\ },
 		\ 'component_function': {
 		\   'readonly': 'LightlineReadonly',
-		\   'fugitive': 'LightlineFugitive'
+		\   'fugitive': 'LightlineFugitive',
+        \   'ale'     : 'LightlineAleInfo'
 		\ },
 		\ 'separator': { 'left': '', 'right': '' },
 		\ 'subseparator': { 'left': '', 'right': '' }
@@ -387,4 +395,13 @@ if has_key(g:plugs, 'lightline.vim')
 		endif
 		return ''
 	endfunction
+    function! LightlineAleInfo()
+        if !exists('g:ale_buffer_info')
+            return ''
+        endif
+        let l:ale_info = ale#statusline#Count(bufnr('%'))
+        let l:warn_info = l:ale_info.warning ? "\uf420 " . l:ale_info.warning : ''
+        let l:error_info = l:ale_info.error ? "\uf071 " . l:ale_info.error : ''
+        return l:warn_info . ' ' . l:error_info
+    endfunction
 endif

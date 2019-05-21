@@ -22,7 +22,7 @@ export XDG_CONFIG_HOME="${HOME}/.config"
 export XDG_CACHE_HOME="${HOME}/.cache"
 export XDG_DATA_HOME="${HOME}/.local/share"
 export DLHOME="${HOME}/Download"
-export TERM="xterm-256color"
+# export TERM="xterm-256color"
 export GITHUB_USER="$(git config user.name | tr -d '\n')"
 export WORDCHARS='*?_.[]~-=&;!#$%^(){}<>' 
 
@@ -67,9 +67,6 @@ peco-src() {
     zle reset-prompt
 }
 
-zle -N peco-src
-bindkey '\C-f' peco-src
-
 function peco-history-selection() {
     BUFFER=`history -n 1 | tac | awk '!a[$0]++' | peco`
     CURSOR=$#BUFFER
@@ -77,12 +74,25 @@ function peco-history-selection() {
 }
 
 zle -N peco-history-selection
-bindkey '\C-r' peco-history-selection
-
+zle -N peco-src
 
 # chlorochrule's original keybind
-bindkey -e
-bindkey '\C-o' backward-delete-char
+bindkey -v
+bindkey "jj" vi-cmd-mode
+bindkey -M viins '^?' backward-delete-char
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^D' delete-char-or-list
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^N' down-line-or-history
+bindkey -M viins '^P' up-line-or-history
+bindkey -M viins '^U' backward-kill-line
+bindkey -M viins '^W' backward-kill-word
+bindkey -M viins '^Y' yank
+bindkey -M viins '\C-e'  forward-word
+bindkey -M viins '\C-a'  backward-word
+
+bindkey '\C-r' peco-history-selection
+bindkey '\C-f' peco-src
 
 # tmux ignore keys
 bindkey -r '\C-g'
