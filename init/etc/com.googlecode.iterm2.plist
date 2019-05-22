@@ -767,9 +767,9 @@
 	<key>NSWindow Frame NSFontPanel</key>
 	<string>584 76 445 77 0 0 1440 900 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>395 384 796 486 0 0 1440 900 </string>
+	<string>395 358 796 486 0 0 1440 900 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>0 0 810 502 0 0 1440 900 </string>
+	<string>132 137 890 552 0 0 1440 900 </string>
 	<key>New Bookmarks</key>
 	<array>
 		<dict>
@@ -1998,11 +1998,11 @@
 			<key>Only The Default BG Color Uses Transparency</key>
 			<false/>
 			<key>Option Key Sends</key>
-			<integer>0</integer>
+			<integer>2</integer>
 			<key>Prompt Before Closing 2</key>
 			<false/>
 			<key>Right Option Key Sends</key>
-			<integer>0</integer>
+			<integer>2</integer>
 			<key>Rows</key>
 			<integer>25</integer>
 			<key>Screen</key>
