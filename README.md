@@ -30,7 +30,7 @@ bash -c "$(curl -fsSL https://github.com/hbin/top-programming-fonts/raw/master/i
 ```
 Inherit PATH in sudo
 ```bash
-visudo /etc/sudoers
+sudo visudo
 ```
 visudo(/etc/sudoers)
 ```
