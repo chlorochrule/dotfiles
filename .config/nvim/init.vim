@@ -204,7 +204,7 @@ nnoremap <silent><Leader>Q :<C-u>bd<CR>
 nnoremap <silent><Leader>- :<C-u>split<CR>
 nnoremap <silent><Leader>\ :<C-u>vsplit<CR>
 nnoremap <C-o> o<ESC>
-nnoremap <silent>X <C-o>
+nnoremap <silent>Q <C-o>
 
 " inoremap
 inoremap jj <ESC>
