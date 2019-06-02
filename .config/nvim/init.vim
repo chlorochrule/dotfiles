@@ -60,6 +60,7 @@ Plug 'davidhalter/jedi-vim', {'for': 'python'}
 Plug 'itchyny/lightline.vim'
 Plug 'joshdick/onedark.vim'
 Plug 'junegunn/vim-easy-align'
+Plug 'mengelbrecht/lightline-bufferline'
 Plug 'Shougo/neosnippet'
 Plug 'Shougo/neosnippet-snippets'
 Plug 'Shougo/deoplete.nvim'
@@ -368,33 +369,33 @@ if has_key(g:plugs, 'vim-gitgutter')
 endif
 
 if has_key(g:plugs, 'lightline.vim')
-	let g:lightline = {
+    let g:lightline = {
         \ 'colorscheme': 'one',
         \ 'active': {
         \     'left' : [['mode', 'paste'], ['fugitive', 'filename', 'readonly', 'modified']],
         \     'right': [['lineinfo'], ['percent'], ['ale', 'char_code', 'fileformat', 'fileencoding', 'filetype']]
         \ }, 
-		\ 'component': {
-		\   'lineinfo': ' %3l:%-2v',
-		\ },
-		\ 'component_function': {
-		\   'readonly': 'LightlineReadonly',
-		\   'fugitive': 'LightlineFugitive',
+        \ 'component': {
+        \   'lineinfo': ' %3l:%-2v',
+        \ },
+        \ 'component_function': {
+        \   'readonly': 'LightlineReadonly',
+        \   'fugitive': 'LightlineFugitive',
         \   'ale'     : 'LightlineAleInfo'
-		\ },
-		\ 'separator': { 'left': '', 'right': '' },
-		\ 'subseparator': { 'left': '', 'right': '' }
-		\ }
-	function! LightlineReadonly()
-		return &readonly ? '' : ''
-	endfunction
-	function! LightlineFugitive()
-		if exists('*fugitive#head')
-			let branch = fugitive#head()
-			return branch !=# '' ? ''.branch : ''
-		endif
-		return ''
-	endfunction
+        \ },
+        \ 'separator': { 'left': '', 'right': '' },
+        \ 'subseparator': { 'left': '', 'right': '' }
+        \ }
+    function! LightlineReadonly()
+        return &readonly ? '' : ''
+    endfunction
+    function! LightlineFugitive()
+        if exists('*fugitive#head')
+            let branch = fugitive#head()
+            return branch !=# '' ? ''.branch : ''
+        endif
+        return ''
+    endfunction
     function! LightlineAleInfo()
         if !exists('g:ale_buffer_info')
             return ''
