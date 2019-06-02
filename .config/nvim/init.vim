@@ -165,7 +165,16 @@ noremap <C-t> <Nop>
 let mapleader = "\<Space>"
 nnoremap <Space> <Nop>
 
-nnoremap q <Nop>
+function! s:quit_buffer() abort
+    if len(getbufinfo({'buflisted': 1})) != 1
+        bd
+    else
+        q
+    endif
+endfunction
+command! QuitBuffer call <SID>quit_buffer()
+
+nnoremap <silent>q :QuitBuffer<CR>
 nnoremap <silent><ESC> :<C-u>nohlsearch<CR>
 nnoremap > >>
 nnoremap < <<
@@ -181,8 +190,8 @@ nnoremap gk k
 nnoremap ZQ <Nop>
 nnoremap s *N
 nnoremap x "_x
-nnoremap H gT
-nnoremap L gt
+nnoremap <silent>L :<C-u>bnext<CR>
+nnoremap <silent>H :<C-u>bprevious<CR>
 nnoremap K 5gk
 nnoremap J 5gj
 nnoremap Y y$
@@ -195,6 +204,7 @@ nnoremap <silent><Leader>Q :<C-u>bd<CR>
 nnoremap <silent><Leader>- :<C-u>split<CR>
 nnoremap <silent><Leader>\ :<C-u>vsplit<CR>
 nnoremap <C-o> o<ESC>
+nnoremap <silent>X <C-o>
 
 " inoremap
 inoremap jj <ESC>
@@ -371,6 +381,9 @@ endif
 if has_key(g:plugs, 'lightline.vim')
     let g:lightline = {
         \ 'colorscheme': 'one',
+        \ 'tabline': {'left': [['buffers']], 'right': [['close']]},
+        \ 'component_expand': {'buffers': 'lightline#bufferline#buffers'},
+        \ 'component_type': {'buffers': 'tabsel'},
         \ 'active': {
         \     'left' : [['mode', 'paste'], ['fugitive', 'filename', 'readonly', 'modified']],
         \     'right': [['lineinfo'], ['percent'], ['ale', 'char_code', 'fileformat', 'fileencoding', 'filetype']]
