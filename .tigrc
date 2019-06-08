@@ -1,2 +1,13 @@
 set main-view = id date author commit-title:graph=yes,refs=yes
 set vertical-split = yes
+set mouse = true
+set tab-size = 4
+set ignore-case = true
+set line-graphics = utf-8
+
+bind main R <git rebase -i %(commit)
+bind diff R <git rebase -i %(commit)
+bind refs N ?git checkout -b %(prompt) %(branch)
+bind status C <git commit
+bind status c !git commit
+bind status + ?git commit --amend
