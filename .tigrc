@@ -6,8 +6,16 @@ set ignore-case = true
 set line-graphics = utf-8
 
 bind main R <git rebase -i %(commit)
+bind main ! <git revert %(commit)
 bind diff R <git rebase -i %(commit)
-bind refs N ?git checkout -b %(prompt) %(branch)
+bind diff C ?git cherry-pick %(commit)
+bind refs N <?git checkout -b %(prompt) %(branch)
+bind refs C !git checkout %(branch)
+bind refs F @git fetch %(remote) %(branch)
 bind status C <git commit
 bind status c !git commit
-bind status + ?git commit --amend
+bind status + !git commit --amend
+bind generic ; :
+bind generic S @git stash
+bind generic P @git stash pop
+bind generic <Ctrl-r> refresh
