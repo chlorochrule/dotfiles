@@ -287,7 +287,6 @@ if has_key(g:plugs, 'deoplete.nvim')
 endif
 
 if has_key(g:plugs, 'denite.nvim')
-    nnoremap <silent>m :<C-u>Denite -mode=normal -immediately buffer<CR>
     nnoremap <silent>t :<C-u>tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
     nnoremap <silent>T :<C-u>-tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
     nnoremap <silent><Leader>o :<C-u>Denite -mode=normal -default-action=tabopen file_rec<CR>
