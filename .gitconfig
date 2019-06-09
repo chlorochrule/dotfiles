@@ -8,3 +8,5 @@
 [alias]
 	pr = pull-request
 	open = browse
+[rebase]
+    autostash = true
