@@ -240,7 +240,6 @@ vnoremap s y/<C-r>"<CR>N
 vnoremap <Tab> %
 
 " readonly
-Gautocmd BufReadPost * if &readonly | nnoremap <buffer>q :<C-u>bd<CR> | endif
 Gautocmd BufWritePost ~/.config/nvim/init.vim :<C-u>source ~/.config/nvim/init.vim<CR>
 
 
@@ -287,20 +286,16 @@ if has_key(g:plugs, 'deoplete.nvim')
 endif
 
 if has_key(g:plugs, 'denite.nvim')
-    nnoremap <silent>t :<C-u>tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
-    nnoremap <silent>T :<C-u>-tabe %<CR>:Denite -mode=normal -immediately buffer<CR>
-    nnoremap <silent><Leader>o :<C-u>Denite -mode=normal -default-action=tabopen file_rec<CR>
-    nnoremap <silent><Leader>O :<C-u>DeniteBufferDir -mode=normal -default-action=tabopen file_rec<CR>
-    nnoremap <silent><Leader>g :<C-u>Denite -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
+    nnoremap <silent><Leader>g :<C-u>Denite -buffer-name=search-buffer-denite grep<CR>
     nnoremap <silent><Leader>G :<C-u>Denite -resume -buffer-name=search-buffer-denite<CR>
-    nnoremap <silent><Leader>s :<C-u>DeniteCursorWord -mode=normal -default-action=tabopen -auto-preview -buffer-name=search-buffer-denite grep<CR>
+    nnoremap <silent><Leader>s :<C-u>DeniteCursorWord -buffer-name=search-buffer-denite grep<CR>
     nnoremap <silent><Leader>b :<C-u>Denite -mode=normal buffer<CR>
 endif
 
 if has_key(g:plugs, 'vaffle.vim')
     let g:vaffle_force_delete = 1
     let g:vaffle_show_hidden_files = 1
-    nnoremap <silent><Leader>v :<C-u>Vaffle<CR>
+    nnoremap <silent><Leader>o :<C-u>Vaffle<CR>
     Gautocmdft vaffle nmap <silent><buffer><nowait> q <Plug>(vaffle-quit)
 endif
 
@@ -380,7 +375,7 @@ endif
 if has_key(g:plugs, 'lightline.vim')
     let g:lightline = {
         \ 'colorscheme': 'one',
-        \ 'tabline': {'left': [['buffers']], 'right': [['close']]},
+        \ 'tabline': {'left': [['buffers']], 'right': []},
         \ 'component_expand': {'buffers': 'lightline#bufferline#buffers'},
         \ 'component_type': {'buffers': 'tabsel'},
         \ 'active': {
@@ -399,12 +394,12 @@ if has_key(g:plugs, 'lightline.vim')
         \ 'subseparator': { 'left': '', 'right': '' }
         \ }
     function! LightlineReadonly()
-        return &readonly ? '' : ''
+        return &readonly ? "\ue0a2" : ''
     endfunction
     function! LightlineFugitive()
         if exists('*fugitive#head')
             let branch = fugitive#head()
-            return branch !=# '' ? ''.branch : ''
+            return branch !=# '' ? "\ue725 ".branch : ''
         endif
         return ''
     endfunction

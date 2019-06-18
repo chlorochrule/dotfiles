@@ -195,7 +195,8 @@ alias ...='../..'
 alias ....='../../..'
 alias .....='../../../..'
 
-alias -g L='| less'
+alias -g view='nvim -R'
+alias -g V='| view'
 alias -g G='| grep'
 
 if which pbcopy >/dev/null 2>&1 ; then
