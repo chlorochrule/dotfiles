@@ -64,6 +64,7 @@ Plug 'itchyny/lightline.vim'
 Plug 'joshdick/onedark.vim'
 Plug 'junegunn/vim-easy-align'
 Plug 'mengelbrecht/lightline-bufferline'
+Plug 'nathanaelkane/vim-indent-guides'
 Plug 'Shougo/neosnippet'
 Plug 'Shougo/neosnippet-snippets'
 Plug 'Shougo/deoplete.nvim'
@@ -430,4 +431,12 @@ if has_key(g:plugs, 'lightline.vim')
     let l:error_info = l:ale_info.error ? "\uf071 " . l:ale_info.error : ''
     return l:warn_info . ' ' . l:error_info
   endfunction
+endif
+
+if has_key(g:plugs, 'vim-indent-guides')
+  let g:indent_guides_enable_on_vim_startup = 1
+  let g:indent_guides_auto_colors = 0
+  " base color rgb(40,44,52), #282C34
+  Gautocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#2E323A ctermbg=3 " +6
+  Gautocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=#343840 ctermbg=3 " +12
 endif
