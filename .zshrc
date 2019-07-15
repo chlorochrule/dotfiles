@@ -181,7 +181,7 @@ unsetopt caseglob
 
 # alias
 alias la='ls -a'
-alias ll='ls -l'
+alias ll='ls -la'
 
 alias cp='cp -i'
 alias mv='mv -i'
