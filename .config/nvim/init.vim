@@ -218,10 +218,10 @@ inoremap <C-w> <ESC>ciw
 inoremap <C-r> <C-o><C-r>
 inoremap <C-u> <C-o>u
 inoremap <C-d> <C-u>
-inoremap <C-h> <Left>
-inoremap <expr><C-j> pumvisible() ? "\<C-n>" : "\<Down>"
-inoremap <expr><C-k> pumvisible() ? "\<C-p>" : "\<Up>"
-inoremap <C-l> <Right>
+inoremap <C-b> <Left>
+inoremap <expr><C-n> pumvisible() ? "\<C-n>" : "\<Down>"
+inoremap <expr><C-p> pumvisible() ? "\<C-p>" : "\<Up>"
+inoremap <C-f> <Right>
 " inoremap <C-t> <ESC>g;
 inoremap <C-Space> <Space>
 inoremap <C-BS> <BS>

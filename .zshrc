@@ -87,20 +87,19 @@ bindkey -M viins '^N' down-line-or-history
 bindkey -M viins '^P' up-line-or-history
 bindkey -M viins '^U' backward-kill-line
 bindkey -M viins '^W' backward-kill-word
+bindkey -M viins '^H'  backward-delete-char
 bindkey -M viins '^Y' yank
-bindkey -M viins '\C-e'  forward-word
-bindkey -M viins '\C-a'  backward-word
+bindkey -M viins '^[b'  forward-word
+bindkey -M viins '^[f'  backward-word
 
 bindkey '\C-r' peco-history-selection
-bindkey '\C-f' peco-src
+bindkey '\C-l' peco-src
+# bindkey -M viins '^J' peco-src-next
+# bindkey -M viins '^K' peco-src-previous
 
 # tmux ignore keys
 bindkey -r '\C-g'
 bindkey -r '\C-t'
-bindkey -r '\C-h'
-bindkey -r '\C-j'
-bindkey -r '\C-k'
-bindkey -r '\C-l'
 
 # history
 HISTFILE=~/.zsh_history
