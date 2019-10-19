@@ -89,8 +89,10 @@ bindkey -M viins '^U' backward-kill-line
 bindkey -M viins '^W' backward-kill-word
 bindkey -M viins '^H'  backward-delete-char
 bindkey -M viins '^Y' yank
-bindkey -M viins '^[b'  forward-word
-bindkey -M viins '^[f'  backward-word
+bindkey -M viins '^F'  forward-char
+bindkey -M viins '^B'  backward-char
+bindkey -M viins '^[f'  forward-word
+bindkey -M viins '^[b'  backward-word
 
 bindkey '\C-r' peco-history-selection
 bindkey '\C-l' peco-src
