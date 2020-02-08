@@ -58,6 +58,9 @@ peco-src() {
     if [ ! -f "$peco_src_dir/mru_src.txt" ]; then
         touch "$peco_src_dir/mru_src.txt"
     fi
+    mru_list=$(cat $peco_src_dir/mru_src.txt)
+    echo -n > $peco_src_dir/mru_src.txt
+    echo "$mru_list" | xargs -IDIR sh -c "test -d $(ghq root)/DIR && echo DIR >> $peco_src_dir/mru_src.txt"
     repos_root="$({cat $peco_src_dir/mru_src.txt ; ghq list ; } | awk '!a[$0]++' | peco)"
     if [ -n "$repos_root" ]; then
         BUFFER="builtin cd $ghq_root/$repos_root"
@@ -216,7 +219,7 @@ has "hub" && alias -g git=hub
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
-export PATH="$PYENV_ROOT/anaconda/bin:$PATH"
+# export PATH="$PYENV_ROOT/anaconda/bin:$PATH"
 
 # golang
 export PATH="${PATH}:/usr/local/go/bin"

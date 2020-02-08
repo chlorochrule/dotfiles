@@ -28,7 +28,7 @@ case ${OSTYPE} in
         # xcode
         xcode-select --install
         # brew
-        ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+        /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
         ;;
     linux*)
         # ubuntu
