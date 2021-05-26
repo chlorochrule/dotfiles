@@ -1,6 +1,0 @@
-#!/bin/bash
-[ -z "${DOTHOME}" ] && export DOTHOME="${HOME}/.dotfiles"
-profile="$(gsettings get org.gnome.Terminal.ProfilesList default)"
-profile="${profile:1:-1}"
-dconf dump "/org/gnome/terminal/legacy/profiles:/:$profile/" > "${DOTHOME}/init/etc/gnome-profile.conf"
-
