@@ -24,6 +24,10 @@ command! -nargs=* Gautocmdft autocmd vimrc_augroup FileType <args>
 " filetype autocmd
 Gautocmdft yaml setlocal tabstop=2 softtabstop=2 shiftwidth=2
 Gautocmdft vim setlocal tabstop=2 softtabstop=2 shiftwidth=2
+Gautocmdft javascript setlocal tabstop=2 softtabstop=2 shiftwidth=2
+Gautocmdft cfg setlocal tabstop=2 softtabstop=2 shiftwidth=2
+Gautocmdft xml setlocal tabstop=2 softtabstop=2 shiftwidth=2
+Gautocmdft ruby setlocal tabstop=2 softtabstop=2 shiftwidth=2
 
 " true color setting
 set termguicolors
@@ -99,7 +103,7 @@ set cursorline
 set ruler
 set nowrap
 set notitle
-set colorcolumn=79
+set colorcolumn=119
 set laststatus=2
 set showtabline=2
 

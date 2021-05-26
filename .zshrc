@@ -107,9 +107,9 @@ bindkey -r '\C-g'
 bindkey -r '\C-t'
 
 # history
-HISTFILE=~/.zsh_history
-HISTSIZE=100000
-SAVEHIST=100000
+export HISTFILE=~/.zsh_history
+export HISTSIZE=100000
+export SAVEHIST=100000
 
 
 # prompt style
@@ -215,15 +215,47 @@ has "nvim" && alias -g vi=nvim
 has "hub" && alias -g git=hub
 
 
-# pyenv and anaconda3
+# jenv
+export JENV_ROOT="$HOME/.jenv"
+if [ -d "${JENV_ROOT}" ]; then
+  export PATH="$JENV_ROOT/bin:$PATH"
+  eval "$(jenv init -)"
+fi
+
+# JAVA_HOME
+export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+export JAVA_TOOL_OPTIONS='-Duser.language=en -Xmx8192m -Xss512m'
+
+# pyenv
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-# export PATH="$PYENV_ROOT/anaconda/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init - | grep -v echo)"
 
 # golang
 export PATH="${PATH}:/usr/local/go/bin"
 export GOPATH="${HOME}"
+
+## aws
+autoload -Uz bashcompinit
+bashcompinit
+complete -C $(which aws_completer) aws
+
+# pip zsh completion start
+function _pip_completion {
+  local words cword
+  read -Ac words
+  read -cn cword
+  reply=( $( COMP_WORDS="$words[*]" \
+             COMP_CWORD=$(( cword-1 )) \
+             PIP_AUTO_COMPLETE=1 $words[1] ) )
+}
+compctl -K _pip_completion pip
+# pip zsh completion end
+
+
+# added by travis gem
+[ -f /Users/nminami/.travis/travis.sh ] && source /Users/nminami/.travis/travis.sh
 
 # exec tmux
 if ! has "tmux"; then
@@ -237,16 +269,4 @@ else
         fi
     fi
 fi
-
-# pip zsh completion start
-function _pip_completion {
-  local words cword
-  read -Ac words
-  read -cn cword
-  reply=( $( COMP_WORDS="$words[*]" \
-             COMP_CWORD=$(( cword-1 )) \
-             PIP_AUTO_COMPLETE=1 $words[1] ) )
-}
-compctl -K _pip_completion pip
-# pip zsh completion end
 

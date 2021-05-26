@@ -1,6 +1,6 @@
 [user]
 	email = minami.polly@gmail.com
-	name = chlorochrule
+	name = Naoto Minami
 [ghq]
 	root = ~/src
 [core]
@@ -10,3 +10,5 @@
 	open = browse
 [rebase]
     autostash = true
+[pull]
+	rebase = false
