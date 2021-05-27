@@ -1,3 +1,6 @@
+eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(/usr/local/Homebrew/bin/brew shellenv)"
+
 autoload -Uz terminfo
 
 has() {
@@ -211,8 +214,8 @@ elif which xsel >/dev/null 2>&1 ; then
     alias -g clipboard='xsel --clipboard --input'
 fi
 
-has "nvim" && alias -g vi=nvim
-has "hub" && alias -g git=hub
+has "nvim" && alias vi=nvim
+has "hub" && eval "$(hub alias -s)" && compdef hub=git
 
 
 # jenv
