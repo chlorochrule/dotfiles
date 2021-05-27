@@ -225,9 +225,6 @@ if [ -d "${JENV_ROOT}" ]; then
   eval "$(jenv init -)"
 fi
 
-# JAVA_HOME
-export JAVA_TOOL_OPTIONS='-Duser.language=en -Xmx8192m -Xss512m'
-
 # pyenv
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
