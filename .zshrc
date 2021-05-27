@@ -226,7 +226,6 @@ if [ -d "${JENV_ROOT}" ]; then
 fi
 
 # JAVA_HOME
-export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
 export JAVA_TOOL_OPTIONS='-Duser.language=en -Xmx8192m -Xss512m'
 
 # pyenv
