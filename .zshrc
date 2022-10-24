@@ -1,5 +1,4 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
-eval "$(/usr/local/Homebrew/bin/brew shellenv)"
 
 autoload -Uz terminfo
 
