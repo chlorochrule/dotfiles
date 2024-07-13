@@ -228,7 +228,7 @@ fi
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
-eval "$(pyenv init - | grep -v echo)"
+eval "$(pyenv init -)"
 
 # golang
 export PATH="${PATH}:/usr/local/go/bin"
@@ -255,6 +255,10 @@ compctl -K _pip_completion pip
 # added by travis gem
 [ -f /Users/nminami/.travis/travis.sh ] && source /Users/nminami/.travis/travis.sh
 
+
+# Load Angular CLI autocompletion.
+source <(ng completion script)
+
 # exec tmux
 if ! has "tmux"; then
     echo "tmux not found" 1>&2
@@ -267,4 +271,3 @@ else
         fi
     fi
 fi
-

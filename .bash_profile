@@ -32,3 +32,4 @@ if [ -d "$HOME/.local/bin" ] ; then
 fi
 
 has "zsh" && exec zsh
+. "$HOME/.cargo/env"
