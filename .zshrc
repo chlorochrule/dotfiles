@@ -259,14 +259,17 @@ compctl -K _pip_completion pip
 # Load Angular CLI autocompletion.
 source <(ng completion script)
 
+# gpg
+export GPG_TTY=$TTY
+
 # exec tmux
 if ! has "tmux"; then
     echo "tmux not found" 1>&2
 else
-    if [[ -z "${TMUX}" && ! -z "${PS1}" ]]; then
+    if [[ "$TERM_PROGRAM" == "iTerm.app" && -z "${TMUX}" && ! -z "${PS1}" ]]; then
         if tmux has-session &> /dev/null && [[ -n "$(tmux ls | grep -v attached)" ]]; then
             exec tmux a
-        else
+        elif [[ "$TERM_PROGRAM" == "iTerm.app" ]]; then
             exec tmux
         fi
     fi
