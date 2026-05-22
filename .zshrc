@@ -189,9 +189,6 @@ unsetopt caseglob
 alias la='ls -a'
 alias ll='ls -la'
 
-alias cp='cp -i'
-alias mv='mv -i'
-
 alias mkdir='mkdir -p'
 
 alias p='pwd'
@@ -234,6 +231,11 @@ eval "$(pyenv init -)"
 export PATH="${PATH}:/usr/local/go/bin"
 export GOPATH="${HOME}"
 
+# uv
+export PATH="${PATH}:$HOME/.local/share/../bin"
+eval "$(uv generate-shell-completion zsh)"
+eval "$(uvx --generate-shell-completion zsh)"
+
 ## aws
 autoload -Uz bashcompinit
 bashcompinit
@@ -274,3 +276,10 @@ else
         fi
     fi
 fi
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+fpath=(/Users/nminami/.docker/completions $fpath)
+autoload -Uz compinit
+compinit
+# End of Docker CLI completions
+
+. "$HOME/.local/share/../bin/env"

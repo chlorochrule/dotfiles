@@ -33,3 +33,7 @@ fi
 
 has "zsh" && exec zsh
 . "$HOME/.cargo/env"
+
+. "$HOME/.local/share/../bin/env"
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"

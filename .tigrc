@@ -1,6 +1,5 @@
 set main-view = id date author commit-title:graph=yes,refs=yes
 set vertical-split = yes
-set mouse = true
 set tab-size = 4
 set ignore-case = true
 set line-graphics = utf-8
