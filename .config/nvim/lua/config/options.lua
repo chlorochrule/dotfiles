@@ -7,11 +7,13 @@ opt.ruler = true
 opt.wrap = false
 opt.title = false
 opt.colorcolumn = "119"
-opt.laststatus = 2
+-- laststatusはlualineのglobalstatus有効時に3へ自動設定されるためここでは触らない
 opt.showtabline = 2
 opt.termguicolors = true
 opt.signcolumn = "yes"
 opt.updatetime = 200
+opt.splitright = true
+opt.splitbelow = true
 
 -- case
 opt.ignorecase = true
@@ -25,6 +27,8 @@ opt.shiftwidth = 4
 opt.expandtab = true
 opt.smarttab = true
 opt.shiftround = true
+-- indentexprが設定されるファイルタイプ(treesitter/filetype indentが効くもの)では
+-- 以下は無視される。indentexprの無いファイルタイプのためのフォールバック
 opt.autoindent = true
 opt.smartindent = true
 opt.cindent = true
@@ -45,8 +49,11 @@ opt.undofile = true
 
 -- cmd
 opt.wildmenu = true
-opt.history = 1000
+-- historyの上限は10000で、Neovimのデフォルトも既に10000のため明示設定は不要
 opt.showcmd = true
+opt.inccommand = "split"
+opt.confirm = true
+opt.shortmess:append("c")
 
 -- misc
 opt.clipboard = "unnamedplus"
@@ -61,5 +68,5 @@ opt.sidescroll = 1
 opt.ambiwidth = "single"
 opt.synmaxcol = 320
 opt.fileformats = { "unix", "dos", "mac" }
-opt.completeopt = { "menu", "longest", "noinsert" }
+opt.completeopt = { "menu", "menuone", "noselect" }
 opt.mouse = "a"
