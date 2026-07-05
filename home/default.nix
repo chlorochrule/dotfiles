@@ -39,6 +39,8 @@ in
     awscli2
     gnupg
     gitleaks
+    nodejs
+    nil
   ];
 
   programs.mise = {
