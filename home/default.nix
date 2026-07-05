@@ -18,6 +18,8 @@ in
 
   xdg.configFile."nvim/init.vim".source = linkDotfile ".config/nvim/init.vim";
 
+  home.file."Pictures/ss/.keep".text = "";
+
   home.packages = with pkgs; [
     tig
     ghq
