@@ -283,3 +283,7 @@ compinit
 # End of Docker CLI completions
 
 . "$HOME/.local/share/../bin/env"
+
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/Users/minami/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)

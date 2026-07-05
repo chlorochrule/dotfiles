@@ -28,6 +28,7 @@
               {
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
+                home-manager.backupFileExtension = "backup";
                 home-manager.extraSpecialArgs = { username = host.username; };
                 home-manager.users.${host.username} = import ./home;
               }
