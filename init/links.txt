@@ -1,6 +1,0 @@
-.config/nvim
-.zshrc
-.tmux.conf
-.bash_profile
-.gitconfig
-.tigrc
