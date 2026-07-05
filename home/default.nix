@@ -67,6 +67,29 @@ in
     enableZshIntegration = true;
   };
 
+  programs.ghostty = {
+    enable = true;
+    package = null; # Homebrew caskのghosttyアプリを使う。設定ファイルのみNix管理
+    settings = {
+      macos-option-as-alt = true;
+
+      font-family = [ "Menlo" "Symbols Nerd Font Mono" ];
+      font-size = 14;
+
+      cursor-style-blink = false;
+
+      selection-word-chars = "/-+\\\\~_.";
+
+      scrollback-limit = 1000000000; # 1GB、遅延確保なので実用上ほぼ無制限
+
+      unfocused-split-opacity = 0.6;
+
+      keybind = [
+        "global:ctrl+i=toggle_visibility"
+      ];
+    };
+  };
+
   programs.starship = {
     enable = true;
     enableZshIntegration = true;

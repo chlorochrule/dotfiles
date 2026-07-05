@@ -10,6 +10,8 @@
 
   environment.systemPackages = [ pkgs.vim ];
 
+  fonts.packages = [ pkgs.nerd-fonts.symbols-only ];
+
   environment.systemPath = [ "/opt/homebrew/bin" "/opt/homebrew/sbin" ];
 
   system.defaults = {
