@@ -38,6 +38,7 @@ in
     yq
     awscli2
     gnupg
+    gitleaks
   ];
 
   programs.mise = {
@@ -62,6 +63,10 @@ in
       push.autoSetupRemote = true;
       alias.get = "!ghq get";
     };
+    hooks.pre-commit = pkgs.writeShellScript "gitleaks-pre-commit" ''
+      set -eu
+      ${pkgs.gitleaks}/bin/gitleaks protect --staged --redact -v
+    '';
   };
 
   programs.fzf = {
