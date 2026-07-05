@@ -51,6 +51,7 @@ in
       pull.rebase = false;
       init.defaultBranch = "main";
       push.autoSetupRemote = true;
+      alias.get = "!ghq get";
     };
   };
 
@@ -124,6 +125,31 @@ in
 
       # tmux ignore keys
       bindkey -r '\C-g'
+
+      # ghq fuzzy cd (MRU-first, like the old peco-src)
+      ghq-fzf-cd() {
+        local ghq_root mru_dir mru_file mru_list selected
+        ghq_root="$(git config ghq.root)"
+        mru_dir="$XDG_CACHE_HOME/ghq-fzf"
+        mru_file="$mru_dir/mru.txt"
+        mkdir -p "$mru_dir"
+        [ -f "$mru_file" ] || touch "$mru_file"
+
+        mru_list=$(cat "$mru_file")
+        : > "$mru_file"
+        echo "$mru_list" | xargs -I DIR sh -c "test -d $(ghq root)/DIR && echo DIR >> $mru_file"
+
+        selected="$({ cat "$mru_file"; ghq list; } | awk '!a[$0]++' | fzf)"
+
+        if [ -n "$selected" ]; then
+          BUFFER="builtin cd $ghq_root/$selected"
+          zle accept-line
+          echo "$(echo "$selected" | cat - "$mru_file" | awk '!a[$0]++')" > "$mru_file"
+        fi
+        zle reset-prompt
+      }
+      zle -N ghq-fzf-cd
+      bindkey '^L' ghq-fzf-cd
 
       # prompt style
       autoload -Uz colors; colors
