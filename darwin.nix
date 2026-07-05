@@ -15,7 +15,7 @@
     onActivation = {
       autoUpdate = false;
       upgrade = false;
-      cleanup = "none";  # 最初はnone。棚卸し確認後にzapへ上げる
+      cleanup = "zap";  # casks棚卸し完了(2026-07-05)、noneからzapへ変更
     };
     casks = [
       "claude"
