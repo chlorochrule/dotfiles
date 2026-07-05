@@ -65,6 +65,54 @@ in
     enableZshIntegration = true;
   };
 
+  programs.starship = {
+    enable = true;
+    enableZshIntegration = true;
+    settings = {
+      add_newline = false;
+      format = "$username$hostname$directory$character";
+      right_format = "$git_branch$git_state$git_status";
+
+      username = {
+        style_user = "cyan";
+        style_root = "bold underline cyan";
+        format = "[$user]($style)";
+        show_always = true;
+      };
+
+      hostname = {
+        ssh_only = true;
+        format = "[$hostname]($style) ";
+        style = "white";
+      };
+
+      directory = {
+        style = "cyan";
+        format = "[\\[$path\\]]($style) ";
+        truncation_length = 1;
+        truncation_symbol = "";
+      };
+
+      character = {
+        success_symbol = "";
+        error_symbol = "";
+        vicmd_symbol = "";
+      };
+
+      git_branch = {
+        format = "[($branch)]($style)";
+        style = "green";
+      };
+
+      git_state = {
+        format = "[|$state]($style)";
+        style = "red";
+      };
+
+      git_status.disabled = true;
+    };
+  };
+
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -151,29 +199,11 @@ in
       zle -N ghq-fzf-cd
       bindkey '^L' ghq-fzf-cd
 
-      # prompt style
-      autoload -Uz colors; colors
-      tmp_prompt="%{$fg[cyan]%}%n[%c] %{$reset_color%}"
-      [ $UID -eq 0 ] && tmp_prompt="%B%U$tmp_prompt%u%b"
-      PROMPT=$tmp_prompt
-      [ -n "$REMOTEHOST$SSH_CONNECTION" ] && PROMPT="%{$fg[white]%}''${HOST%%.*} $PROMPT"
-
       # word separator
       autoload -Uz select-word-style
       select-word-style default
       zstyle ':zle:*' word-chars " /=;@:{},.&'\"|"
       zstyle ':zle:*' word-style unspecified
-
-      # vcs
-      autoload -Uz vcs_info
-      autoload -Uz add-zsh-hook
-      zstyle ':vcs_info:*' formats '%F{green}(%s)-[%b]%f'
-      zstyle ':vcs_info:*' actionformats '%F{red}(%s)-[%b|%a]%f'
-      function _update_vcs_info_msg() {
-          LANG=en_US.UTF-8 vcs_info
-          RPROMPT=$vcs_info_msg_0_
-      }
-      add-zsh-hook precmd _update_vcs_info_msg
 
       # option
       setopt print_eight_bit no_beep no_flow_control ignore_eof interactive_comments
