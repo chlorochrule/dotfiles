@@ -18,6 +18,13 @@ in
 
   xdg.configFile."nvim/init.vim".source = linkDotfile ".config/nvim/init.vim";
 
+  home.file.".claude/settings.json".source = linkDotfile "home/claude/settings.json";
+  home.file.".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
+  home.file.".claude/commands".source = linkDotfile "home/claude/commands";
+  home.file.".claude/skills".source = linkDotfile "home/claude/skills";
+  home.file.".claude/agents".source = linkDotfile "home/claude/agents";
+  home.file.".claude/hooks".source = linkDotfile "home/claude/hooks";
+
   home.file."Pictures/ss/.keep".text = "";
 
   home.packages = with pkgs; [
@@ -77,6 +84,8 @@ in
       font-size = 14;
 
       cursor-style-blink = false;
+
+      bell-features = "audio,attention,title,border";
 
       selection-word-chars = "/-+\\\\~_.";
 
@@ -195,6 +204,10 @@ in
       eval "$(uvx --generate-shell-completion zsh)"
 
       export GPG_TTY=$TTY
+
+      # zshのデフォルトはkill-whole-line(カーソル位置に関わらず行全体を削除)。
+      # bash/readline風にカーソルより前だけ削除する挙動に上書きする
+      bindkey '^U' backward-kill-line
 
       # tmux ignore keys
       bindkey -r '\C-g'

@@ -1,0 +1,18 @@
+{
+  "model": "sonnet",
+  "tui": "fullscreen",
+  "theme": "dark",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\a\\033]9;Claude Code needs your input\\007' > /dev/tty"
+          }
+        ]
+      }
+    ]
+  }
+}
