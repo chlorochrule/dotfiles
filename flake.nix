@@ -7,9 +7,13 @@
       url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager/release-25.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, nix-darwin }:
+  outputs = { self, nixpkgs, nix-darwin, home-manager }:
     let
       mkHost = hostPath:
         let host = import hostPath;
@@ -18,7 +22,16 @@
           value = nix-darwin.lib.darwinSystem {
             system = host.system;
             specialArgs = { username = host.username; };
-            modules = [ ./darwin.nix ];
+            modules = [
+              ./darwin.nix
+              home-manager.darwinModules.home-manager
+              {
+                home-manager.useGlobalPkgs = true;
+                home-manager.useUserPackages = true;
+                home-manager.extraSpecialArgs = { username = host.username; };
+                home-manager.users.${host.username} = import ./home;
+              }
+            ];
           };
         };
 

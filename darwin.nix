@@ -2,6 +2,8 @@
   system.stateVersion = 6;
   system.primaryUser = username;
 
+  users.users.${username}.home = "/Users/${username}";
+
   documentation.enable = false;
 
   nix.settings.experimental-features = "nix-command flakes";
