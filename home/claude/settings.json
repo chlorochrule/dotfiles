@@ -2,6 +2,9 @@
   "model": "sonnet",
   "tui": "fullscreen",
   "theme": "dark",
+  "permissions": {
+    "defaultMode": "auto"
+  },
   "hooks": {
     "Notification": [
       {
