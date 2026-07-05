@@ -1,7 +1,10 @@
-{ pkgs, ... }: {
+{ ... }: {
   home.stateVersion = "25.11";
 
-  home.packages = [ pkgs.mise ];
+  programs.mise = {
+    enable = true;
+    enableZshIntegration = true;
+  };
 
   programs.git = {
     enable = true;
@@ -20,10 +23,5 @@
     };
   };
 
-  programs.zsh = {
-    enable = true;
-    initContent = ''
-      eval "$(mise activate zsh)"
-    '';
-  };
+  programs.zsh.enable = true;
 }
