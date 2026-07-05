@@ -18,7 +18,6 @@ in
 
   xdg.configFile."nvim".source = linkDotfile ".config/nvim";
 
-  home.file.".claude/settings.json".source = linkDotfile "home/claude/settings.json";
   home.file.".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
   home.file.".claude/commands".source = linkDotfile "home/claude/commands";
   home.file.".claude/skills".source = linkDotfile "home/claude/skills";
@@ -53,10 +52,7 @@ in
     enable = true;
     lfs.enable = true;
     settings = {
-      user = {
-        name = "Naoto Minami";
-        email = "minami.polly@gmail.com";
-      };
+      # user.name/emailはホスト固有(hosts/<hostname>/home.nix)で宣言する
       ghq.root = "~/src";
       core.editor = "nvim";
       rebase.autostash = true;

@@ -70,24 +70,6 @@
       upgrade = false;
       cleanup = "zap";  # casks棚卸し完了(2026-07-05)、noneからzapへ変更
     };
-    casks = [
-      "claude"
-      "claude-code@latest"
-      "discord"
-      "ghostty"
-      "google-chrome"
-      "intellij-idea-ce"
-      "jetbrains-toolbox"
-      "menumeters"
-      "nordvpn"
-      "ollama-app"
-      "postman-agent"
-      "rancher"
-      "slack"
-      "spotify"
-      "visual-studio-code"
-      "wireshark-app"
-      "zoom"
-    ];
+    # casksはホスト固有(hosts/<hostname>/darwin.nix)で宣言する
   };
 }

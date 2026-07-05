@@ -24,13 +24,16 @@
             specialArgs = { username = host.username; };
             modules = [
               ./darwin.nix
+              (hostPath + "/darwin.nix")
               home-manager.darwinModules.home-manager
               {
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
                 home-manager.backupFileExtension = "backup";
                 home-manager.extraSpecialArgs = { username = host.username; };
-                home-manager.users.${host.username} = import ./home;
+                home-manager.users.${host.username} = {
+                  imports = [ ./home (hostPath + "/home.nix") ];
+                };
               }
             ];
           };
