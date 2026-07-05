@@ -10,7 +10,7 @@
 
   environment.systemPackages = [ pkgs.vim ];
 
-  fonts.packages = [ pkgs.nerd-fonts.symbols-only ];
+  fonts.packages = [ pkgs.nerd-fonts.symbols-only pkgs.sarasa-gothic ];
 
   environment.systemPath = [ "/opt/homebrew/bin" "/opt/homebrew/sbin" ];
 

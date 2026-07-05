@@ -72,6 +72,7 @@ in
   programs.fzf = {
     enable = true;
     enableZshIntegration = true;
+    defaultOptions = [ "--layout=reverse" ];
   };
 
   programs.eza = {
@@ -85,7 +86,7 @@ in
     settings = {
       macos-option-as-alt = true;
 
-      font-family = [ "Menlo" "Symbols Nerd Font Mono" ];
+      font-family = [ "Menlo" "Sarasa Mono J" "Symbols Nerd Font Mono" ];
       font-size = 14;
 
       cursor-style-blink = false;
