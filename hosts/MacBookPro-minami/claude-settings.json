@@ -82,6 +82,17 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/tmux-status.sh reset"
+          }
+        ]
+      }
     ]
   },
   "tui": "fullscreen",
