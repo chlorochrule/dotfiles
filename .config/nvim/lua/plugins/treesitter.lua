@@ -19,7 +19,8 @@ return {
     },
     auto_install = true,
     highlight = { enable = true },
-    indent = { enable = true },
+    -- pythonはvim-python-pep8-indentに任せる(継続行などtreesitterより正確)
+    indent = { enable = true, disable = { "python" } },
   },
   config = function(_, opts)
     require("nvim-treesitter.configs").setup(opts)
