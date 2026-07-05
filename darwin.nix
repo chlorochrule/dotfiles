@@ -1,4 +1,4 @@
-{ pkgs, username, ... }: {
+{ pkgs, lib, username, ... }: {
   system.stateVersion = 6;
   system.primaryUser = username;
 
@@ -7,6 +7,11 @@
   documentation.enable = false;
 
   nix.settings.experimental-features = "nix-command flakes";
+
+  # terraformはBSL1.1(unfree)なので個別に許可する
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "terraform"
+  ];
 
   environment.systemPackages = [ pkgs.vim ];
 

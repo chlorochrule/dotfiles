@@ -1,10 +1,8 @@
 {
-  "model": "sonnet",
-  "tui": "fullscreen",
-  "theme": "dark",
   "permissions": {
     "defaultMode": "auto"
   },
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -48,6 +46,15 @@
             "command": "$HOME/.claude/hooks/tmux-status.sh working"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/editorconfig-check.sh"
+          }
+        ]
       }
     ],
     "Notification": [
@@ -76,5 +83,7 @@
         ]
       }
     ]
-  }
+  },
+  "tui": "fullscreen",
+  "theme": "dark"
 }

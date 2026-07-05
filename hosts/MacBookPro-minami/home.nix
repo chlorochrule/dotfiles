@@ -1,7 +1,29 @@
-{ config, ... }:
+{ config, lib, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   linkDotfile = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
+
+  # ~/.claude/<name>/ を「共通(home/claude/<name>) + このホスト固有
+  # (./claude/<name>、存在すれば)」をファイル単位でマージして構成する。
+  # 同名ファイルがあればホスト固有側を優先する。
+  # 新規ファイル追加時は(ディレクトリ全体シンボリックリンクと違い)rebuildが必要。
+  claudeDirNames = [ "commands" "skills" "agents" "hooks" ];
+
+  readDirIfExists = path: if builtins.pathExists path then builtins.readDir path else { };
+
+  entriesFor = name:
+    let
+      commonPath = ../../home/claude + "/${name}";
+      hostPath = ./claude + "/${name}";
+      commonRel = "home/claude/${name}";
+      hostRel = "hosts/MacBookPro-minami/claude/${name}";
+      toEntries = relDir: files:
+        lib.mapAttrs' (fname: _:
+          lib.nameValuePair ".claude/${name}/${fname}" { source = linkDotfile "${relDir}/${fname}"; }
+        ) files;
+    in
+    (toEntries commonRel (readDirIfExists commonPath))
+    // (toEntries hostRel (readDirIfExists hostPath));
 in
 {
   programs.git.settings.user = {
@@ -9,16 +31,8 @@ in
     email = "minami.polly@gmail.com";
   };
 
-  home.file.".claude/settings.json".source =
-    linkDotfile "hosts/MacBookPro-minami/claude-settings.json";
-  home.file.".claude/commands".source =
-    linkDotfile "hosts/MacBookPro-minami/claude/commands";
-  home.file.".claude/skills".source =
-    linkDotfile "hosts/MacBookPro-minami/claude/skills";
-  home.file.".claude/agents".source =
-    linkDotfile "hosts/MacBookPro-minami/claude/agents";
-  home.file.".claude/hooks".source =
-    linkDotfile "hosts/MacBookPro-minami/claude/hooks";
-  home.file.".claude/CLAUDE.md".source =
-    linkDotfile "hosts/MacBookPro-minami/claude/CLAUDE.md";
+  home.file = lib.foldl' (acc: name: acc // (entriesFor name)) { } claudeDirNames // {
+    ".claude/settings.json".source =
+      linkDotfile "hosts/MacBookPro-minami/claude-settings.json";
+  };
 }

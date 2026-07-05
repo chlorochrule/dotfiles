@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   linkDotfile = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
@@ -18,6 +18,8 @@ in
 
   xdg.configFile."nvim".source = linkDotfile ".config/nvim";
 
+  home.file.".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
+
   home.file."Pictures/ss/.keep".text = "";
 
   home.packages = with pkgs; [
@@ -34,12 +36,21 @@ in
     gitleaks
     nodejs
     nil
+    terraform
+    direnv
+    pandoc
+    editorconfig-checker
+    gh
+    wget
   ];
 
   programs.mise = {
     enable = true;
     enableZshIntegration = true;
-    globalConfig.tools.uv = "latest";
+    globalConfig.tools = {
+      uv = "latest";
+      deno = "latest";
+    };
   };
 
   programs.git = {
@@ -193,13 +204,10 @@ in
       bindkey "^[[Z" reverse-menu-complete
     '';
 
-    initContent = ''
+    initContent = lib.mkMerge [
+      ''
       # Rancher Desktop
       export PATH="$HOME/.rd/bin:$PATH"
-
-      # uv
-      eval "$(uv generate-shell-completion zsh)"
-      eval "$(uvx --generate-shell-completion zsh)"
 
       export GPG_TTY=$TTY
 
@@ -264,6 +272,12 @@ in
               fi
           fi
       fi
-    '';
+      ''
+      (lib.mkOrder 1500 ''
+        # uv(miseがactivateされた後に実行する必要があるため優先度を上げている)
+        eval "$(uv generate-shell-completion zsh)"
+        eval "$(uvx --generate-shell-completion zsh)"
+      '')
+    ];
   };
 }
