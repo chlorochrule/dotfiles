@@ -18,12 +18,6 @@ in
 
   xdg.configFile."nvim".source = linkDotfile ".config/nvim";
 
-  home.file.".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
-  home.file.".claude/commands".source = linkDotfile "home/claude/commands";
-  home.file.".claude/skills".source = linkDotfile "home/claude/skills";
-  home.file.".claude/agents".source = linkDotfile "home/claude/agents";
-  home.file.".claude/hooks".source = linkDotfile "home/claude/hooks";
-
   home.file."Pictures/ss/.keep".text = "";
 
   home.packages = with pkgs; [
