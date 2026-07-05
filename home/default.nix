@@ -16,7 +16,7 @@ in
   home.file."bin/tmux-renumber-sessions".source = linkDotfile "bin/tmux-renumber-sessions";
   home.file."bin/license".source = linkDotfile "bin/license";
 
-  xdg.configFile."nvim/init.vim".source = linkDotfile ".config/nvim/init.vim";
+  xdg.configFile."nvim".source = linkDotfile ".config/nvim";
 
   home.file.".claude/settings.json".source = linkDotfile "home/claude/settings.json";
   home.file.".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
