@@ -3,6 +3,7 @@
     "defaultMode": "auto"
   },
   "model": "sonnet",
+  "language": "japanese",
   "hooks": {
     "SessionStart": [
       {
