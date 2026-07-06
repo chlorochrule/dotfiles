@@ -31,6 +31,22 @@
       NSAutomaticSpellingCorrectionEnabled = false;
       AppleShowAllExtensions = true;
       NSWindowResizeTime = 0.001;
+      AppleInterfaceStyle = "Dark";
+    };
+
+    trackpad = {
+      Clicking = true;
+      Dragging = true;
+      TrackpadRightClick = true;
+    };
+
+    universalaccess = {
+      reduceMotion = true;
+    };
+
+    menuExtraClock = {
+      ShowDayOfWeek = true;
+      ShowAMPM = true;
     };
 
     finder = {
@@ -48,6 +64,7 @@
       autohide-time-modifier = 0.4;
       showhidden = true;
       expose-animation-duration = 0.12;
+      wvous-br-corner = 14;  # 右下ホットコーナー: クイックメモ
     };
 
     screencapture = {
