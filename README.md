@@ -199,3 +199,18 @@ sudo nix-collect-garbage --delete-older-than 30d
 - `~/.claude/{commands,skills,agents,hooks}`配下に新規ファイルを追加した
     場合は、他の`home/`配下の変更と違ってrebuildしないと反映されません
     (上記「ファイル構成」セクション参照)
+- Claude Codeのユーザースコープ(全プロジェクト共通)MCPサーバーは
+    `~/.claude.json`の`mcpServers`キーで管理されます。この
+    ファイルにはプロジェクト履歴やtrust状態などClaude Code自身が書き込む
+    可変な実行時状態も同居しているため、home-manager側では
+    ファイル全体をリンクせず、`home.activation.claudeMcpServers`
+    (`hosts/MacBookPro-minami/home.nix`)がrebuildのたびに`jq`で
+    `mcpServers`キーだけをマージします。現在`chrome-devtools`
+    (`chrome-devtools-mcp`、npx経由)と`playwright`
+    (nixpkgsの`playwright-mcp`)を登録しています。ブラウザ自動化用途の
+    Playwright本体(CLI)も`playwright-test`パッケージとして
+    このホストの`home.packages`に含めています
+- Anthropic公式のChrome拡張機能「Claude for Chrome」はChromeウェブストア
+    経由でのインストールが必要(現状ベータ/招待制のため)で、Nixでの宣言的
+    管理はしていません。claude.aiのアカウント設定からベータを有効化し、
+    案内されるリンクからインストールしてください
