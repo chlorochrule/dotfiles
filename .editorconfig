@@ -1,3 +1,5 @@
+root = true
+
 [*]
 charset = utf-8
 end_of_line = lf
@@ -9,7 +11,7 @@ tab_width = 4
 ij_continuation_indent_size = 8
 ij_formatter_off_tag = @formatter:off
 ij_formatter_on_tag = @formatter:on
-ij_formatter_tags_enabled = false
+ij_formatter_tags_enabled = true
 ij_smart_tabs = false
 ij_visual_guides = none
 ij_wrap_on_typing = false
@@ -599,6 +601,9 @@ ij_html_text_wrap = normal
 ij_html_uniform_ident = false
 
 [{*.markdown,*.md}]
+indent_size = unset
+tab_width = unset
+trim_trailing_whitespace = false
 ij_markdown_force_one_space_after_blockquote_symbol = true
 ij_markdown_force_one_space_after_header_symbol = true
 ij_markdown_force_one_space_after_list_bullet = true
