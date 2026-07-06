@@ -42,6 +42,7 @@ in
     editorconfig-checker
     gh
     wget
+    gnumake
   ];
 
   programs.mise = {
