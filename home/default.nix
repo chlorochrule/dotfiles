@@ -103,6 +103,8 @@ in
 
       unfocused-split-opacity = 0.6;
 
+      link-url = true; # cmd+クリックでURLをシステムのデフォルトアプリで開く(Ghosttyのデフォルト値だが明示)
+
       keybind = [
         "global:ctrl+i=toggle_visibility"
       ];
