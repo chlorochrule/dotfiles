@@ -194,6 +194,11 @@ in
     ];
 
     completionInit = ''
+      # Homebrewの補完(brew completions link済みのパッケージ)をfpathに追加
+      if command -v brew &> /dev/null; then
+        fpath=("$(brew --prefix)/share/zsh/site-functions" $fpath)
+      fi
+
       zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
       zstyle ':completion:*' ignore-parents parent pwd ..
       zstyle ':completion:*:processes' command 'ps x -o pid,s,args'
