@@ -88,8 +88,8 @@
   homebrew = {
     enable = true;
     onActivation = {
-      autoUpdate = false;
-      upgrade = false;
+      autoUpdate = true;
+      upgrade = true;
       cleanup = "zap";  # casks棚卸し完了(2026-07-05)、noneからzapへ変更
     };
     # casksはホスト固有(hosts/<hostname>/darwin.nix)で宣言する

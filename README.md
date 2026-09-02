@@ -193,6 +193,9 @@ sudo nix-collect-garbage --delete-older-than 30d
     なっています。`hosts/<hostname>/darwin.nix` の `casks` リストに
     宣言していないcaskは rebuild時に自動アンインストールされるので、
     新しいGUIアプリをHomebrew経由で入れる場合は必ずリストに追加してください
+- `homebrew.onActivation.autoUpdate`/`upgrade` は `true` にしてあり、
+    `darwin-rebuild switch` のたびにHomebrewのタップ情報が更新され、
+    古くなったcaskは自動で最新版へアップグレードされます
 - BSLなどunfreeライセンスのパッケージ(`terraform`等)を`home.packages`に
     追加する場合は、`darwin.nix`の`nixpkgs.config.allowUnfreePredicate`に
     パッケージ名を追加する必要があります
