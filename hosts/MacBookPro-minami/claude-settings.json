@@ -3,7 +3,6 @@
     "defaultMode": "auto"
   },
   "model": "sonnet",
-  "language": "japanese",
   "hooks": {
     "SessionStart": [
       {
@@ -96,6 +95,7 @@
       }
     ]
   },
+  "language": "japanese",
   "tui": "fullscreen",
   "theme": "dark"
 }
