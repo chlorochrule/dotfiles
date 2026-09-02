@@ -3,6 +3,9 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-25.11-darwin";
+    # 一部パッケージ(ollama等、リリースブランチへのバックポートが追いつかず
+    # 実用上unstable版が必要なもの)をホスト側でoverlay経由で個別に差し替えるために使う。
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     nix-darwin = {
       url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -13,7 +16,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, nix-darwin, home-manager }:
+  outputs = { self, nixpkgs, nixpkgs-unstable, nix-darwin, home-manager }:
     let
       mkHost = hostPath:
         let host = import hostPath;
@@ -21,7 +24,10 @@
           name = host.hostname;
           value = nix-darwin.lib.darwinSystem {
             system = host.system;
-            specialArgs = { username = host.username; };
+            specialArgs = {
+              username = host.username;
+              pkgs-unstable = import nixpkgs-unstable { system = host.system; };
+            };
             modules = [
               ./darwin.nix
               (hostPath + "/darwin.nix")

@@ -1,4 +1,12 @@
-{ username, ... }: {
+{ username, pkgs-unstable, ... }: {
+  # nixpkgs-25.11-darwinのollamaは0.21.1で止まっており(アップストリームの
+  # バックポートが追いついていない)、新しいモデル(Qwen3.6, Qwen3-Coder-Next等)の
+  # マニフェストが要求するバージョンを満たせずpullが失敗する。
+  # 最新版が必要なのでnixpkgs-unstable(flake.nixのinput)のollamaに差し替える。
+  nixpkgs.overlays = [
+    (final: prev: { ollama = pkgs-unstable.ollama; })
+  ];
+
   homebrew.casks = [
     "claude"
     "claude-code@latest"
@@ -9,7 +17,6 @@
     "jetbrains-toolbox"
     "menumeters"
     "nordvpn"
-    "ollama-app"
     "postman-agent"
     "rancher"
     "raycast"

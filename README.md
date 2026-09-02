@@ -123,7 +123,8 @@ sudo darwin-rebuild switch --flake ~/.dotfiles
 │       ├── darwin.nix           # (任意)マシン固有のnix-darwin設定。例: Homebrew casks
 │       ├── home.nix             # (任意)マシン固有のhome-manager設定
 │       │                         # 例: git identity、~/.claude/settings.json、
-│       │                         #     commands/skills/agents/hooksへの追加分
+│       │                         #     commands/skills/agents/hooksへの追加分、
+│       │                         #     ローカルLLM(Ollama)関連設定
 │       └── claude-settings.json # (任意)このホスト用の~/.claude/settings.json
 ├── home/
 │   ├── default.nix              # 全マシン共通のhome-manager設定
@@ -180,6 +181,14 @@ sudo darwin-rebuild switch --rollback
 
 # ガベージコレクション
 sudo nix-collect-garbage --delete-older-than 30d
+
+# ローカルLLMモデルの取得(MacBookPro-minami、初回のみ・数十GB)
+ollama pull qwen3.6:27b        # dense 27B, 18GB(q4_K_M), SWE-bench Verified 77.2
+ollama pull qwen3-coder-next   # 80B MoE/3B active, 46GB, コーディングエージェント特化
+
+# ローカルLLM(Ollama)経由でClaude Codeを起動
+claude-q36    # Qwen3.6-27B
+claude-q3cn   # Qwen3-Coder-Next
 ```
 
 ## 既知の注意点
@@ -217,3 +226,29 @@ sudo nix-collect-garbage --delete-older-than 30d
     経由でのインストールが必要(現状ベータ/招待制のため)で、Nixでの宣言的
     管理はしていません。claude.aiのアカウント設定からベータを有効化し、
     案内されるリンクからインストールしてください
+- Claude Codeの`/model`コマンドはAnthropic公式モデルのみが選択肢で、
+    ローカルLLMを直接そのリストに追加する機能はありません。代わりに
+    `hosts/MacBookPro-minami/home.nix`で`services.ollama.enable = true`を
+    有効化してOllama(Anthropic Messages API互換モード搭載、
+    `127.0.0.1:11434`でlaunchd agentとして自動起動)を常駐させ、
+    `ANTHROPIC_BASE_URL`等の環境変数でエンドポイントごと切り替える
+    `claude-q36`/`claude-q3cn`というzsh関数(同ファイル内)を用意しています。
+    通常の`claude`コマンド(Anthropic本家)には影響しません。モデル本体は
+    `ollama pull`で別途取得が必要です(上記「よく使う運用コマンド」参照)。
+    未知モデル名に対する警告を避けるため`CLAUDE_CODE_MAX_CONTEXT_TOKENS`も
+    実際のコンテキストウィンドウ(256K)に設定しています。`services.ollama`の
+    `OLLAMA_CONTEXT_LENGTH`も262144(256K、両モデルの実際の学習時ウィンドウ)に
+    設定していますが、これは必須です。Ollamaのデフォルト`num_ctx`は4096しか
+    なく、Claude Codeが送る長大なsystem prompt+tool定義だけでcontext windowを
+    ほぼ使い切ってしまい、肝心のユーザー指示が実質無視される(無関係な応答を
+    返す)現象が実測で確認されたため。256Kに拡張後は実際のタスク(ファイル内容の
+    正確な読み取り等)も問題なく遂行できることを確認済みです。メモリは
+    Qwen3.6-27Bで約20GB、Qwen3-Coder-Nextで約59GB(いずれも256Kコンテキスト
+    込み)で、128GB環境なら問題なく収まります
+- `hosts/MacBookPro-minami/darwin.nix`では、Ollamaパッケージだけ
+    `flake.nix`の`nixpkgs-unstable` inputからoverlayで差し替えています。
+    `nixpkgs-25.11-darwin`収録のollama(0.21.1)はアップストリームの
+    バックポートが追いついておらず、Qwen3.6やQwen3-Coder-Nextのような
+    新しいモデルのマニフェストが要求するバージョンを満たせず`pull`が
+    失敗するためです。将来`nixpkgs-25.11-darwin`側のollamaが更新されたら
+    このoverlayは不要になる可能性があります
