@@ -136,7 +136,8 @@ sudo darwin-rebuild switch --flake ~/.dotfiles
 │       ├── agents/
 │       └── hooks/
 ├── .config/nvim/                # Neovim設定(Lua + lazy.nvim)
-├── .tigrc, .tmux.conf, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
+├── .config/herdr/config.toml    # herdr(ghosttyのマルチプレクサ)の設定
+├── .tigrc, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
 └── CLAUDE.md                    # このリポジトリで作業する際のClaude Code向け指示
 ```
 
@@ -252,3 +253,41 @@ claude-q3cn   # Qwen3-Coder-Next
     新しいモデルのマニフェストが要求するバージョンを満たせず`pull`が
     失敗するためです。将来`nixpkgs-25.11-darwin`側のollamaが更新されたら
     このoverlayは不要になる可能性があります
+- `herdr`(AIコーディングエージェント用のターミナルワークスペースマネージャ)は
+    nixpkgs未収録のため、`flake.nix`で公式の`herdr-nix`(herdr本体のprebuilt
+    バイナリをcachix経由でハッシュ検証込みで取得するラッパー)をinputとして
+    追加し、`home-manager.extraSpecialArgs`経由で全マシン共通の`home/default.nix`の
+    `home.packages`に渡しています。cachixの`extra-substituters`/
+    `extra-trusted-public-keys`は`darwin.nix`の`nix.extraOptions`で設定しています
+- Ghosttyのマルチプレクサはtmuxからherdrに置き換えました。関連する変更点:
+    - 起動: `home/default.nix`のzsh `initContent`が、Ghostty上の対話シェルで
+        (`$HERDR_ENV`が未設定なら)`exec herdr`します。引数なしの`herdr`は
+        デフォルトセッションへのアタッチ/新規作成を自動判定するため、tmux版の
+        ような`has-session`分岐は不要です
+    - キーバインド: `.config/herdr/config.toml`でprefixを`ctrl+g`(旧tmuxと同じ)
+        に設定し、旧`.tmux.conf`の`-n`(prefixなし)バインドを`alt+`キーとして
+        再現しています(新規workspace/tab、workspace/tab切替、pane分割/削除等)。
+        rebuild時は`home.activation`で起動中のherdrサーバーへ
+        `herdr server reload-config`が自動実行されます
+    - セッション永続化: herdrはサーバー再起動時にworkspace/tab/pane/cwd/layoutを
+        標準で復元するため、旧tpm(`tmux-resurrect`/`tmux-continuum`)相当の
+        プラグインは不要になり削除しました
+    - Claude Codeとの連携: 旧`tmux-status.sh`(hookでウィンドウタブの色を
+        手動で塗り分ける仕組み)を削除し、`home/claude/hooks/herdr-agent-state.sh`
+        (`herdr integration install claude`が生成する公式フックと同内容)に
+        置き換えました。作業中/入力待ち等のエージェント状態はherdr側の画面解析で
+        自動検知されるため、hookはセッション識別情報の報告のみを行います。herdrの
+        メジャーアップデートで統合フックの内容が変わった場合は、`herdr integration
+        install claude`を再実行して生成物をこのファイルに反映してください
+    - Neovimとの連携: `vim-tmux-navigator`を削除し、`.config/nvim/lua/config/keymaps.lua`
+        に同等のCtrl+h/j/k/l境界越え移動を自前で実装しました(herdr内実行時のみ
+        `$HERDR_SOCKET_PATH`で有効化、`herdr pane focus --direction`を呼びます)。
+        `vim-tmux-navigator`はlazy.nvimの起動spec(`plugins/editing.lua`)から
+        既に削除済みですが、ディスク上のプラグイン自体を消すには次回nvim起動時に
+        `:Lazy clean`を実行してください
+    - 旧`C-t`(現在のペインの状態に応じてtig/tig statusを開く動的な仕組み)は
+        `alt+t`でtigをポップアップ表示する固定バインドに簡略化しました
+        (`[[keys.command]]`、`.config/herdr/config.toml`)
+    - `bin/tmux-kill-pane`・`tmux-kill-session`・`tmux-renumber-sessions`は
+        削除しました。pane/tab/workspaceを閉じた際の「他へ退避してから閉じる」
+        制御やid再割り当てはherdr側の標準動作に委ねています

@@ -1,0 +1,33 @@
+# herdr configuration
+# https://herdr.dev/docs/configuration/
+
+[keys]
+# 旧.tmux.confのprefix('C-g')を維持
+prefix = "ctrl+g"
+
+# 旧.tmux.confの"-n"(prefixなし)バインドをalt+キーとして維持
+new_workspace = "alt+n"
+previous_workspace = "alt+j"
+next_workspace = "alt+k"
+close_workspace = "alt+q"
+
+new_tab = "alt+c"
+previous_tab = "alt+h"
+next_tab = "alt+l"
+
+split_vertical = "alt+backslash"
+split_horizontal = "alt+minus"
+close_pane = "alt+w"
+
+# 旧: C-t new-window -> tig(またはtig status)。
+# ポップアップで一時的にtigを開き、終了時に自動で閉じる。
+[[keys.command]]
+key = "alt+t"
+type = "popup"
+command = "tig"
+width = "90%"
+height = "90%"
+
+[ui]
+# 旧new-window(M-c)相当。名前入力を求めず即座にtabを作る
+prompt_new_tab_name = false

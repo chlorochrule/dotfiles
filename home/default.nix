@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, herdr, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   linkDotfile = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
@@ -9,14 +9,11 @@ in
 
   home.file.".tigrc".source = linkDotfile ".tigrc";
   home.file.".editorconfig".source = linkDotfile ".editorconfig";
-  home.file.".tmux.conf".source = linkDotfile ".tmux.conf";
 
-  home.file."bin/tmux-kill-pane".source = linkDotfile "bin/tmux-kill-pane";
-  home.file."bin/tmux-kill-session".source = linkDotfile "bin/tmux-kill-session";
-  home.file."bin/tmux-renumber-sessions".source = linkDotfile "bin/tmux-renumber-sessions";
   home.file."bin/license".source = linkDotfile "bin/license";
 
   xdg.configFile."nvim".source = linkDotfile ".config/nvim";
+  xdg.configFile."herdr/config.toml".source = linkDotfile ".config/herdr/config.toml";
 
   home.file.".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
 
@@ -25,7 +22,6 @@ in
   home.packages = with pkgs; [
     tig
     ghq
-    tmux
     cloc
     tree
     neovim
@@ -43,6 +39,8 @@ in
     gh
     wget
     gnumake
+  ] ++ [
+    herdr
   ];
 
   programs.mise = {
@@ -223,7 +221,7 @@ in
       # bash/readline風にカーソルより前だけ削除する挙動に上書きする
       bindkey '^U' backward-kill-line
 
-      # tmux ignore keys
+      # herdr ignore keys(prefix('C-g')をzshのzleバインドと衝突させない)
       bindkey -r '\C-g'
 
       # ghq fuzzy cd (MRU-first, like the old peco-src)
@@ -268,16 +266,14 @@ in
       ## aws
       source ${pkgs.awscli2}/bin/aws_zsh_completer.sh
 
-      # exec tmux
-      if ! command -v tmux &> /dev/null; then
-          echo "tmux not found" 1>&2
+      # exec herdr(引数なしの`herdr`はデフォルトセッションへの
+      # アタッチ/新規作成を自動判定するため、tmux版と違いhas-session相当の
+      # 分岐が不要)
+      if ! command -v herdr &> /dev/null; then
+          echo "herdr not found" 1>&2
       else
-          if [[ "$TERM_PROGRAM" == "ghostty" && -z "$TMUX" && -n "$PS1" ]]; then
-              if tmux has-session &> /dev/null && [[ -n "$(tmux ls | grep -v attached)" ]]; then
-                  exec tmux a
-              else
-                  exec tmux
-              fi
+          if [[ "$TERM_PROGRAM" == "ghostty" && -z "$HERDR_ENV" && -n "$PS1" ]]; then
+              exec herdr
           fi
       fi
       ''
@@ -288,4 +284,10 @@ in
       '')
     ];
   };
+
+  # rebuildで.config/herdr/config.tomlが変わった場合、実行中のherdrサーバーに
+  # 即時反映する(サーバーが起動していない場合は何もせず無視する)
+  home.activation.herdrReloadConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ${herdr}/bin/herdr server reload-config >/dev/null 2>&1 || true
+  '';
 }

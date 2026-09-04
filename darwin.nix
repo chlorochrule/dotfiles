@@ -8,6 +8,12 @@
 
   nix.settings.experimental-features = "nix-command flakes";
 
+  # herdr(nixpkgs未収録)のprebuiltバイナリをソースビルドせず取得するためのcachix設定
+  nix.extraOptions = ''
+    extra-substituters = https://herdr.cachix.org
+    extra-trusted-public-keys = herdr.cachix.org-1:3nH7IStRsS0ASfdonA0DCRR2ZrSCeWitZ7Kwew0cR4I=
+  '';
+
   # terraformはBSL1.1(unfree)なので個別に許可する
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
     "terraform"

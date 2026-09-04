@@ -10,43 +10,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/tmux-status.sh reset"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/tmux-status.sh working"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/tmux-status.sh pretool"
+            "command": "$HOME/.claude/hooks/herdr-agent-state.sh session",
+            "timeout": 10
           }
         ]
       }
     ],
     "PostToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/tmux-status.sh working"
-          }
-        ]
-      },
       {
         "matcher": "Edit|Write",
         "hooks": [
@@ -64,32 +34,6 @@
           {
             "type": "command",
             "command": "printf '\\a\\033]9;Claude Code needs your input\\007' > /dev/tty"
-          },
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/tmux-status.sh notify"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/tmux-status.sh done"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.claude/hooks/tmux-status.sh reset"
           }
         ]
       }

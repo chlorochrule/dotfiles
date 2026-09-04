@@ -1,8 +1,26 @@
 local map = vim.keymap.set
 
--- tmux ignore keys
+-- herdr ignore keys(prefix)
 map("", "<C-g>", "<Nop>")
-map("", "<C-t>", "<Nop>")
+
+-- herdrのpane境界をまたいでvim-tmux-navigator風にCtrl+h/j/k/lで移動する。
+-- herdr内で実行している時だけ有効化(通常のnvim単体使用時は素のwincmdのまま)
+if vim.env.HERDR_SOCKET_PATH then
+  local function nav(wincmd, direction)
+    return function()
+      local before = vim.api.nvim_get_current_win()
+      vim.cmd("wincmd " .. wincmd)
+      if vim.api.nvim_get_current_win() == before then
+        vim.fn.system({ "herdr", "pane", "focus", "--direction", direction })
+      end
+    end
+  end
+
+  map("n", "<C-h>", nav("h", "left"))
+  map("n", "<C-j>", nav("j", "down"))
+  map("n", "<C-k>", nav("k", "up"))
+  map("n", "<C-l>", nav("l", "right"))
+end
 
 -- leader
 vim.g.mapleader = " "
