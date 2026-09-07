@@ -39,6 +39,9 @@
       }
     ]
   },
+  "enabledPlugins": {
+    "langfuse-observability@langfuse-observability": true
+  },
   "extraKnownMarketplaces": {
     "langfuse-observability": {
       "source": {
@@ -47,17 +50,15 @@
       }
     }
   },
-  "enabledPlugins": {
-    "langfuse-observability@langfuse-observability": true
-  },
+  "language": "japanese",
   "pluginConfigs": {
     "langfuse-observability@langfuse-observability": {
       "options": {
-        "LANGFUSE_BASE_URL": "http://localhost:3000"
+        "LANGFUSE_BASE_URL": "http://localhost:3000",
+        "LANGFUSE_PUBLIC_KEY": "pk-lf-d6f67acb8c0c1932aec25fc3c475c459"
       }
     }
   },
-  "language": "japanese",
   "tui": "fullscreen",
   "theme": "dark"
 }
