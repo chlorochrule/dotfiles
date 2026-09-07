@@ -199,10 +199,13 @@ claude-q3cn   # Qwen3-Coder-Next
     `git add` してから rebuild してください
 - `$HOME is not owned by you` という警告は、`sudo` 実行時にrootへの
     fallbackが起きているだけで実害はありません
-- Homebrewは casks 専用で `homebrew.onActivation.cleanup = "zap"` に
-    なっています。`hosts/<hostname>/darwin.nix` の `casks` リストに
-    宣言していないcaskは rebuild時に自動アンインストールされるので、
-    新しいGUIアプリをHomebrew経由で入れる場合は必ずリストに追加してください
+- Homebrewは casks 専用です。本来 `homebrew.onActivation.cleanup = "zap"` にしており、
+    `hosts/<hostname>/darwin.nix` の `casks` リストに宣言していないcaskは
+    rebuild時に自動アンインストールされます。新しいGUIアプリをHomebrew経由で
+    入れる場合は必ずリストに追加してください
+    (Homebrew 6.0.22で`--cleanup`フラグが廃止され、nix-darwin-25.11ブランチの
+    対応がまだ未リリースのため、現在は一時的に `cleanup = "none"` にしてcleanupを
+    無効化しています。修正が取り込まれ次第 `zap` に戻す予定)
 - `homebrew.onActivation.autoUpdate`/`upgrade` は `true` にしてあり、
     `darwin-rebuild switch` のたびにHomebrewのタップ情報が更新され、
     古くなったcaskは自動で最新版へアップグレードされます

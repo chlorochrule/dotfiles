@@ -96,7 +96,10 @@
     onActivation = {
       autoUpdate = true;
       upgrade = true;
-      cleanup = "zap";  # casks棚卸し完了(2026-07-05)、noneからzapへ変更
+      # Homebrew 6.0.22で`--cleanup`フラグが廃止され、nix-darwin-25.11ブランチ側の
+      # 対応(`brew bundle cleanup`への切り替え)がまだ未リリースのため一時的にnoneへ退避。
+      # 修正が25.11に取り込まれ次第zapへ戻す。
+      cleanup = "none";
     };
     # casksはホスト固有(hosts/<hostname>/darwin.nix)で宣言する
   };
