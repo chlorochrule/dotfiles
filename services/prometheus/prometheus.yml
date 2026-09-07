@@ -6,9 +6,9 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # macOSホスト本体のメトリクス。node_exporterはコンテナではなくNix経由で
+  # macOSホスト本体のメトリクス。node_exporterはコンテナではなくnix-darwin経由で
   # ホストに直接インストールし127.0.0.1:9100でlistenさせている
-  # (hosts/MacBookPro-minami/home.nix参照)。host.docker.internalでホストへ到達する。
+  # (hosts/MacBookPro-minami/darwin.nix参照)。host.docker.internalでホストへ到達する。
   - job_name: node
     static_configs:
       - targets: ["host.docker.internal:9100"]

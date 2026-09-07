@@ -1,12 +1,12 @@
-# Prometheusのdocker-compose.yml/prometheus.ymlの実体は../../prometheus
+# Prometheusのdocker-compose.yml/prometheus.ymlの実体は../../services/prometheus
 # (このディレクトリではない)に置く。scrape対象の定義に秘密情報を含まないため
 # langfuse/grafanaと異なり.envの生成は不要で、docker-compose.ymlと合わせて
 # 直接コミットしている。
 
 locals {
-  prometheus_dir = "${path.module}/../../prometheus"
+  prometheus_dir = "${path.module}/../../services/prometheus"
   # ホスト側ポートは9095(9090はlangfuse/minioが既に使用しているため)。
-  # コンテナ内部は既定の9090のまま(prometheus/docker-compose.yml参照)。
+  # コンテナ内部は既定の9090のまま(services/prometheus/docker-compose.yml参照)。
   prometheus_url = "http://localhost:9095"
 }
 
@@ -32,9 +32,10 @@ resource "null_resource" "prometheus_compose_up" {
   }
 }
 
-# GrafanaコンテナからはHost経由(host.docker.internal)でPrometheusの
-# 公開ポート(127.0.0.1:9095)へアクセスする(grafana/docker-compose.ymlの
-# extra_hosts参照)。accessは既定のproxy(Grafanaバックエンド経由)のまま。
+# GrafanaコンテナからはRancher Desktopが提供するhost.docker.internal経由で
+# Prometheusの公開ポート(127.0.0.1:9095)へアクセスする(services/grafana/
+# docker-compose.ymlのコメント参照)。accessは既定のproxy(Grafanaバックエンド
+# 経由)のまま。
 resource "grafana_data_source" "prometheus" {
   type = "prometheus"
   name = "Prometheus"

@@ -3,8 +3,8 @@
 # (ENCRYPTION_KEYはAES-256鍵として32byte/64文字が必須)。
 
 locals {
-  # docker-compose.yml/.envの実体は../../langfuse(このディレクトリではない)に置く
-  langfuse_dir = "${path.module}/../../langfuse"
+  # docker-compose.yml/.envの実体は../../services/langfuse(このディレクトリではない)に置く
+  langfuse_dir = "${path.module}/../../services/langfuse"
 }
 
 resource "random_id" "salt" {

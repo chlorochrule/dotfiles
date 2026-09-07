@@ -138,9 +138,10 @@ sudo darwin-rebuild switch --flake ~/.dotfiles
 ├── .config/nvim/                # Neovim設定(Lua + lazy.nvim)
 ├── .config/herdr/config.toml    # herdr(ghosttyのマルチプレクサ)の設定
 ├── .tigrc, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
-├── langfuse/                    # ローカルLangfuse(Docker Compose定義)。Nix管理外
-├── grafana/                     # ローカルGrafana(Docker Compose定義)。Nix管理外
-├── prometheus/                  # ローカルPrometheus(Docker Compose定義)。Nix管理外
+├── services/                    # ローカル専用サービス群(Docker Compose定義)。Nix管理外
+│   ├── langfuse/                 # ローカルLangfuse
+│   ├── grafana/                  # ローカルGrafana
+│   └── prometheus/               # ローカルPrometheus
 ├── terraform/
 │   └── local/                    # ↑3つのプロビジョニング用Terraform(ローカルMac
 │                                 #     provisioning専用ディレクトリ)。Nix管理外
@@ -213,9 +214,9 @@ Docker Composeで起動し、Terraformで冪等にプロビジョニングする
 Homebrew cask `rancher`(Rancher Desktop)で提供されるものを使うため、
 Rancher Desktopを起動しておく必要があります。
 
-各サービスは独立したdocker-compose project(`langfuse/`/`grafana/`/`prometheus/`)
-として起動しており、共有のDockerネットワークは作っていません。サービス間の
-通信(GrafanaからPrometheusへ、Prometheusからホストのnode_exporterへ)は
+各サービスは独立したdocker-compose project(`services/langfuse/`/`services/grafana/`/
+`services/prometheus/`)として起動しており、共有のDockerネットワークは作っていません。
+サービス間の通信(GrafanaからPrometheusへ、Prometheusからホストのnode_exporterへ)は
 Rancher Desktopが提供する`host.docker.internal`(127.0.0.1限定のサービスにも
 到達できる)経由で行います。`docker-compose.yml`で`extra_hosts`により
 `host.docker.internal`を明示上書きするとLinux流のブリッジゲートウェイIPになり
@@ -223,7 +224,7 @@ Rancher Desktopが提供する`host.docker.internal`(127.0.0.1限定のサービ
 
 ### Langfuse: Claude Codeの操作ログを記録する
 
-`langfuse/`配下にLangfuse(LLMアプリ向けの可観測性OSS)のセルフホスト用
+`services/langfuse/`配下にLangfuse(LLMアプリ向けの可観測性OSS)のセルフホスト用
 Docker Compose定義を置いています。Claude Codeのユーザープロンプト、
 モデルの応答、ツール呼び出しの入出力を、このMac上だけで完結するLangfuseに
 記録できます(データは外部送信されません)。
@@ -236,20 +237,20 @@ Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.
 `LANGFUSE_SECRET_KEY`)だけは秘密情報のためgit管理下に置かず、初回のみ
 手動設定が必要です。
 
-`langfuse/.env`(docker-compose.ymlのCHANGEME項目)や、組織/プロジェクト/
+`services/langfuse/.env`(docker-compose.ymlのCHANGEME項目)や、組織/プロジェクト/
 ログイン用ユーザー・APIキーの初回作成(Langfuseの
 [headless initialization](https://langfuse.com/self-hosting/administration/headless-initialization)、
 `LANGFUSE_INIT_*`環境変数)は手動で行わず、`terraform/local/`が
 `terraform apply`のたびに冪等に実施します。ブラウザでサインアップする
-必要はありません。`docker-compose.yml`/`.envrc`自体は`langfuse/`に
-残しており、`langfuse/.envrc`(direnv)はTerraformが書いた`.env`を
+必要はありません。`docker-compose.yml`/`.envrc`自体は`services/langfuse/`に
+残しており、`.envrc`(direnv)はTerraformが書いた`.env`を
 シェルにも読み込むだけの役割です。
 
 ### Grafana: ダッシュボードを見る
 
-`grafana/`配下にGrafanaのセルフホスト用Docker Compose定義を置いています
+`services/grafana/`配下にGrafanaのセルフホスト用Docker Compose定義を置いています
 (`http://localhost:3001`、外部公開しません)。admin初期パスワードは
-`terraform/local/grafana.tf`が乱数で生成し`grafana/.env`に書き出します
+`terraform/local/grafana.tf`が乱数で生成し`services/grafana/.env`に書き出します
 (Langfuseの`.env`生成と同じ方針)。
 
 ダッシュボード・データソース・adminアカウントは可能な限りTerraformの
@@ -262,10 +263,10 @@ Terraform管理下に置いています。実データを見るダッシュボ�
 
 ### Prometheus: macOSホストのメトリクスを収集する
 
-`prometheus/`配下にPrometheusのセルフホスト用Docker Compose定義を置いています
+`services/prometheus/`配下にPrometheusのセルフホスト用Docker Compose定義を置いています
 (`http://localhost:9095`、外部公開しません。コンテナ内部ポートは既定の9090ですが、
-ホスト側は`langfuse/`のminioが既に`9090`を使っているため`9095`にずらしています)。
-スクレイプ対象を定義する`prometheus/prometheus.yml`は秘密情報を含まないため
+ホスト側は`services/langfuse/`のminioが既に`9090`を使っているため`9095`にずらしています)。
+スクレイプ対象を定義する`services/prometheus/prometheus.yml`は秘密情報を含まないため
 Terraform管理外で直接コミットしています。
 
 CPU/メモリ/ディスク等、macOSホスト本体のメトリクスは
@@ -314,9 +315,9 @@ cd ~/.dotfiles/terraform/local
 
 # 起動/停止(3サービスまとめて)
 terraform apply
-docker compose -f ../../langfuse/docker-compose.yml down
-docker compose -f ../../grafana/docker-compose.yml down
-docker compose -f ../../prometheus/docker-compose.yml down
+docker compose -f ../../services/langfuse/docker-compose.yml down
+docker compose -f ../../services/grafana/docker-compose.yml down
+docker compose -f ../../services/prometheus/docker-compose.yml down
 
 # 発行済みAPIキー・ログイン情報の確認
 terraform output -raw langfuse_public_key
@@ -326,16 +327,16 @@ terraform output -raw grafana_login_password
 
 # Langfuseの全データを消してやり直す(APIキー・ログイン情報は.envの内容を
 # 維持したまま同じ値で再作成される。値ごと変えたい場合はterraform.tfstateも消す)
-docker compose -f ../../langfuse/docker-compose.yml down -v
+docker compose -f ../../services/langfuse/docker-compose.yml down -v
 terraform apply -replace=null_resource.compose_up
 
 # Grafanaの全データを消してやり直す(ダッシュボード等はterraform apply時に
 # 再作成される。admin初期パスワードも同様の理由で同じ値のまま再作成される)
-docker compose -f ../../grafana/docker-compose.yml down -v
+docker compose -f ../../services/grafana/docker-compose.yml down -v
 terraform apply -replace=null_resource.grafana_compose_up
 
 # Prometheusの蓄積データを消してやり直す
-docker compose -f ../../prometheus/docker-compose.yml down -v
+docker compose -f ../../services/prometheus/docker-compose.yml down -v
 terraform apply -replace=null_resource.prometheus_compose_up
 ```
 

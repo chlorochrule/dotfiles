@@ -16,7 +16,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     ports:
-      # 9090はlangfuse/docker-compose.ymlのminio(S3 API)が既に使用しているため
+      # 9090はservices/langfuse/docker-compose.ymlのminio(S3 API)が既に使用しているため
       # ホスト側ポートは9095にずらす(コンテナ内部は既定の9090のまま)
       - 127.0.0.1:9095:9090
     healthcheck:

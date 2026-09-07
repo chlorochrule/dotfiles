@@ -2,8 +2,8 @@ home/claude/projects/
 home/claude/plugins/
 home/claude/settings.local.json
 home/claude.json
-langfuse/.env
-grafana/.env
+services/langfuse/.env
+services/grafana/.env
 terraform/local/.terraform/
 terraform/local/terraform.tfstate*
 terraform/local/.terraform.tfstate.lock.info

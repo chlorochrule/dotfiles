@@ -1,8 +1,8 @@
-# Grafanaのdocker-compose.yml/.envの実体は../../grafana(このディレクトリでは
-# ない)に置く。admin初期パスワードを乱数で生成し.envへ書き出す方針はlangfuse.tfと同じ。
+# Grafanaのdocker-compose.yml/.envの実体は../../services/grafana(このディレクトリ
+# ではない)に置く。admin初期パスワードを乱数で生成し.envへ書き出す方針はlangfuse.tfと同じ。
 
 locals {
-  grafana_dir = "${path.module}/../../grafana"
+  grafana_dir = "${path.module}/../../services/grafana"
   grafana_url = "http://localhost:3001"
 }
 
