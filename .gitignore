@@ -1,5 +1,6 @@
 home/claude/projects/
 home/claude/plugins/
+home/claude/skills/japanese-tech-writing/
 home/claude/settings.local.json
 home/claude.json
 services/langfuse/.env
