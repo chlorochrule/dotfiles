@@ -139,11 +139,12 @@ sudo darwin-rebuild switch --flake ~/.dotfiles
 ├── .config/herdr/config.toml    # herdr(ghosttyのマルチプレクサ)の設定
 ├── .tigrc, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
 ├── langfuse/                    # ローカルLangfuse(Docker Compose定義)。Nix管理外
+├── grafana/                     # ローカルGrafana(Docker Compose定義)。Nix管理外
 ├── terraform/
-│   └── langfuse/                # ↑のプロビジョニング用Terraform(ローカルMac
+│   └── local/                    # ↑2つのプロビジョニング用Terraform(ローカルMac
 │                                 #     provisioning専用ディレクトリ)。Nix管理外
-│                                 # (詳細は「ローカルLangfuseでClaude Codeの
-│                                 #     操作ログを記録する」参照)
+│                                 # (詳細は「ローカルサービス(Langfuse/Grafana)を
+│                                 #     Terraformでプロビジョニングする」参照)
 └── CLAUDE.md                    # このリポジトリで作業する際のClaude Code向け指示
 ```
 
@@ -198,14 +199,25 @@ claude-q36    # Qwen3.6-27B
 claude-q3cn   # Qwen3-Coder-Next
 ```
 
-## ローカルLangfuseでClaude Codeの操作ログを記録する
+## ローカルサービス(Langfuse/Grafana)をTerraformでプロビジョニングする
+
+`terraform/local/`は、このMac上だけで完結するローカル専用サービス群を
+Docker Composeで起動し、Terraformで冪等にプロビジョニングするための
+共通ディレクトリです(Nix管理外)。1つの`terraform apply`で以下の
+両方がまとめて起動・provisioningされます。サービスごとの資源は
+`langfuse.tf`/`grafana.tf`のようにファイル単位で分けており、出力名も
+`langfuse_*`/`grafana_*`のようにprefixしています。生成したパスワード等の
+資格情報はローカルの`terraform/local/terraform.tfstate`(git管理外)に
+保存されます。Dockerは`hosts/MacBookPro-minami/darwin.nix`のHomebrew
+cask `rancher`(Rancher Desktop)で提供されるものを使うため、Rancher
+Desktopを起動しておく必要があります。
+
+### Langfuse: Claude Codeの操作ログを記録する
 
 `langfuse/`配下にLangfuse(LLMアプリ向けの可観測性OSS)のセルフホスト用
 Docker Compose定義を置いています。Claude Codeのユーザープロンプト、
 モデルの応答、ツール呼び出しの入出力を、このMac上だけで完結するLangfuseに
-記録できます(データは外部送信されません)。Dockerは`hosts/MacBookPro-minami/darwin.nix`の
-Homebrew cask `rancher`(Rancher Desktop)で提供されるものを使うため、
-Rancher Desktopを起動しておく必要があります。
+記録できます(データは外部送信されません)。
 
 Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.com/langfuse/Claude-Observability-Plugin)
 (hookでセッションtranscriptを読み取りLangfuseへ送信するプラグイン)を使い、
@@ -218,55 +230,79 @@ Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.
 `langfuse/.env`(docker-compose.ymlのCHANGEME項目)や、組織/プロジェクト/
 ログイン用ユーザー・APIキーの初回作成(Langfuseの
 [headless initialization](https://langfuse.com/self-hosting/administration/headless-initialization)、
-`LANGFUSE_INIT_*`環境変数)は手動で行わず、`terraform/langfuse/`(Terraform、
-ローカルMacのプロビジョニング専用ディレクトリ)が`terraform apply`のたびに
-冪等に実施します。ブラウザでサインアップする必要はありません。生成した
-資格情報はローカルの`terraform/langfuse/terraform.tfstate`(git管理外)に
-保存されます。`docker-compose.yml`/`.envrc`自体は`langfuse/`に残しており、
-`langfuse/.envrc`(direnv)はTerraformが書いた`.env`をシェルにも読み込むだけの
-役割です。
+`LANGFUSE_INIT_*`環境変数)は手動で行わず、`terraform/local/`が
+`terraform apply`のたびに冪等に実施します。ブラウザでサインアップする
+必要はありません。`docker-compose.yml`/`.envrc`自体は`langfuse/`に
+残しており、`langfuse/.envrc`(direnv)はTerraformが書いた`.env`を
+シェルにも読み込むだけの役割です。
+
+### Grafana: ダッシュボードを見る
+
+`grafana/`配下にGrafanaのセルフホスト用Docker Compose定義を置いています
+(`http://localhost:3001`、外部公開しません)。admin初期パスワードは
+`terraform/local/grafana.tf`が乱数で生成し`grafana/.env`に書き出します
+(Langfuseの`.env`生成と同じ方針)。
+
+ダッシュボード・データソース・adminアカウントは可能な限りTerraformの
+[grafana/grafanaプロバイダー](https://registry.terraform.io/providers/grafana/grafana/latest/docs)
+で管理し、Grafanaの管理画面からの手動設定を極力不要にしています。
+現時点では外部メトリクスソース(Prometheus等)を構築していないため、
+組み込みのTestDataデータソースと、それを使ったサンプルダッシュボード
+(`Local`フォルダ配下の`Welcome`)のみをTerraform管理下に置いています。
+実際のデータソースを追加する際は`terraform/local/grafana.tf`に
+`grafana_data_source`/`grafana_dashboard`リソースを追記してください。
 
 ### 初回セットアップ
 
 ```bash
-# 1. Langfuseを起動(初回のprovisioningも同時に行われる)
-cd ~/.dotfiles/terraform/langfuse
+# 1. Langfuse/Grafanaを起動(初回のprovisioningも同時に行われる)
+cd ~/.dotfiles/terraform/local
 terraform init
 terraform apply
 
 # 2. Claude Codeのプラグイン設定を適用(claude-settings.jsonの変更を反映)
 sudo darwin-rebuild switch --flake ~/.dotfiles
 
-# 3. Claude Codeを起動し、Terraformが発行したAPIキーを登録
+# 3. Claude Codeを起動し、Terraformが発行したLangfuseのAPIキーを登録
 #    (SECRET_KEYはOSキーチェーンに保存される)
 claude
 /plugin configure langfuse-observability@langfuse-observability
-#   LANGFUSE_PUBLIC_KEY: `terraform output -raw public_key`
-#   LANGFUSE_SECRET_KEY: `terraform output -raw secret_key`
+#   LANGFUSE_PUBLIC_KEY: `terraform output -raw langfuse_public_key`
+#   LANGFUSE_SECRET_KEY: `terraform output -raw langfuse_secret_key`
 ```
 
-ブラウザ(`http://localhost:3000`)からログインしたい場合は、
-`terraform output login_email` / `terraform output -raw login_password`で
-確認できます。
+ブラウザからログインしたい場合、Langfuse(`http://localhost:3000`)は
+`terraform output langfuse_login_email` /
+`terraform output -raw langfuse_login_password`、
+Grafana(`http://localhost:3001`)は
+`terraform output grafana_login_user` /
+`terraform output -raw grafana_login_password`で確認できます。
 
 ### 運用コマンド
 
 ```bash
-cd ~/.dotfiles/terraform/langfuse
+cd ~/.dotfiles/terraform/local
 
-# 起動/停止
+# 起動/停止(両サービスまとめて)
 terraform apply
 docker compose -f ../../langfuse/docker-compose.yml down
+docker compose -f ../../grafana/docker-compose.yml down
 
 # 発行済みAPIキー・ログイン情報の確認
-terraform output -raw public_key
-terraform output -raw secret_key
-terraform output -raw login_password
+terraform output -raw langfuse_public_key
+terraform output -raw langfuse_secret_key
+terraform output -raw langfuse_login_password
+terraform output -raw grafana_login_password
 
-# 全データを消してやり直す(APIキー・ログイン情報は.envの内容を維持したまま
-# 同じ値で再作成される。値ごと変えたい場合はterraform.tfstateも消す)
+# Langfuseの全データを消してやり直す(APIキー・ログイン情報は.envの内容を
+# 維持したまま同じ値で再作成される。値ごと変えたい場合はterraform.tfstateも消す)
 docker compose -f ../../langfuse/docker-compose.yml down -v
 terraform apply -replace=null_resource.compose_up
+
+# Grafanaの全データを消してやり直す(ダッシュボード等はterraform apply時に
+# 再作成される。admin初期パスワードも同様の理由で同じ値のまま再作成される)
+docker compose -f ../../grafana/docker-compose.yml down -v
+terraform apply -replace=null_resource.grafana_compose_up
 ```
 
 ## 既知の注意点

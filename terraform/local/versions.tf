@@ -14,5 +14,9 @@ terraform {
       source  = "hashicorp/null"
       version = "~> 3.2"
     }
+    grafana = {
+      source  = "grafana/grafana"
+      version = "~> 4.45"
+    }
   }
 }

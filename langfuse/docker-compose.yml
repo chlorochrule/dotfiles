@@ -3,7 +3,7 @@
 # langfuse-webとminioのポートも127.0.0.1限定に変更しています。
 # https://github.com/langfuse/langfuse/blob/main/docker-compose.yml
 #
-# 起動は`terraform/langfuse/`で`terraform apply`を実行してください
+# 起動は`terraform/local/`で`terraform apply`を実行してください
 # (.envの生成・LANGFUSE_INIT_*によるorg/project/APIキーの初回provisioning
 # まで含みます)。
 services:

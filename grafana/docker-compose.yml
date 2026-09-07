@@ -1,0 +1,25 @@
+# ローカルMacでの個人利用専用(外部公開しない)Grafana。ポートは127.0.0.1限定。
+# ダッシュボード/データソース/アカウントのprovisioningはterraform/local/grafana.tfで
+# 行うため、起動は`terraform/local/`で`terraform apply`を実行してください
+# (.envの生成、admin初期パスワードの発行まで含みます)。
+services:
+  grafana:
+    image: docker.io/grafana/grafana:13.0.2
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin} # CHANGEME
+    ports:
+      - 127.0.0.1:3001:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  grafana_data:
+    driver: local
