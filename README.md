@@ -289,7 +289,11 @@ Dockerコンテナの中からでは真のホストメトリクスが取れな�
 `host.docker.internal:9100`としてスクレイプします。
 
 PrometheusのGrafanaデータソース登録(`terraform/local/prometheus.tf`の
-`grafana_data_source.prometheus`)もTerraform管理です。
+`grafana_data_source.prometheus`)もTerraform管理です。`terraform/local/
+prometheus_grafana.tf`では、そのデータソースを使ってmacOSホストのnode_exporter
+メトリクス(Uptime/CPU/メモリ/バッテリー/ロードアベレージ/ディスクI/O/
+ネットワークI/O/ファイルシステム使用率)を見る`macOS Host (node_exporter)`
+ダッシュボードも管理しています。
 
 ### 初回セットアップ
 
