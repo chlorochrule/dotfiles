@@ -261,6 +261,17 @@ Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.
 Terraform管理下に置いています。実データを見るダッシュボードを追加する際は
 `terraform/local/grafana.tf`に`grafana_dashboard`リソースを追記してください。
 
+LangfuseのトレースデータはClickHouseに保存されているため、公式署名済みの
+[grafana-clickhouse-datasource](https://grafana.com/grafana/plugins/grafana-clickhouse-datasource/)
+プラグインを`services/grafana/docker-compose.yml`の`GF_INSTALL_PLUGINS`で
+導入し、`terraform/local/langfuse_grafana.tf`でLangfuse自身のClickHouse
+(`services/langfuse/`)へのデータソースと、Langfuse UIのHomeダッシュボード
+(Traces/Model costs/Observations by time/latency percentiles等)相当を
+再現した`Langfuse Overview`ダッシュボードをTerraform管理しています。
+クエリはLangfuse v4のOTel統合スパンテーブル(`events_core`)に対する生SQLで、
+Scores関連(このプロジェクトでは実データ無し)以外はLangfuse UIの数値と
+一致することを確認済みです。
+
 ### Prometheus: macOSホストのメトリクスを収集する
 
 `services/prometheus/`配下にPrometheusのセルフホスト用Docker Compose定義を置いています
