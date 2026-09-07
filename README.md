@@ -264,13 +264,20 @@ Terraform管理下に置いています。実データを見るダッシュボ�
 LangfuseのトレースデータはClickHouseに保存されているため、公式署名済みの
 [grafana-clickhouse-datasource](https://grafana.com/grafana/plugins/grafana-clickhouse-datasource/)
 プラグインを`services/grafana/docker-compose.yml`の`GF_INSTALL_PLUGINS`で
-導入し、`terraform/local/langfuse_grafana.tf`でLangfuse自身のClickHouse
-(`services/langfuse/`)へのデータソースと、Langfuse UIのHomeダッシュボード
-(Traces/Model costs/Observations by time/latency percentiles等)相当を
-再現した`Langfuse Overview`ダッシュボードをTerraform管理しています。
+導入し、Langfuse自身のClickHouse(`services/langfuse/`)へのデータソースと、
+Langfuseの[Dashboards](http://localhost:3000/project/claude-code/dashboards)
+(Langfuse Home/Agent/Cost/Latency/Usage Management、Langfuse Maintained)
+相当のダッシュボードをTerraform管理しています。
+
+- `terraform/local/langfuse_grafana.tf`: Langfuse Home相当(`Langfuse Overview`)
+- `terraform/local/langfuse_grafana_extra.tf`: Agent/Cost/Latency Dashboard相当
+  (`Langfuse Agent`/`Langfuse Cost`/`Langfuse Latency`)
+
 クエリはLangfuse v4のOTel統合スパンテーブル(`events_core`)に対する生SQLで、
-Scores関連(このプロジェクトでは実データ無し)以外はLangfuse UIの数値と
-一致することを確認済みです。
+Langfuse UIの数値と一致することを確認済みです。Scores関連(スコアデータ無し)、
+Usage Managementの大半(Traces/Observations統計とほぼ重複)、Time To First
+Token/出力トークン毎秒系(`completion_start_time`が未記録でLangfuse UI側も
+常にNo data)は対象外にしています。
 
 ### Prometheus: macOSホストのメトリクスを収集する
 
