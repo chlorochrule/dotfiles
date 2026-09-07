@@ -286,7 +286,7 @@ claude-q3cn   # Qwen3-Coder-Next
         既に削除済みですが、ディスク上のプラグイン自体を消すには次回nvim起動時に
         `:Lazy clean`を実行してください
     - 旧`C-t`(現在のペインの状態に応じてtig/tig statusを開く動的な仕組み)は
-        `alt+t`でtigをポップアップ表示する固定バインドに簡略化しました
+        `ctrl+t`でtigをポップアップ表示する固定バインドに簡略化しました
         (`[[keys.command]]`、`.config/herdr/config.toml`)
     - `bin/tmux-kill-pane`・`tmux-kill-session`・`tmux-renumber-sessions`は
         削除しました。pane/tab/workspaceを閉じた際の「他へ退避してから閉じる」

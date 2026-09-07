@@ -22,7 +22,7 @@ close_pane = "alt+w"
 # 旧: C-t new-window -> tig(またはtig status)。
 # ポップアップで一時的にtigを開き、終了時に自動で閉じる。
 [[keys.command]]
-key = "alt+t"
+key = "ctrl+t"
 type = "popup"
 command = "tig"
 width = "90%"
