@@ -2,6 +2,12 @@
 # ダッシュボード/データソース/アカウントのprovisioningはterraform/local/grafana.tfで
 # 行うため、起動は`terraform/local/`で`terraform apply`を実行してください
 # (.envの生成、admin初期パスワードの発行まで含みます)。
+#
+# 別のdocker-compose project(prometheus/)で起動しているPrometheus(127.0.0.1限定)は
+# Rancher Desktopが提供するhost.docker.internal経由で参照する(terraform/local/
+# grafana.tfのgrafana_data_source.prometheus)。extra_hostsで明示上書きすると
+# Linux流のブリッジゲートウェイIPになり127.0.0.1限定のサービスに届かなくなるため
+# 指定しない。
 services:
   grafana:
     image: docker.io/grafana/grafana:13.0.2

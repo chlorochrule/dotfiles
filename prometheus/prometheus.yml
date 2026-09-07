@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # macOSホスト本体のメトリクス。node_exporterはコンテナではなくNix経由で
+  # ホストに直接インストールし127.0.0.1:9100でlistenさせている
+  # (hosts/MacBookPro-minami/home.nix参照)。host.docker.internalでホストへ到達する。
+  - job_name: node
+    static_configs:
+      - targets: ["host.docker.internal:9100"]

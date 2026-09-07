@@ -51,6 +51,19 @@
     "/Users/${username}/Downloads"
   ];
 
+  # macOSホスト本体(CPU/メモリ/ディスク等)のメトリクスをterraform/local/の
+  # Prometheus(Docker)へ提供するnode_exporter。DockerコンテナからではOSの
+  # 真のホストメトリクスが取れないため、nix-darwinのlaunchd daemonとして
+  # ホストに直接インストールする(home-managerのservices.*には
+  # node_exporter用のdarwin対応launchdモジュールが存在しないため)。
+  # 127.0.0.1限定でlistenし、外部・他コンテナからは直接到達できないようにする
+  # (Prometheus側はhost.docker.internal経由でアクセスする)。
+  services.prometheus.exporters.node = {
+    enable = true;
+    listenAddress = "127.0.0.1";
+    port = 9100;
+  };
+
   system.defaults.CustomUserPreferences = {
     # Spotlightの⌘Space(symbolic hotkey 64)を無効化し、Raycastに割り当てる
     "com.apple.symbolichotkeys" = {

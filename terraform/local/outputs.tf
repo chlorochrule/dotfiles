@@ -35,3 +35,7 @@ output "grafana_login_password" {
   value     = random_password.grafana_admin.result
   sensitive = true
 }
+
+output "prometheus_url" {
+  value = local.prometheus_url
+}

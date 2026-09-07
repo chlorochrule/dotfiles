@@ -61,9 +61,9 @@ resource "grafana_folder" "local" {
   depends_on = [null_resource.grafana_compose_up]
 }
 
-# 外部メトリクスソース(Prometheus等)はこのMacにまだ構築していないため、
-# Grafana組み込みのTestDataデータソースをterraform管理のサンプルとして
-# 登録している。実際のデータソースを追加する際はここに追記する。
+# Grafana組み込みのTestDataデータソース。terraform管理のサンプルとして
+# welcomeダッシュボードから参照している(実データはprometheus.tfの
+# grafana_data_source.prometheus参照)。
 resource "grafana_data_source" "testdata" {
   type = "grafana-testdata-datasource"
   name = "TestData"

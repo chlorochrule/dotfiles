@@ -140,11 +140,12 @@ sudo darwin-rebuild switch --flake ~/.dotfiles
 ├── .tigrc, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
 ├── langfuse/                    # ローカルLangfuse(Docker Compose定義)。Nix管理外
 ├── grafana/                     # ローカルGrafana(Docker Compose定義)。Nix管理外
+├── prometheus/                  # ローカルPrometheus(Docker Compose定義)。Nix管理外
 ├── terraform/
-│   └── local/                    # ↑2つのプロビジョニング用Terraform(ローカルMac
+│   └── local/                    # ↑3つのプロビジョニング用Terraform(ローカルMac
 │                                 #     provisioning専用ディレクトリ)。Nix管理外
-│                                 # (詳細は「ローカルサービス(Langfuse/Grafana)を
-│                                 #     Terraformでプロビジョニングする」参照)
+│                                 # (詳細は「ローカルサービス(Langfuse/Grafana/
+│                                 #     Prometheus)をTerraformでプロビジョニングする」参照)
 └── CLAUDE.md                    # このリポジトリで作業する際のClaude Code向け指示
 ```
 
@@ -199,18 +200,26 @@ claude-q36    # Qwen3.6-27B
 claude-q3cn   # Qwen3-Coder-Next
 ```
 
-## ローカルサービス(Langfuse/Grafana)をTerraformでプロビジョニングする
+## ローカルサービス(Langfuse/Grafana/Prometheus)をTerraformでプロビジョニングする
 
 `terraform/local/`は、このMac上だけで完結するローカル専用サービス群を
 Docker Composeで起動し、Terraformで冪等にプロビジョニングするための
 共通ディレクトリです(Nix管理外)。1つの`terraform apply`で以下の
-両方がまとめて起動・provisioningされます。サービスごとの資源は
-`langfuse.tf`/`grafana.tf`のようにファイル単位で分けており、出力名も
-`langfuse_*`/`grafana_*`のようにprefixしています。生成したパスワード等の
-資格情報はローカルの`terraform/local/terraform.tfstate`(git管理外)に
-保存されます。Dockerは`hosts/MacBookPro-minami/darwin.nix`のHomebrew
-cask `rancher`(Rancher Desktop)で提供されるものを使うため、Rancher
-Desktopを起動しておく必要があります。
+3つがまとめて起動・provisioningされます。サービスごとの資源は
+`langfuse.tf`/`grafana.tf`/`prometheus.tf`のようにファイル単位で分けており、
+出力名も`langfuse_*`/`grafana_*`/`prometheus_*`のようにprefixしています。
+生成したパスワード等の資格情報はローカルの`terraform/local/terraform.tfstate`
+(git管理外)に保存されます。Dockerは`hosts/MacBookPro-minami/darwin.nix`の
+Homebrew cask `rancher`(Rancher Desktop)で提供されるものを使うため、
+Rancher Desktopを起動しておく必要があります。
+
+各サービスは独立したdocker-compose project(`langfuse/`/`grafana/`/`prometheus/`)
+として起動しており、共有のDockerネットワークは作っていません。サービス間の
+通信(GrafanaからPrometheusへ、Prometheusからホストのnode_exporterへ)は
+Rancher Desktopが提供する`host.docker.internal`(127.0.0.1限定のサービスにも
+到達できる)経由で行います。`docker-compose.yml`で`extra_hosts`により
+`host.docker.internal`を明示上書きするとLinux流のブリッジゲートウェイIPになり
+127.0.0.1限定のサービスに届かなくなるため、あえて指定していません。
 
 ### Langfuse: Claude Codeの操作ログを記録する
 
@@ -246,22 +255,41 @@ Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.
 ダッシュボード・データソース・adminアカウントは可能な限りTerraformの
 [grafana/grafanaプロバイダー](https://registry.terraform.io/providers/grafana/grafana/latest/docs)
 で管理し、Grafanaの管理画面からの手動設定を極力不要にしています。
-現時点では外部メトリクスソース(Prometheus等)を構築していないため、
-組み込みのTestDataデータソースと、それを使ったサンプルダッシュボード
-(`Local`フォルダ配下の`Welcome`)のみをTerraform管理下に置いています。
-実際のデータソースを追加する際は`terraform/local/grafana.tf`に
-`grafana_data_source`/`grafana_dashboard`リソースを追記してください。
+データソースは下記のPrometheusのほか、組み込みのTestDataデータソースと、
+それを使ったサンプルダッシュボード(`Local`フォルダ配下の`Welcome`)を
+Terraform管理下に置いています。実データを見るダッシュボードを追加する際は
+`terraform/local/grafana.tf`に`grafana_dashboard`リソースを追記してください。
+
+### Prometheus: macOSホストのメトリクスを収集する
+
+`prometheus/`配下にPrometheusのセルフホスト用Docker Compose定義を置いています
+(`http://localhost:9095`、外部公開しません。コンテナ内部ポートは既定の9090ですが、
+ホスト側は`langfuse/`のminioが既に`9090`を使っているため`9095`にずらしています)。
+スクレイプ対象を定義する`prometheus/prometheus.yml`は秘密情報を含まないため
+Terraform管理外で直接コミットしています。
+
+CPU/メモリ/ディスク等、macOSホスト本体のメトリクスは
+[node_exporter](https://github.com/prometheus/node_exporter)で収集します。
+Dockerコンテナの中からでは真のホストメトリクスが取れないため、
+`hosts/MacBookPro-minami/darwin.nix`の`services.prometheus.exporters.node`
+(nix-darwin組み込みのlaunchd daemonモジュール)でホストに直接インストールし、
+`127.0.0.1:9100`限定でlistenさせています。Prometheus側はこれを
+`host.docker.internal:9100`としてスクレイプします。
+
+PrometheusのGrafanaデータソース登録(`terraform/local/prometheus.tf`の
+`grafana_data_source.prometheus`)もTerraform管理です。
 
 ### 初回セットアップ
 
 ```bash
-# 1. Langfuse/Grafanaを起動(初回のprovisioningも同時に行われる)
+# 1. Claude Codeのプラグイン設定・node_exporterを適用(claude-settings.jsonの
+#    変更反映と、Prometheusがスクレイプするhost側node_exporterの有効化を兼ねる)
+sudo darwin-rebuild switch --flake ~/.dotfiles
+
+# 2. Langfuse/Grafana/Prometheusを起動(初回のprovisioningも同時に行われる)
 cd ~/.dotfiles/terraform/local
 terraform init
 terraform apply
-
-# 2. Claude Codeのプラグイン設定を適用(claude-settings.jsonの変更を反映)
-sudo darwin-rebuild switch --flake ~/.dotfiles
 
 # 3. Claude Codeを起動し、Terraformが発行したLangfuseのAPIキーを登録
 #    (SECRET_KEYはOSキーチェーンに保存される)
@@ -277,16 +305,18 @@ claude
 Grafana(`http://localhost:3001`)は
 `terraform output grafana_login_user` /
 `terraform output -raw grafana_login_password`で確認できます。
+Prometheus(`http://localhost:9095`)はログイン不要です。
 
 ### 運用コマンド
 
 ```bash
 cd ~/.dotfiles/terraform/local
 
-# 起動/停止(両サービスまとめて)
+# 起動/停止(3サービスまとめて)
 terraform apply
 docker compose -f ../../langfuse/docker-compose.yml down
 docker compose -f ../../grafana/docker-compose.yml down
+docker compose -f ../../prometheus/docker-compose.yml down
 
 # 発行済みAPIキー・ログイン情報の確認
 terraform output -raw langfuse_public_key
@@ -303,6 +333,10 @@ terraform apply -replace=null_resource.compose_up
 # 再作成される。admin初期パスワードも同様の理由で同じ値のまま再作成される)
 docker compose -f ../../grafana/docker-compose.yml down -v
 terraform apply -replace=null_resource.grafana_compose_up
+
+# Prometheusの蓄積データを消してやり直す
+docker compose -f ../../prometheus/docker-compose.yml down -v
+terraform apply -replace=null_resource.prometheus_compose_up
 ```
 
 ## 既知の注意点
