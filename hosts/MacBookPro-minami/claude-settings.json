@@ -39,6 +39,24 @@
       }
     ]
   },
+  "extraKnownMarketplaces": {
+    "langfuse-observability": {
+      "source": {
+        "source": "github",
+        "repo": "langfuse/Claude-Observability-Plugin"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "langfuse-observability@langfuse-observability": true
+  },
+  "pluginConfigs": {
+    "langfuse-observability@langfuse-observability": {
+      "options": {
+        "LANGFUSE_BASE_URL": "http://localhost:3000"
+      }
+    }
+  },
   "language": "japanese",
   "tui": "fullscreen",
   "theme": "dark"

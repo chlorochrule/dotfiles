@@ -33,7 +33,6 @@ in
     nodejs
     nil
     terraform
-    direnv
     pandoc
     editorconfig-checker
     gh
@@ -50,6 +49,12 @@ in
       uv = "latest";
       deno = "latest";
     };
+  };
+
+  # langfuse/.envrc等、ディレクトリ単位で.envを自動生成・読み込みするために使う
+  programs.direnv = {
+    enable = true;
+    enableZshIntegration = true;
   };
 
   programs.git = {

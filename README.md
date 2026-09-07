@@ -138,6 +138,12 @@ sudo darwin-rebuild switch --flake ~/.dotfiles
 ├── .config/nvim/                # Neovim設定(Lua + lazy.nvim)
 ├── .config/herdr/config.toml    # herdr(ghosttyのマルチプレクサ)の設定
 ├── .tigrc, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
+├── langfuse/                    # ローカルLangfuse(Docker Compose定義)。Nix管理外
+├── terraform/
+│   └── langfuse/                # ↑のプロビジョニング用Terraform(ローカルMac
+│                                 #     provisioning専用ディレクトリ)。Nix管理外
+│                                 # (詳細は「ローカルLangfuseでClaude Codeの
+│                                 #     操作ログを記録する」参照)
 └── CLAUDE.md                    # このリポジトリで作業する際のClaude Code向け指示
 ```
 
@@ -190,6 +196,77 @@ ollama pull qwen3-coder-next   # 80B MoE/3B active, 46GB, コーディングエ�
 # ローカルLLM(Ollama)経由でClaude Codeを起動
 claude-q36    # Qwen3.6-27B
 claude-q3cn   # Qwen3-Coder-Next
+```
+
+## ローカルLangfuseでClaude Codeの操作ログを記録する
+
+`langfuse/`配下にLangfuse(LLMアプリ向けの可観測性OSS)のセルフホスト用
+Docker Compose定義を置いています。Claude Codeのユーザープロンプト、
+モデルの応答、ツール呼び出しの入出力を、このMac上だけで完結するLangfuseに
+記録できます(データは外部送信されません)。Dockerは`hosts/MacBookPro-minami/darwin.nix`の
+Homebrew cask `rancher`(Rancher Desktop)で提供されるものを使うため、
+Rancher Desktopを起動しておく必要があります。
+
+Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.com/langfuse/Claude-Observability-Plugin)
+(hookでセッションtranscriptを読み取りLangfuseへ送信するプラグイン)を使い、
+`hosts/MacBookPro-minami/claude-settings.json`の`extraKnownMarketplaces`/
+`enabledPlugins`/`pluginConfigs`で宣言的にマーケットプレイス登録・有効化・
+`LANGFUSE_BASE_URL`の設定までを行っています。APIキー(`LANGFUSE_PUBLIC_KEY`/
+`LANGFUSE_SECRET_KEY`)だけは秘密情報のためgit管理下に置かず、初回のみ
+手動設定が必要です。
+
+`langfuse/.env`(docker-compose.ymlのCHANGEME項目)や、組織/プロジェクト/
+ログイン用ユーザー・APIキーの初回作成(Langfuseの
+[headless initialization](https://langfuse.com/self-hosting/administration/headless-initialization)、
+`LANGFUSE_INIT_*`環境変数)は手動で行わず、`terraform/langfuse/`(Terraform、
+ローカルMacのプロビジョニング専用ディレクトリ)が`terraform apply`のたびに
+冪等に実施します。ブラウザでサインアップする必要はありません。生成した
+資格情報はローカルの`terraform/langfuse/terraform.tfstate`(git管理外)に
+保存されます。`docker-compose.yml`/`.envrc`自体は`langfuse/`に残しており、
+`langfuse/.envrc`(direnv)はTerraformが書いた`.env`をシェルにも読み込むだけの
+役割です。
+
+### 初回セットアップ
+
+```bash
+# 1. Langfuseを起動(初回のprovisioningも同時に行われる)
+cd ~/.dotfiles/terraform/langfuse
+terraform init
+terraform apply
+
+# 2. Claude Codeのプラグイン設定を適用(claude-settings.jsonの変更を反映)
+sudo darwin-rebuild switch --flake ~/.dotfiles
+
+# 3. Claude Codeを起動し、Terraformが発行したAPIキーを登録
+#    (SECRET_KEYはOSキーチェーンに保存される)
+claude
+/plugin configure langfuse-observability@langfuse-observability
+#   LANGFUSE_PUBLIC_KEY: `terraform output -raw public_key`
+#   LANGFUSE_SECRET_KEY: `terraform output -raw secret_key`
+```
+
+ブラウザ(`http://localhost:3000`)からログインしたい場合は、
+`terraform output login_email` / `terraform output -raw login_password`で
+確認できます。
+
+### 運用コマンド
+
+```bash
+cd ~/.dotfiles/terraform/langfuse
+
+# 起動/停止
+terraform apply
+docker compose -f ../../langfuse/docker-compose.yml down
+
+# 発行済みAPIキー・ログイン情報の確認
+terraform output -raw public_key
+terraform output -raw secret_key
+terraform output -raw login_password
+
+# 全データを消してやり直す(APIキー・ログイン情報は.envの内容を維持したまま
+# 同じ値で再作成される。値ごと変えたい場合はterraform.tfstateも消す)
+docker compose -f ../../langfuse/docker-compose.yml down -v
+terraform apply -replace=null_resource.compose_up
 ```
 
 ## 既知の注意点

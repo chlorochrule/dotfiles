@@ -2,3 +2,8 @@ home/claude/projects/
 home/claude/plugins/
 home/claude/settings.local.json
 home/claude.json
+langfuse/.env
+terraform/langfuse/.terraform/
+terraform/langfuse/terraform.tfstate*
+terraform/langfuse/.terraform.tfstate.lock.info
+terraform/langfuse/*.tfvars
