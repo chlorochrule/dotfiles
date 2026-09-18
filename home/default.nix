@@ -317,9 +317,11 @@ in
       fi
       ''
       (lib.mkOrder 1500 ''
-        # uv(miseがactivateされた後に実行する必要があるため優先度を上げている)
-        eval "$(uv generate-shell-completion zsh)"
-        eval "$(uvx --generate-shell-completion zsh)"
+        # uv(miseがactivateされた後に実行する必要があるため優先度を上げている)。
+        # mise未インストール状態(初回provisioning前等)ではuv/uvxがPATHに無く、
+        # command not foundがシェル起動ごとに出ることを実際に確認したためガードする
+        command -v uv >/dev/null 2>&1 && eval "$(uv generate-shell-completion zsh)"
+        command -v uvx >/dev/null 2>&1 && eval "$(uvx --generate-shell-completion zsh)"
       '')
     ];
   };
