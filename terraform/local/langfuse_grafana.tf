@@ -3,8 +3,55 @@
 # ClickHouseデータソースとダッシュボードをここで管理する(services/grafana/
 # docker-compose.ymlのGF_INSTALL_PLUGINSでgrafana-clickhouse-datasourceを導入)。
 #
-# 接続情報(host.docker.internal:8123、langfuse.tfのrandom_password.clickhouse)は
-# Langfuse自身のClickHouseインスタンスをそのまま参照している。
+# 接続先(host.docker.internal:8123)はLangfuse自身のClickHouseインスタンスを
+# そのまま参照している。ただしGrafanaはダッシュボードのSELECTクエリしか発行しない
+# ため、langfuse.tfのrandom_password.clickhouse(langfuse-web/workerが使うフル権限の
+# ユーザー)ではなく、SELECTのみ許可した専用ユーザーを別途作成して使う
+# (壊れたダッシュボード定義やプラグインの不具合でデータが書き変わる/消える
+# リスクを避けるための最小権限化)。
+
+resource "random_password" "clickhouse_grafana_ro" {
+  length  = 32
+  special = false
+}
+
+# CREATE USER/GRANTをSQLで発行する方式は、langfuse.tfのrandom_password.clickhouse
+# ユーザー自身がACCESS MANAGEMENT権限(他ユーザーの作成・権限付与)を持たず
+# 失敗した(docker公式clickhouseイメージのCLICKHOUSE_USER/PASSWORDで作られる
+# ユーザーはデータ操作権限のみで管理者権限は持たない)。
+# 代わりにClickHouseの設定ファイル(users.d、組み込みのreadonlyプロファイルを使う)
+# でユーザーを直接定義する。ClickHouseはconfig_reload_interval(既定2秒)で
+# users.d配下の変更を自動検知するため、パスワードを変更してもコンテナの
+# 再作成は不要(ただし初回はservices/langfuse/docker-compose.ymlの
+# volumeマウント自体が必要なので、コンテナ作成前にファイルが存在する必要がある)。
+resource "local_sensitive_file" "clickhouse_grafana_ro_users_xml" {
+  filename        = "${local.langfuse_dir}/clickhouse-users.d/grafana-ro.xml"
+  file_permission = "0600"
+
+  content = <<-EOT
+    <clickhouse>
+      <!-- 組み込みのreadonlyプロファイル(readonly=1)はSET文自体を禁止し、Grafanaの -->
+      <!-- ClickHouseプラグインが送るmax_execution_time等のセッション設定変更まで -->
+      <!-- 拒否してしまう。readonly=2はSETによる設定変更は許しつつ、書き込みは禁止する -->
+      <profiles>
+        <grafana_ro_profile>
+          <readonly>2</readonly>
+        </grafana_ro_profile>
+      </profiles>
+      <users>
+        <grafana_ro>
+          <password_sha256_hex>${sha256(random_password.clickhouse_grafana_ro.result)}</password_sha256_hex>
+          <networks>
+            <ip>::/0</ip>
+          </networks>
+          <profile>grafana_ro_profile</profile>
+          <quota>default</quota>
+          <access_management>0</access_management>
+        </grafana_ro>
+      </users>
+    </clickhouse>
+  EOT
+}
 
 resource "grafana_data_source" "langfuse_clickhouse" {
   type = "grafana-clickhouse-datasource"
@@ -15,12 +62,12 @@ resource "grafana_data_source" "langfuse_clickhouse" {
     port            = 8123
     protocol        = "http"
     secure          = false
-    username        = "clickhouse"
+    username        = "grafana_ro"
     defaultDatabase = "default"
   })
 
   secure_json_data_encoded = jsonencode({
-    password = random_password.clickhouse.result
+    password = random_password.clickhouse_grafana_ro.result
   })
 
   depends_on = [

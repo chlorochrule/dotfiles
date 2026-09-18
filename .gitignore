@@ -4,6 +4,7 @@ home/claude/plugins/
 home/claude/settings.local.json
 home/claude.json
 services/langfuse/.env
+services/langfuse/clickhouse-users.d/
 services/grafana/.env
 terraform/local/.terraform/
 terraform/local/terraform.tfstate*

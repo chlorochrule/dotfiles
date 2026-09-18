@@ -92,6 +92,11 @@ resource "null_resource" "compose_up" {
   triggers = {
     env_sha256     = local_sensitive_file.env.content_sha256
     compose_sha256 = filesha256("${local.langfuse_dir}/docker-compose.yml")
+    # clickhouseのusers.d(langfuse_grafana.tf)はdocker-compose.ymlのvolumeマウント先
+    # なので、初回起動前に必ず存在している必要がある(depends_onで順序も保証)。
+    # 内容の変更自体はClickHouseがconfig_reload_intervalで自動検知するため、
+    # ここでのtrigger化はコンテナ未作成時の初回マウント漏れを防ぐためのもの
+    clickhouse_users_xml_sha256 = local_sensitive_file.clickhouse_grafana_ro_users_xml.content_sha256
     # destroy時のprovisionerはself経由でしか値を参照できないためtriggers経由で渡す
     langfuse_dir = local.langfuse_dir
   }
@@ -107,5 +112,8 @@ resource "null_resource" "compose_up" {
     command     = "docker compose down"
   }
 
-  depends_on = [local_sensitive_file.env]
+  depends_on = [
+    local_sensitive_file.env,
+    local_sensitive_file.clickhouse_grafana_ro_users_xml,
+  ]
 }

@@ -115,6 +115,13 @@ services:
     volumes:
       - langfuse_clickhouse_data:/var/lib/clickhouse
       - langfuse_clickhouse_logs:/var/log/clickhouse-server
+      # terraform/local/langfuse_grafana.tfが生成する、Grafana用read-onlyユーザー
+      # (grafana_ro)の定義。CLICKHOUSE_USER(clickhouse)はACCESS MANAGEMENT権限を
+      # 持たずSQLのCREATE USER/GRANTで作成できないため、設定ファイルで直接定義する。
+      # ディレクトリ全体ではなくファイル単位でマウントするのは、entrypointが
+      # 起動時にCLICKHOUSE_USER用の`default-user.xml`を同じディレクトリへ
+      # 書き込む必要があり、ディレクトリ自体をroにすると失敗するため
+      - ./clickhouse-users.d/grafana-ro.xml:/etc/clickhouse-server/users.d/grafana-ro.xml:ro
     ports:
       - 127.0.0.1:8123:8123
       # native protocol(9000)はホスト側のどこからも参照していない
