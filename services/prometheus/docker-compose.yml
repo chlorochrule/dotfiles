@@ -1,6 +1,6 @@
 # ローカルMacでの個人利用専用(外部公開しない)Prometheus。ポートは127.0.0.1限定。
 # スクレイプ対象の定義は./prometheus.yml(秘密情報を含まないため直接コミット、
-# terraform管理外)。Grafanaへのデータソース登録はterraform/local/grafana.tfで
+# terraform管理外)。Grafanaへのデータソース登録はterraform/local/prometheus.tfで
 # 行うため、起動は`terraform/local/`で`terraform apply`を実行してください。
 #
 # ホストmacOS上でnix-darwin経由起動しているnode_exporter(127.0.0.1:9100、

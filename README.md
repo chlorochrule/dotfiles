@@ -171,11 +171,11 @@ Nix storeへコピーされないため、手編集してもrebuildなしで即�
 # 設定変更を適用
 sudo darwin-rebuild switch --flake ~/.dotfiles
 
-# inputsを最新化(flake.lockを更新)
-sudo nix --extra-experimental-features "nix-command flakes" flake update
+# inputsを最新化(flake.lockを更新)。flake.lockの書き込みだけなのでsudo不要
+nix --extra-experimental-features "nix-command flakes" flake update
 
 # 特定inputのみ更新
-sudo nix --extra-experimental-features "nix-command flakes" flake update <input名>
+nix --extra-experimental-features "nix-command flakes" flake update <input名>
 
 # 世代確認・ロールバック
 darwin-rebuild --list-generations
@@ -250,7 +250,8 @@ admin初期パスワードは`terraform/local/grafana.tf`が乱数で生成し`s
 Grafanaの管理画面からの手動設定を極力不要にしています。
 データソースは下記のPrometheusのほか、組み込みのTestDataデータソースと、
 それを使ったサンプルダッシュボード(`Local`フォルダ配下の`Welcome`)をTerraform管理下に置いています。
-実データを見るダッシュボードを追加する際は`terraform/local/grafana.tf`に`grafana_dashboard`リソースを追記してください。
+実データを見るダッシュボードを追加する際は`terraform/local/`の該当ファイル
+(例: `langfuse_grafana.tf`、`prometheus_grafana.tf`)に`grafana_dashboard`リソースを追記してください。
 
 LangfuseのトレースデータはClickHouseに保存されているため、
 公式署名済みの[grafana-clickhouse-datasource](https://grafana.com/grafana/plugins/grafana-clickhouse-datasource/)

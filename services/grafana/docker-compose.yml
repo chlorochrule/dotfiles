@@ -1,11 +1,12 @@
 # ローカルMacでの個人利用専用(外部公開しない)Grafana。ポートは127.0.0.1限定。
-# ダッシュボード/データソース/アカウントのprovisioningはterraform/local/grafana.tfで
-# 行うため、起動は`terraform/local/`で`terraform apply`を実行してください
+# ダッシュボード/データソース/アカウントのprovisioningはterraform/local/の
+# grafana.tf・prometheus.tf・langfuse_grafana*.tfで行うため、起動は
+# `terraform/local/`で`terraform apply`を実行してください
 # (.envの生成、admin初期パスワードの発行まで含みます)。
 #
 # 別のdocker-compose project(services/prometheus/)で起動しているPrometheus(127.0.0.1限定)は
 # Rancher Desktopが提供するhost.docker.internal経由で参照する(terraform/local/
-# grafana.tfのgrafana_data_source.prometheus)。extra_hostsで明示上書きすると
+# prometheus.tfのgrafana_data_source.prometheus)。extra_hostsで明示上書きすると
 # Linux流のブリッジゲートウェイIPになり127.0.0.1限定のサービスに届かなくなるため
 # 指定しない。
 services:
@@ -22,7 +23,12 @@ services:
       # Langfuseのトレースデータ(ClickHouse)をGrafanaダッシュボードで可視化するために使う
       # (terraform/local/langfuse_grafana.tf参照)。公式署名済みプラグインのため
       # GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINSは不要。
-      GF_INSTALL_PLUGINS: grafana-clickhouse-datasource 4.21.2
+      # GF_INSTALL_PLUGINSは非推奨(起動ログにdeprecation警告が出る)。
+      # SYNC版を使うのは、terraform apply側の`docker compose up -d --wait`が
+      # ヘルスチェック通過を待つ前提であり、プラグインの読み込み完了後にGrafanaが
+      # 起動する(非同期のGF_PLUGINS_PREINSTALLではインストール未完了のまま
+      # ヘルスチェックが通ってしまう可能性がある)必要があるため。
+      GF_PLUGINS_PREINSTALL_SYNC: grafana-clickhouse-datasource@4.21.2
     ports:
       - 127.0.0.1:3001:3000
     volumes:
