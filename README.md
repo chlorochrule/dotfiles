@@ -347,7 +347,7 @@ Prometheus(`http://localhost:9095`)はログイン不要です。
 
 ### 運用コマンド
 
-Langfuse本体・redis・postgresのイメージバージョンを上げる際は、手でdocker-compose.ymlの
+Langfuse本体・redis・postgres・clickhouseのイメージバージョンを上げる際は、手でdocker-compose.ymlの
 タグを書き換えるのではなく`.claude/skills/upgrade-langfuse`(このリポジトリで作業する時に
 Claude Codeが自動検出するプロジェクトスコープのskill)を使ってください。
 Grafanaダッシュボードが依存するClickHouseスキーマへの影響を確認する手順まで含みます。

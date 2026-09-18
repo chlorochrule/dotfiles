@@ -2,8 +2,8 @@
 name: upgrade-langfuse
 description: >-
   dotfilesリポジトリ(services/langfuse/docker-compose.yml)でバージョンを明示的に固定している
-  Langfuse本体(langfuse-web/langfuse-worker)・redis・postgresのイメージタグを上げる手順。
-  「Langfuseを最新にして」「langfuse-workerのバージョン上げて」「redis/postgresのイメージ更新して」
+  Langfuse本体(langfuse-web/langfuse-worker)・redis・postgres・clickhouseのイメージタグを上げる手順。
+  「Langfuseを最新にして」「langfuse-workerのバージョン上げて」「redis/postgres/clickhouseのイメージ更新して」
   のように名前が出た場合はもちろん、このリポジトリで作業中に「バージョン上げて」「更新して」
   「アップグレードして」と言われた場合も、対象がこれらのサービスなら必ず使うこと。
   GrafanaダッシュボードがLangfuseのClickHouseスキーマ(events_core)に生SQLで直接依存しており、
@@ -19,6 +19,9 @@ description: >-
   メジャーバージョンのみの移動タグ(`:4`/`:7`/`:17`)で追従させている4つのイメージ
   (`langfuse-worker`、`langfuse`、`redis`、`postgres`)を、導入時点の実バージョンへ明示的に
   固定している。理由はdocker-compose.yml先頭のコメントを参照。
+- `clickhouse`も同じ理由で固定している。ただし上流はマイナー系列の移動タグ(`:25.12`)で
+  指定しており、Langfuseとの組み合わせで検証されているのはその系列なので、
+  **系列は上流のdocker-compose.ymlに合わせ、系列内の最新パッチに固定する**方針にしている。
 - `minio`・Grafana・Prometheusのバージョンはこのスキルの対象外(別の考慮が必要)。
 - 作業前に`git status`でこのリポジトリがクリーンであることを確認する。無関係な変更が
   混ざっているとバージョン更新のコミットが追いにくくなる。
@@ -27,8 +30,8 @@ description: >-
 
 ### 1. 現在のバージョンを確認する
 
-`services/langfuse/docker-compose.yml`の4箇所のimageタグ
-(`langfuse-worker`、`langfuse`、`redis`、`postgres:${POSTGRES_VERSION:-...}`)を読む。
+`services/langfuse/docker-compose.yml`の5箇所のimageタグ
+(`langfuse-worker`、`langfuse`、`redis`、`postgres:${POSTGRES_VERSION:-...}`、`clickhouse`)を読む。
 `langfuse-worker`と`langfuse`は同じLangfuseアプリケーションのサーバー/ワーカーなので、
 常に同じバージョンに揃えること(片方だけ上げると動作しない)。
 
@@ -56,6 +59,21 @@ scripts/list-registry-tags.sh registry-1.docker.io library/redis \
 scripts/list-registry-tags.sh registry-1.docker.io library/postgres \
   | scripts/latest-patch.sh <現在のバージョン>
 ```
+
+clickhouseのタグは`25.12.11.4`(年.月.パッチ.ビルド)の4要素で、先頭が年のため
+`latest-patch.sh`の「同じメジャー内」の比較は使えない。代わりに、上流の
+docker-compose.ymlが指定している系列を確認し、その系列内の最新パッチを求める。
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/langfuse/langfuse/main/docker-compose.yml \
+  | grep 'clickhouse-server:'
+scripts/list-registry-tags.sh registry-1.docker.io clickhouse/clickhouse-server \
+  | grep -E '^<上流の系列(例: 25\.12)>\.[0-9]+\.[0-9]+$' | sort -V | tail -1
+```
+
+上流の系列が現在の固定値の系列から変わっていた場合は、系列の移行として別扱いで提示する。
+ClickHouseはデータ形式の都合で新しい系列から古い系列へ戻せないことがあるため、
+移行する場合は事前に`langfuse_clickhouse_data`ボリュームのバックアップを取るよう伝える。
 
 現在のバージョンと「同じメジャー内での最新パッチ」を表にしてユーザーに提示し、
 どこまで上げるか確認を取る。既定では**同じメジャー内のパッチ更新のみ**を提案する。
@@ -92,6 +110,7 @@ docker inspect langfuse-langfuse-web-1 --format '{{.Config.Image}}'
 docker inspect langfuse-langfuse-worker-1 --format '{{.Config.Image}}'
 docker inspect langfuse-redis-1 --format '{{.Config.Image}}'
 docker inspect langfuse-postgres-1 --format '{{.Config.Image}}'
+docker inspect langfuse-clickhouse-1 --format '{{.Config.Image}}'
 docker ps --format '{{.Names}} {{.Status}}' | grep langfuse
 ```
 

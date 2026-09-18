@@ -8,11 +8,14 @@
 # まで含みます)。
 #
 # 上流はlangfuse/langfuse-worker/redis/postgresをメジャーバージョンのみの
-# 移動タグ(`:4`/`:7`/`:17`)で追従させているが、Grafana側(terraform/local/
-# langfuse_grafana*.tf)がClickHouseの内部テーブル(events_core)に生SQLで
-# 依存しているため、無言のマイナー更新でスキーマが変わりダッシュボードが
-# 壊れることを避けたい。このため、この4つだけ導入時点の実バージョンに
-# 明示的に固定している(上げる場合は意図的にここを書き換える)。
+# 移動タグ(`:4`/`:7`/`:17`)で、clickhouseをマイナー系列の移動タグ(`:25.12`)で
+# 追従させているが、Grafana側(terraform/local/langfuse_grafana*.tf)が
+# ClickHouseの内部テーブル(events_core)に生SQLで依存しているため、無言の更新で
+# スキーマやSQLの挙動が変わりダッシュボードが壊れることを避けたい。このため、
+# この5つは導入時点の実バージョンに明示的に固定している(上げる場合は
+# .claude/skills/upgrade-langfuseの手順で意図的にここを書き換える)。
+# clickhouseは上流がLangfuseとの組み合わせで検証している系列に合わせ、
+# 系列内の最新パッチに固定する(系列自体は上流が上げるまで変えない)。
 # minio(cgr.dev/chainguard/minio)はChainguardの無料枠だと`latest`以外の
 # バージョンタグが提供されない(履歴版タグは有料プラン限定)ため、
 # digest固定するとセキュリティパッチも一切入らなくなり上流追従の
@@ -105,7 +108,7 @@ services:
       LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_INIT_USER_PASSWORD:-}
 
   clickhouse:
-    image: docker.io/clickhouse/clickhouse-server:25.12
+    image: docker.io/clickhouse/clickhouse-server:25.12.11.4
     restart: always
     user: "101:101"
     environment:
