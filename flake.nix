@@ -2,7 +2,7 @@
   description = "darwin config";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-25.11-darwin";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
     # 一部パッケージ(ollama等、リリースブランチへのバックポートが追いつかず
     # 実用上unstable版が必要なもの)をホスト側でoverlay経由で個別に差し替えるために使う。
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -11,11 +11,11 @@
     # ハッシュ検証込みで取得するラッパー(cachix設定はdarwin.nixのnix.extraOptions)。
     herdr-nix.url = "github:herdrdev/herdr-nix";
     nix-darwin = {
-      url = "github:nix-darwin/nix-darwin/nix-darwin-25.11";
+      url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {
-      url = "github:nix-community/home-manager/release-25.11";
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

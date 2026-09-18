@@ -92,7 +92,7 @@ in
     fi
     tmp="$(mktemp)"
     ${pkgs.jq}/bin/jq \
-      --arg pwBin "${pkgs.playwright-mcp}/bin/mcp-server-playwright" \
+      --arg pwBin "${pkgs.playwright-mcp}/bin/playwright-mcp" \
       '.mcpServers = ((.mcpServers // {}) + {
         "chrome-devtools": { type: "stdio", command: "npx", args: ["-y", "chrome-devtools-mcp@latest"] },
         "playwright": { type: "stdio", command: $pwBin }

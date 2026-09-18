@@ -164,6 +164,9 @@ in
 
   programs.zsh = {
     enable = true;
+    # home-manager 26.05以降、既定値がXDGディレクトリ(~/.config/zsh)へ変わる予定。
+    # XDG移行は別途まとめて対応する(TODO)ため、ここでは明示的に現状(homeDirectory)を固定する。
+    dotDir = config.home.homeDirectory;
     enableCompletion = true;
     syntaxHighlighting.enable = true;
     autosuggestion.enable = true;

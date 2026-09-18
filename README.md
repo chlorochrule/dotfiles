@@ -87,7 +87,7 @@ git add hosts/<新ホストのディレクトリ名> flake.nix
 
 ```bash
 sudo nix --extra-experimental-features "nix-command flakes" \
-    run nix-darwin/nix-darwin-25.11#darwin-rebuild -- switch --flake ~/.dotfiles
+    run nix-darwin/nix-darwin-26.05#darwin-rebuild -- switch --flake ~/.dotfiles
 ```
 
 `/etc/bashrc` や `/etc/zshrc` など、nix-darwinが管理しようとするファイルが既に存在する場合は `Unexpected files in /etc` のようなエラーで止まります。
@@ -355,12 +355,9 @@ terraform apply -replace=null_resource.prometheus_compose_up
 - `$HOME is not owned by you` という警告は、
     `sudo` 実行時にrootへのfallbackが起きているだけで実害はありません
 - Homebrewは casks 専用です。
-    本来 `homebrew.onActivation.cleanup = "zap"` にしており、`hosts/<hostname>/darwin.nix` の
+    `homebrew.onActivation.cleanup = "zap"` にしており、`hosts/<hostname>/darwin.nix` の
     `casks` リストに宣言していないcaskはrebuild時に自動アンインストールされます。
     新しいGUIアプリをHomebrew経由で入れる場合は必ずリストに追加してください
-    (Homebrew 6.0.22で`--cleanup`フラグが廃止され、nix-darwin-25.11ブランチの対応がまだ
-    未リリースのため、現在は一時的に `cleanup = "none"` にしてcleanupを無効化しています。
-    修正が取り込まれ次第 `zap` に戻す予定)
 - `homebrew.onActivation.autoUpdate`/`upgrade` は `true` にしてあり、`darwin-rebuild switch` の
     たびにHomebrewのタップ情報が更新され、古くなったcaskは自動で最新版へアップグレードされます
 - BSLなどunfreeライセンスのパッケージ(`terraform`等)を`home.packages`に追加する場合は、
@@ -401,10 +398,10 @@ terraform apply -replace=null_resource.prometheus_compose_up
     128GB環境なら問題なく収まります
 - `hosts/MacBookPro-minami/darwin.nix`では、Ollamaパッケージだけ`flake.nix`の
     `nixpkgs-unstable` inputからoverlayで差し替えています。
-    `nixpkgs-25.11-darwin`収録のollama(0.21.1)はアップストリームのバックポートが
+    `nixpkgs`のDarwinリリースブランチ収録のollamaはアップストリームのバックポートが
     追いついておらず、Qwen3.6やQwen3-Coder-Nextのような新しいモデルのマニフェストが
     要求するバージョンを満たせず`pull`が失敗するためです。
-    将来`nixpkgs-25.11-darwin`側のollamaが更新されたらこのoverlayは不要になる可能性があります
+    将来リリースブランチ側のollamaが十分新しくなればこのoverlayは不要になる可能性があります
 - `herdr`(AIコーディングエージェント用のターミナルワークスペースマネージャ)はnixpkgs未収録のため、
     `flake.nix`で公式の`herdr-nix`(herdr本体のprebuiltバイナリをcachix経由でハッシュ検証込みで
     取得するラッパー)をinputとして追加し、`home-manager.extraSpecialArgs`経由で全マシン共通の
