@@ -1,4 +1,4 @@
-{ username, pkgs-unstable, ... }: {
+{ lib, username, pkgs-unstable, ... }: {
   # nixpkgs-25.11-darwinのollamaは0.21.1で止まっており(アップストリームの
   # バックポートが追いついていない)、新しいモデル(Qwen3.6, Qwen3-Coder-Next等)の
   # マニフェストが要求するバージョンを満たせずpullが失敗する。
@@ -63,6 +63,14 @@
     listenAddress = "127.0.0.1";
     port = 9100;
   };
+
+  # services.prometheus.exporters.nodeが内部で作る_prometheus-node-exporter
+  # ユーザーのデフォルトhomeは"/var/lib/prometheus-node-exporter"だが、
+  # 実際にdscl上へ記録された既存アカウントのhomeは"/private/var/lib/..."
+  # (同一パスだが/varは/private/varへのシンボリックリンクのため文字列が異なる)。
+  # nix-darwinは既存ユーザーのhome変更に対応しておらず文字列不一致で
+  # activationが失敗するため、実際の値でmkForceして上書きする。
+  users.users._prometheus-node-exporter.home = lib.mkForce "/private/var/lib/prometheus-node-exporter";
 
   system.defaults.CustomUserPreferences = {
     # Spotlightの⌘Space(symbolic hotkey 64)を無効化し、Raycastに割り当てる
