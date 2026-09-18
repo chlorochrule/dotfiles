@@ -27,11 +27,10 @@ opt.shiftwidth = 4
 opt.expandtab = true
 opt.smarttab = true
 opt.shiftround = true
--- indentexprが設定されるファイルタイプ(treesitter/filetype indentが効くもの)では
--- 以下は無視される。indentexprの無いファイルタイプのためのフォールバック
+-- indentexprの無いファイルタイプ(text, toml等)のフォールバックは前行のインデントを
+-- 引き継ぐだけにする。cindent/smartindentを全体で有効にすると、閉じていない括弧や
+-- 行末の{でC言語風にインデントされてしまう
 opt.autoindent = true
-opt.smartindent = true
-opt.cindent = true
 
 -- search
 opt.wrapscan = true
