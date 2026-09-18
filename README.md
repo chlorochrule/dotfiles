@@ -131,10 +131,10 @@ home-manager側の設定(zsh、git、mise、Ghostty等)もこの1コマンドで
 │   │                             # (zsh, git, mise, fzf, eza, starship, ghostty等)
 │   └── claude/                  # ~/.claude/配下、全マシン共通の内容
 │       ├── CLAUDE.md
-│       ├── commands/
-│       ├── skills/
-│       ├── agents/
-│       └── hooks/
+│       ├── commands/            # (任意)現在は中身が無いためgit上には存在しない
+│       ├── skills/              # (任意)同上
+│       ├── agents/              # (任意)同上
+│       └── hooks/               # editorconfig-check.sh, herdr-agent-state.sh
 ├── .config/nvim/                # Neovim設定(Lua + lazy.nvim)
 ├── .config/herdr/config.toml    # herdr(ghosttyのマルチプレクサ)の設定
 ├── .tigrc, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
