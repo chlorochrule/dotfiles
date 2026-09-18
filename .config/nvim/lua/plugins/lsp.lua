@@ -21,8 +21,8 @@ local function on_attach(_, bufnr)
   vim.keymap.set("n", "<Leader>a", vim.lsp.buf.definition, opts)
   vim.keymap.set("n", "<Leader>k", vim.lsp.buf.hover, opts)
   vim.keymap.set("n", "<Leader>r", vim.lsp.buf.rename, opts)
-  vim.keymap.set("n", "<C-n>", vim.diagnostic.goto_next, opts)
-  vim.keymap.set("n", "<C-p>", vim.diagnostic.goto_prev, opts)
+  vim.keymap.set("n", "<C-n>", function() vim.diagnostic.jump({ count = 1 }) end, opts)
+  vim.keymap.set("n", "<C-p>", function() vim.diagnostic.jump({ count = -1 }) end, opts)
 end
 
 return {
