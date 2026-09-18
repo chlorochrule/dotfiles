@@ -217,7 +217,9 @@ Linux流のブリッジゲートウェイIPになり127.0.0.1限定のサービ�
 
 `services/langfuse/`配下にLangfuse(LLMアプリ向けの可観測性OSS)のセルフホスト用Docker Compose定義を置いています。
 Claude Codeのユーザープロンプト、モデルの応答、ツール呼び出しの入出力を、
-このMac上だけで完結するLangfuseに記録できます(データは外部送信されません)。
+このMac上だけで完結するLangfuseに記録できます(データは外部送信されません。
+`terraform/local/langfuse.tf`が`.env`に`TELEMETRY_ENABLED=false`を書き出し、
+Langfuse自体の利用統計送信も無効化しています)。
 
 Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.com/langfuse/Claude-Observability-Plugin)
 (hookでセッションtranscriptを読み取りLangfuseへ送信するプラグイン)を使い、
@@ -240,6 +242,8 @@ APIキー(`LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY`)だけは秘密情報の�
 (`http://localhost:3001`、外部公開しません)。
 admin初期パスワードは`terraform/local/grafana.tf`が乱数で生成し`services/grafana/.env`に書き出します
 (Langfuseの`.env`生成と同じ方針)。
+`services/grafana/docker-compose.yml`では利用統計送信・バージョンチェック
+(`GF_ANALYTICS_*`)も無効化しています。
 
 ダッシュボード、データソース、adminアカウントは可能な限りTerraformの
 [grafana/grafanaプロバイダー](https://registry.terraform.io/providers/grafana/grafana/latest/docs)で管理し、

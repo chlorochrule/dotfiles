@@ -61,6 +61,7 @@ resource "local_sensitive_file" "env" {
   file_permission = "0600"
 
   content = <<-EOT
+    TELEMETRY_ENABLED=false
     SALT=${random_id.salt.hex}
     ENCRYPTION_KEY=${random_id.encryption_key.hex}
     NEXTAUTH_SECRET=${random_id.nextauth_secret.hex}
