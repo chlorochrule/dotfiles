@@ -6,9 +6,20 @@
 # 起動は`terraform/local/`で`terraform apply`を実行してください
 # (.envの生成・LANGFUSE_INIT_*によるorg/project/APIキーの初回provisioning
 # まで含みます)。
+#
+# 上流はlangfuse/langfuse-worker/redis/postgresをメジャーバージョンのみの
+# 移動タグ(`:4`/`:7`/`:17`)で追従させているが、Grafana側(terraform/local/
+# langfuse_grafana*.tf)がClickHouseの内部テーブル(events_core)に生SQLで
+# 依存しているため、無言のマイナー更新でスキーマが変わりダッシュボードが
+# 壊れることを避けたい。このため、この4つだけ導入時点の実バージョンに
+# 明示的に固定している(上げる場合は意図的にここを書き換える)。
+# minio(cgr.dev/chainguard/minio)はChainguardの無料枠だと`latest`以外の
+# バージョンタグが提供されない(履歴版タグは有料プラン限定)ため、
+# digest固定するとセキュリティパッチも一切入らなくなり上流追従の
+# メリットを失うので、あえて固定せず上流のまま`latest`にしている。
 services:
   langfuse-worker:
-    image: docker.langfuse.com/langfuse/langfuse-worker:4
+    image: docker.langfuse.com/langfuse/langfuse-worker:4.30.0
     restart: always
     depends_on: &langfuse-depends-on
       postgres:
@@ -65,7 +76,7 @@ services:
       SMTP_CONNECTION_URL: ${SMTP_CONNECTION_URL:-}
 
   langfuse-web:
-    image: docker.langfuse.com/langfuse/langfuse:4
+    image: docker.langfuse.com/langfuse/langfuse:4.30.0
     restart: always
     depends_on: *langfuse-depends-on
     ports:
@@ -129,7 +140,7 @@ services:
       start_period: 1s
 
   redis:
-    image: docker.io/redis:7
+    image: docker.io/redis:7.4.11
     restart: always
     command: >
       --requirepass ${REDIS_AUTH:-myredissecret}
@@ -145,7 +156,7 @@ services:
       retries: 10
 
   postgres:
-    image: docker.io/postgres:${POSTGRES_VERSION:-17}
+    image: docker.io/postgres:${POSTGRES_VERSION:-17.11}
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
