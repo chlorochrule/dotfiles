@@ -1,7 +1,7 @@
 # LangfuseのトレースデータはClickHouse(services/langfuse、events_coreテーブル)に
 # 保存されている。Grafana組み込みのTestDataとは別に、実データを可視化するための
 # ClickHouseデータソースとダッシュボードをここで管理する(services/grafana/
-# docker-compose.ymlのGF_INSTALL_PLUGINSでgrafana-clickhouse-datasourceを導入)。
+# docker-compose.ymlのGF_PLUGINS_PREINSTALL_SYNCでgrafana-clickhouse-datasourceを導入)。
 #
 # 接続先(host.docker.internal:8123)はLangfuse自身のClickHouseインスタンスを
 # そのまま参照している。ただしGrafanaはダッシュボードのSELECTクエリしか発行しない

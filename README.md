@@ -108,6 +108,11 @@ home-manager側の設定(zsh、git、mise、Ghostty等)もこの1コマンドで
 
 ```
 ~/.dotfiles/
+├── .claude/
+│   └── skills/                  # このリポジトリで作業する時だけ使うプロジェクトスコープの
+│                                 # skill(Claude Codeがこのリポジトリ内で自動検出する)。
+│                                 # ~/.claude/配下へはデプロイされない(home/claude/skills/とは別物)。
+│                                 # 例: upgrade-langfuse(services/langfuse/のバージョンを上げる手順)
 ├── flake.nix                    # inputs定義、ホストをdarwinConfigurationsへ自動展開
 ├── darwin.nix                   # 全マシン共通のnix-darwin設定
 │                                 # (system.defaults, フォント, unfreeパッケージの許可等)
@@ -152,7 +157,8 @@ Nix storeへコピーされないため、手編集してもrebuildなしで即�
 
 これらは「全マシン共通(`home/claude/<name>/`) + このホスト固有(`hosts/<hostname>/claude/<name>/`、
 存在する場合のみ)」をファイル単位でマージして`~/.claude/<name>/`を構成します
-(`hosts/<hostname>/home.nix`内のマージ処理)。
+(`home/default.nix`内のマージ処理。ホスト名は`flake.nix`が`home-manager.extraSpecialArgs`
+経由で渡すため、このロジック自体はホストを問わず共通で、新規ホスト追加時にコピーする必要はありません)。
 同名ファイルがあればホスト固有側が優先されます。
 
 この仕組みにより、例えば私用PCと仕事用PCの両方で共通のコマンド/スキルを使いつつ、
@@ -255,7 +261,7 @@ Grafanaの管理画面からの手動設定を極力不要にしています。
 
 LangfuseのトレースデータはClickHouseに保存されているため、
 公式署名済みの[grafana-clickhouse-datasource](https://grafana.com/grafana/plugins/grafana-clickhouse-datasource/)
-プラグインを`services/grafana/docker-compose.yml`の`GF_INSTALL_PLUGINS`で導入し、
+プラグインを`services/grafana/docker-compose.yml`の`GF_PLUGINS_PREINSTALL_SYNC`で導入し、
 Langfuse自身のClickHouse(`services/langfuse/`)へのデータソースと、
 Langfuseの[Dashboards](http://localhost:3000/project/claude-code/dashboards)
 (Langfuse Home/Agent/Cost/Latency/Usage Management、Langfuse Maintained)相当のダッシュボードを
@@ -270,6 +276,12 @@ Langfuse UIの数値と一致することを確認済みです。
 Scores関連(スコアデータ無し)、Usage Managementの大半(Traces/Observations統計とほぼ重複)、
 Time To First Token/出力トークン毎秒系(`completion_start_time`が未記録でLangfuse UI側も常にNo data)は
 対象外にしています。
+
+GrafanaはこのClickHouseへ、langfuse-web/workerが使うフル権限のユーザーではなく、
+SELECTのみ許可した専用ユーザー(`grafana_ro`)で接続しています。ダッシュボード定義や
+プラグインの不具合でデータが書き変わる/消えるリスクを避けるための最小権限化で、
+ユーザー自体はClickHouseの設定ファイル(`services/langfuse/clickhouse-users.d/`、
+`terraform/local/langfuse_grafana.tf`が生成、git管理外)で定義しています。
 
 ### Prometheus: macOSホストのメトリクスを収集する
 
@@ -321,6 +333,11 @@ claude
 Prometheus(`http://localhost:9095`)はログイン不要です。
 
 ### 運用コマンド
+
+Langfuse本体・redis・postgresのイメージバージョンを上げる際は、手でdocker-compose.ymlの
+タグを書き換えるのではなく`.claude/skills/upgrade-langfuse`(このリポジトリで作業する時に
+Claude Codeが自動検出するプロジェクトスコープのskill)を使ってください。
+Grafanaダッシュボードが依存するClickHouseスキーマへの影響を確認する手順まで含みます。
 
 ```bash
 cd ~/.dotfiles/terraform/local
@@ -407,6 +424,11 @@ terraform apply -replace=null_resource.prometheus_compose_up
     追いついておらず、Qwen3.6やQwen3-Coder-Nextのような新しいモデルのマニフェストが
     要求するバージョンを満たせず`pull`が失敗するためです。
     将来リリースブランチ側のollamaが十分新しくなればこのoverlayは不要になる可能性があります
+- `.config/nvim/lua/plugins/treesitter.lua`のnvim-treesitterは`main`ブランチを使っています
+    (Neovim 0.12以降が必要。上流の開発は`main`が主流で、`master`はNeovim 0.11向けの
+    後方互換用に維持されている保守版)。`main`はパーサーのビルドに外部の`tree-sitter`
+    CLIコマンドを直接呼ぶため(masterは内部で完結していた)、`home/default.nix`の
+    `home.packages`に`pkgs.tree-sitter`が無いとパーサーのビルドが失敗します
 - `herdr`(AIコーディングエージェント用のターミナルワークスペースマネージャ)はnixpkgs未収録のため、
     `flake.nix`で公式の`herdr-nix`(herdr本体のprebuiltバイナリをcachix経由でハッシュ検証込みで
     取得するラッパー)をinputとして追加し、`home-manager.extraSpecialArgs`経由で全マシン共通の
