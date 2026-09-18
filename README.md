@@ -370,16 +370,16 @@ terraform output -raw grafana_login_password
 # Langfuseの全データを消してやり直す(APIキー・ログイン情報は.envの内容を
 # 維持したまま同じ値で再作成される。値ごと変えたい場合はterraform.tfstateも消す)
 docker compose -f ../../services/langfuse/docker-compose.yml down -v
-terraform apply -replace=null_resource.compose_up
+terraform apply -replace=terraform_data.compose_up
 
 # Grafanaの全データを消してやり直す(ダッシュボード等はterraform apply時に
 # 再作成される。admin初期パスワードも同様の理由で同じ値のまま再作成される)
 docker compose -f ../../services/grafana/docker-compose.yml down -v
-terraform apply -replace=null_resource.grafana_compose_up
+terraform apply -replace=terraform_data.grafana_compose_up
 
 # Prometheusの蓄積データを消してやり直す
 docker compose -f ../../services/prometheus/docker-compose.yml down -v
-terraform apply -replace=null_resource.prometheus_compose_up
+terraform apply -replace=terraform_data.prometheus_compose_up
 ```
 
 ## 既知の注意点

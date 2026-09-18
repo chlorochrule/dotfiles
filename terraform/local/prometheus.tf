@@ -11,12 +11,12 @@ locals {
 }
 
 # docker-compose.ymlの実体はTerraform化せず、`docker compose up`を呼ぶだけの
-# null_resourceにする(langfuse/grafanaと同じ方針)。
-resource "null_resource" "prometheus_compose_up" {
-  triggers = {
+# terraform_dataにする(langfuse/grafanaと同じ方針)。
+resource "terraform_data" "prometheus_compose_up" {
+  triggers_replace = {
     compose_sha256    = filesha256("${local.prometheus_dir}/docker-compose.yml")
     prometheus_sha256 = filesha256("${local.prometheus_dir}/prometheus.yml")
-    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers経由で渡す
+    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers_replace経由で渡す
     prometheus_dir = local.prometheus_dir
   }
 
@@ -27,7 +27,7 @@ resource "null_resource" "prometheus_compose_up" {
 
   provisioner "local-exec" {
     when        = destroy
-    working_dir = self.triggers.prometheus_dir
+    working_dir = self.triggers_replace.prometheus_dir
     command     = "docker compose down"
   }
 }
@@ -46,7 +46,7 @@ resource "grafana_data_source" "prometheus" {
   })
 
   depends_on = [
-    null_resource.grafana_compose_up,
-    null_resource.prometheus_compose_up,
+    terraform_data.grafana_compose_up,
+    terraform_data.prometheus_compose_up,
   ]
 }

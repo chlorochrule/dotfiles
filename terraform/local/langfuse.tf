@@ -87,9 +87,9 @@ resource "local_sensitive_file" "env" {
 
 # docker-compose.ymlの実体はTerraform化せず(healthcheck/depends_on込みで
 # 上流のdocker-compose.ymlをそのまま追従させたいため)、.env生成後に
-# `docker compose up`を呼ぶだけのnull_resourceにする
-resource "null_resource" "compose_up" {
-  triggers = {
+# `docker compose up`を呼ぶだけのterraform_dataにする
+resource "terraform_data" "compose_up" {
+  triggers_replace = {
     env_sha256     = local_sensitive_file.env.content_sha256
     compose_sha256 = filesha256("${local.langfuse_dir}/docker-compose.yml")
     # clickhouseのusers.d(langfuse_grafana.tf)はdocker-compose.ymlのvolumeマウント先
@@ -97,7 +97,7 @@ resource "null_resource" "compose_up" {
     # 内容の変更自体はClickHouseがconfig_reload_intervalで自動検知するため、
     # ここでのtrigger化はコンテナ未作成時の初回マウント漏れを防ぐためのもの
     clickhouse_users_xml_sha256 = local_sensitive_file.clickhouse_grafana_ro_users_xml.content_sha256
-    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers経由で渡す
+    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers_replace経由で渡す
     langfuse_dir = local.langfuse_dir
   }
 
@@ -108,7 +108,7 @@ resource "null_resource" "compose_up" {
 
   provisioner "local-exec" {
     when        = destroy
-    working_dir = self.triggers.langfuse_dir
+    working_dir = self.triggers_replace.langfuse_dir
     command     = "docker compose down"
   }
 

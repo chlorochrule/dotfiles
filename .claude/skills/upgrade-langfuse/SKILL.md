@@ -99,7 +99,7 @@ cd terraform/local
 terraform apply
 ```
 
-`docker-compose.yml`のハッシュが`null_resource`の`triggers`に含まれているため、
+`docker-compose.yml`のハッシュが`terraform_data`の`triggers_replace`に含まれているため、
 変更を検知して対象サービスのコンテナが`docker compose down` → `up -d --wait`で
 作り直される(`--wait`がヘルスチェック通過まで待つ)。
 
@@ -155,7 +155,7 @@ Langfuseの新しいClickHouseスキーマに合わせて修正するか、後�
 cd services/langfuse
 docker compose down -v
 cd ../../terraform/local
-terraform apply -replace=null_resource.compose_up
+terraform apply -replace=terraform_data.compose_up
 ```
 
 ### 8. コミットする

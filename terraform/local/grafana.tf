@@ -22,14 +22,14 @@ resource "local_sensitive_file" "grafana_env" {
 }
 
 # docker-compose.ymlの実体はTerraform化せず、.env生成後に`docker compose up`を
-# 呼ぶだけのnull_resourceにする(langfuse側と同じ方針)。`--wait`がhealthcheck
+# 呼ぶだけのterraform_dataにする(langfuse側と同じ方針)。`--wait`がhealthcheck
 # 通過(GrafanaのREST APIが応答可能になるまで)を待つため、これ以降のgrafana
 # providerリソースはAPIに安全にアクセスできる。
-resource "null_resource" "grafana_compose_up" {
-  triggers = {
+resource "terraform_data" "grafana_compose_up" {
+  triggers_replace = {
     env_sha256     = local_sensitive_file.grafana_env.content_sha256
     compose_sha256 = filesha256("${local.grafana_dir}/docker-compose.yml")
-    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers経由で渡す
+    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers_replace経由で渡す
     grafana_dir = local.grafana_dir
   }
 
@@ -40,7 +40,7 @@ resource "null_resource" "grafana_compose_up" {
 
   provisioner "local-exec" {
     when        = destroy
-    working_dir = self.triggers.grafana_dir
+    working_dir = self.triggers_replace.grafana_dir
     command     = "docker compose down"
   }
 
@@ -58,7 +58,7 @@ provider "grafana" {
 resource "grafana_folder" "local" {
   title = "Local"
 
-  depends_on = [null_resource.grafana_compose_up]
+  depends_on = [terraform_data.grafana_compose_up]
 }
 
 # Grafana組み込みのTestDataデータソース。terraform管理のサンプルとして
@@ -68,7 +68,7 @@ resource "grafana_data_source" "testdata" {
   type = "grafana-testdata-datasource"
   name = "TestData"
 
-  depends_on = [null_resource.grafana_compose_up]
+  depends_on = [terraform_data.grafana_compose_up]
 }
 
 # grafana_data_source/grafana_folder同様、terraform管理下にあることを示す
@@ -100,5 +100,5 @@ resource "grafana_dashboard" "welcome" {
     ]
   })
 
-  depends_on = [null_resource.grafana_compose_up]
+  depends_on = [terraform_data.grafana_compose_up]
 }

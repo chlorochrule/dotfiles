@@ -71,8 +71,8 @@ resource "grafana_data_source" "langfuse_clickhouse" {
   })
 
   depends_on = [
-    null_resource.grafana_compose_up,
-    null_resource.compose_up,
+    terraform_data.grafana_compose_up,
+    terraform_data.compose_up,
   ]
 }
 
