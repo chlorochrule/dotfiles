@@ -21,9 +21,9 @@ fi
 current="$1"
 current_major="${current%%.*}"
 
-tags="$(grep -E '^[0-9]+\.[0-9]+(\.[0-9]+)?$')"
+tags="$(grep -E '^[0-9]+\.[0-9]+(\.[0-9]+)?$' || true)"
 
-same_major="$(printf '%s\n' "$tags" | grep -E "^${current_major}\." | sort -V | tail -1)"
+same_major="$(printf '%s\n' "$tags" | { grep -E "^${current_major}\." || true; } | sort -V | tail -1)"
 echo "same major (${current_major}.x) latest patch: ${same_major:-not found}"
 
 max_major="$(printf '%s\n' "$tags" | cut -d. -f1 | sort -n | tail -1)"

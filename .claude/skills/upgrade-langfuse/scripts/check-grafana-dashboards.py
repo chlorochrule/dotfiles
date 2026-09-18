@@ -8,7 +8,9 @@ Langfuseのスキーマ変更によって壊れていないかを検証するた
 ClickHouseデータソース以外のパネル(Prometheus、TestData等)は対象外。
 
 使い方:
-    check-grafana-dashboards.py <grafana_url> <admin_user> <admin_password>
+    GRAFANA_PASSWORD=<admin_password> check-grafana-dashboards.py <grafana_url> <admin_user>
+
+パスワードはコマンドライン引数(psで他ユーザーからも見える)ではなく環境変数で渡す。
 
 終了コード:
     0: 対象パネルすべて正常
@@ -16,6 +18,7 @@ ClickHouseデータソース以外のパネル(Prometheus、TestData等)は対�
 """
 import base64
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -34,10 +37,11 @@ def api(base_url, auth_header, path, method="GET", body=None):
 
 
 def main():
-    if len(sys.argv) != 4:
+    password = os.environ.get("GRAFANA_PASSWORD")
+    if len(sys.argv) != 3 or not password:
         print(__doc__)
         sys.exit(2)
-    base_url, user, password = sys.argv[1], sys.argv[2], sys.argv[3]
+    base_url, user = sys.argv[1], sys.argv[2]
     auth = "Basic " + base64.b64encode(f"{user}:{password}".encode()).decode()
 
     dashboards = api(base_url, auth, "/api/search?type=dash-db")

@@ -124,10 +124,10 @@ docker ps --format '{{.Names}} {{.Status}}' | grep langfuse
 
 ```bash
 cd terraform/local
-python3 ../../.claude/skills/upgrade-langfuse/scripts/check-grafana-dashboards.py \
+GRAFANA_PASSWORD="$(terraform output -raw grafana_login_password)" \
+  python3 ../../.claude/skills/upgrade-langfuse/scripts/check-grafana-dashboards.py \
   "$(terraform output -raw grafana_url)" \
-  "$(terraform output -raw grafana_login_user)" \
-  "$(terraform output -raw grafana_login_password)"
+  "$(terraform output -raw grafana_login_user)"
 ```
 
 `all ClickHouse panel queries succeeded`と出れば完了。
