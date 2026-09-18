@@ -632,6 +632,10 @@ tab_width = 2
 [flake.lock]
 indent_size = 2
 
+# IntelliJが書き出すij_*のリスト値は1行に収まらず、EditorConfigには行継続の構文も無い
+[.editorconfig]
+max_line_length = off
+
 [{*.py,*.pyw}]
 ij_python_align_collections_and_comprehensions = true
 ij_python_align_multiline_imports = true
