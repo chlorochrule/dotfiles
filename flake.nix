@@ -9,7 +9,10 @@
     # herdrはnixpkgs未収録のため公式flakeから取得する。
     # herdr-nixはソースビルドせず、herdr本体のprebuiltバイナリ(cachix経由)を
     # ハッシュ検証込みで取得するラッパー(cachix設定はdarwin.nixのnix.extraOptions)。
-    herdr-nix.url = "github:herdrdev/herdr-nix";
+    herdr-nix = {
+      url = "github:herdrdev/herdr-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nix-darwin = {
       url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -42,6 +45,7 @@
                 home-manager.backupFileExtension = "backup";
                 home-manager.extraSpecialArgs = {
                   username = host.username;
+                  hostname = host.hostname;
                   herdr = herdr-nix.packages.${host.system}.default;
                 };
                 home-manager.users.${host.username} = {

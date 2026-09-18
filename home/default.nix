@@ -1,23 +1,50 @@
-{ config, pkgs, lib, herdr, ... }:
+{ config, pkgs, lib, herdr, hostname, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   linkDotfile = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
+
+  # ~/.claude/<name>/ を「全マシン共通(home/claude/<name>) + このホスト固有
+  # (hosts/<hostname>/claude/<name>、存在すれば)」をファイル単位でマージして構成する。
+  # 同名ファイルがあればホスト固有側が優先される。
+  # 新規ファイル追加時は(ディレクトリ単位のシンボリックリンクと違い)rebuildが必要。
+  # ホスト名を引数(hostname)で受け取るこの関数自体はホストを問わず共通なので、
+  # 新規ホストを追加する際にこのロジックをコピーする必要はない
+  # (hosts/<hostname>/home.nixにはホスト固有の設定だけを書けばよい)。
+  claudeDirNames = [ "commands" "skills" "agents" "hooks" ];
+
+  readDirIfExists = path: if builtins.pathExists path then builtins.readDir path else { };
+
+  claudeMergedEntriesFor = name:
+    let
+      commonPath = ./claude + "/${name}";
+      hostPath = ../hosts/${hostname}/claude + "/${name}";
+      commonRel = "home/claude/${name}";
+      hostRel = "hosts/${hostname}/claude/${name}";
+      toEntries = relDir: files:
+        lib.mapAttrs' (fname: _:
+          lib.nameValuePair ".claude/${name}/${fname}" { source = linkDotfile "${relDir}/${fname}"; }
+        ) files;
+    in
+    (toEntries commonRel (readDirIfExists commonPath))
+    // (toEntries hostRel (readDirIfExists hostPath));
 in
 {
   home.stateVersion = "25.11";
   xdg.enable = true;
 
-  home.file.".tigrc".source = linkDotfile ".tigrc";
-  home.file.".editorconfig".source = linkDotfile ".editorconfig";
+  home.file = lib.foldl' (acc: name: acc // (claudeMergedEntriesFor name)) { } claudeDirNames // {
+    ".tigrc".source = linkDotfile ".tigrc";
+    ".editorconfig".source = linkDotfile ".editorconfig";
 
-  home.file."bin/license".source = linkDotfile "bin/license";
+    "bin/license".source = linkDotfile "bin/license";
+
+    ".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
+
+    "Pictures/ss/.keep".text = "";
+  };
 
   xdg.configFile."nvim".source = linkDotfile ".config/nvim";
   xdg.configFile."herdr/config.toml".source = linkDotfile ".config/herdr/config.toml";
-
-  home.file.".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
-
-  home.file."Pictures/ss/.keep".text = "";
 
   home.packages = with pkgs; [
     tig
