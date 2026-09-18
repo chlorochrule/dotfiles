@@ -1,8 +1,4 @@
-{ config, lib, pkgs, hostname, ... }:
-let
-  dotfiles = "${config.home.homeDirectory}/.dotfiles";
-  linkDotfile = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
-in
+{ config, lib, pkgs, ... }:
 {
   programs.git.settings.user = {
     name = "Naoto Minami";
@@ -11,8 +7,16 @@ in
 
   # ~/.claude/settings.json はマージ対象外の単一ファイル(home/default.nixの
   # claudeMergedEntriesFor参照)なので、ホスト固有のここで直接宣言する。
-  home.file.".claude/settings.json".source =
-    linkDotfile "hosts/${hostname}/claude/settings.json";
+  #
+  # 他の~/.claude/配下と違い、あえてmkOutOfStoreSymlink(linkDotfile)は使わない。
+  # settings.jsonはClaude Code自身が`/model`等でモデル選択を「デフォルトとして保存」
+  # しようとして書き込みに来ることがあり、mkOutOfStoreSymlinkだとその書き込みが
+  # git管理下の実ファイルへ直接反映されてしまい、意図しない差分が発生することを
+  # 実際に確認した。plain path参照にしてNix storeへコピーさせる(読み取り専用の
+  # 通常のシンボリックリンクになる)ことで、そうした書き込みは単に失敗するだけになり、
+  # settings.jsonはこちらが明示的にコミットした内容だけを反映するようになる
+  # (手編集した場合は他の.claude/配下同様、darwin-rebuild switchしないと反映されない)。
+  home.file.".claude/settings.json".source = ./claude/settings.json;
 
   # Playwright本体(CLI/ライブラリとしての利用)とPlaywright MCPサーバー。
   # このホストでのブラウザ自動化・DevTools連携用途に限定するためホスト固有に置く。
