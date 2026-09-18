@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '\\a\\033]9;Claude Code needs your input\\007' > /dev/tty"
+            "command": "printf '\\a\\033]9;Claude Code needs your input\\007' 2>/dev/null > /dev/tty || true"
           }
         ]
       }
