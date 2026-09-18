@@ -33,7 +33,7 @@ in
 
   home.file = lib.foldl' (acc: name: acc // (entriesFor name)) { } claudeDirNames // {
     ".claude/settings.json".source =
-      linkDotfile "hosts/MacBookPro-minami/claude-settings.json";
+      linkDotfile "hosts/MacBookPro-minami/claude/settings.json";
   };
 
   # Playwright本体(CLI/ライブラリとしての利用)とPlaywright MCPサーバー。

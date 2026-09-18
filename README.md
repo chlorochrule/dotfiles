@@ -119,7 +119,8 @@ home-manager側の設定(zsh、git、mise、Ghostty等)もこの1コマンドで
 │       │                         # 例: git identity、~/.claude/settings.json、
 │       │                         #     commands/skills/agents/hooksへの追加分、
 │       │                         #     ローカルLLM(Ollama)関連設定
-│       └── claude-settings.json # (任意)このホスト用の~/.claude/settings.json
+│       └── claude/
+│           └── settings.json    # (任意)このホスト用の~/.claude/settings.json
 ├── home/
 │   ├── default.nix              # 全マシン共通のhome-manager設定
 │   │                             # (zsh, git, mise, fzf, eza, starship, ghostty等)
@@ -161,7 +162,7 @@ Nix storeへコピーされないため、手編集してもrebuildなしで即�
 
 `~/.claude/settings.json` と `~/.claude/CLAUDE.md` はマージ対象外で、それぞれ単一ファイルとして扱われます。
 `settings.json`はマシンごとに内容を変えたい設定(モデル選択、権限モード、hookの登録等)なので
-`hosts/<hostname>/claude-settings.json` に置き、`CLAUDE.md`は全マシン共通なので
+`hosts/<hostname>/claude/settings.json` に置き、`CLAUDE.md`は全マシン共通なので
 `home/claude/CLAUDE.md` に置きます。
 
 ## よく使う運用コマンド
@@ -220,7 +221,7 @@ Claude Codeのユーザープロンプト、モデルの応答、ツール呼び
 
 Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.com/langfuse/Claude-Observability-Plugin)
 (hookでセッションtranscriptを読み取りLangfuseへ送信するプラグイン)を使い、
-`hosts/MacBookPro-minami/claude-settings.json`の`extraKnownMarketplaces`/`enabledPlugins`/`pluginConfigs`で
+`hosts/MacBookPro-minami/claude/settings.json`の`extraKnownMarketplaces`/`enabledPlugins`/`pluginConfigs`で
 宣言的にマーケットプレイス登録、有効化、`LANGFUSE_BASE_URL`の設定までを行っています。
 APIキー(`LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY`)だけは秘密情報のためgit管理下に置かず、
 初回のみ手動設定が必要です。
@@ -292,7 +293,7 @@ node_exporterメトリクス(Uptime/CPU/メモリ/バッテリー/ロードア�
 ### 初回セットアップ
 
 ```bash
-# 1. Claude Codeのプラグイン設定・node_exporterを適用(claude-settings.jsonの
+# 1. Claude Codeのプラグイン設定・node_exporterを適用(claude/settings.jsonの
 #    変更反映と、Prometheusがスクレイプするhost側node_exporterの有効化を兼ねる)
 sudo darwin-rebuild switch --flake ~/.dotfiles
 
