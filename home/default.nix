@@ -52,6 +52,10 @@ in
     cloc
     tree
     neovim
+    # nvim-treesitter(mainブランチ、.config/nvim/lua/plugins/treesitter.lua)が
+    # パーサーのビルドに要求する。masterブランチと違い内部コンパイルではなく
+    # 外部の`tree-sitter`コマンドを呼ぶため、PATHに無いとビルドが失敗する
+    tree-sitter
     jq
     yq
     awscli2
