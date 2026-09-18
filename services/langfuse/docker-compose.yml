@@ -17,6 +17,12 @@
 # バージョンタグが提供されない(履歴版タグは有料プラン限定)ため、
 # digest固定するとセキュリティパッチも一切入らなくなり上流追従の
 # メリットを失うので、あえて固定せず上流のまま`latest`にしている。
+#
+# postgres/redis/clickhouse(native protocol)のホスト向けポート公開は上流では
+# 行われているが、ホスト側のどこからも参照していない(langfuse-web/workerは
+# Dockerネットワーク内の`postgres`/`redis`/`clickhouse`ホスト名で直接繋がる)ため、
+# 他のローカルプロジェクトとのポート衝突を避ける目的でこの3つだけ上流から
+# 意図的に逸脱し、公開していない(詳細は各サービスのコメント参照)。
 services:
   langfuse-worker:
     image: docker.langfuse.com/langfuse/langfuse-worker:4.38.0
@@ -111,7 +117,10 @@ services:
       - langfuse_clickhouse_logs:/var/log/clickhouse-server
     ports:
       - 127.0.0.1:8123:8123
-      - 127.0.0.1:9000:9000
+      # native protocol(9000)はホスト側のどこからも参照していない
+      # (Grafanaはhost.docker.internal:8123経由のHTTPインターフェースを使う)ため、
+      # 他のローカルプロジェクトとのポート衝突を避ける目的でupstreamから
+      # 意図的に逸脱し、公開していない
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
       interval: 5s
@@ -145,8 +154,9 @@ services:
     command: >
       --requirepass ${REDIS_AUTH:-myredissecret}
       --maxmemory-policy noeviction
-    ports:
-      - 127.0.0.1:6379:6379
+    # ホスト側のどこからも参照していないため、他のローカルプロジェクトとの
+    # ポート衝突(6379は既定ポートで競合しやすい)を避ける目的でupstreamから
+    # 意図的に逸脱し、公開していない
     volumes:
       - langfuse_redis_data:/data
     healthcheck:
@@ -169,8 +179,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
       TZ: UTC
       PGTZ: UTC
-    ports:
-      - 127.0.0.1:5432:5432
+    # ホスト側のどこからも参照していないため、他のローカルプロジェクトとの
+    # ポート衝突(5432は既定ポートで競合しやすい)を避ける目的でupstreamから
+    # 意図的に逸脱し、公開していない。デバッグしたい場合は
+    # `docker exec -it langfuse-postgres-1 psql -U postgres`のようにコンテナ内から使う
     volumes:
       - langfuse_postgres_data:/var/lib/postgresql/data
 
