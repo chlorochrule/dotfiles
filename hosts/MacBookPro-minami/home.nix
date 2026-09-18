@@ -71,6 +71,8 @@
   # ~/.claude.jsonにはプロジェクト履歴やtrust状態などClaude Codeが書き込む
   # 可変な実行時状態も同居しているため、home.fileでファイル全体をリンクせず、
   # mcpServersキーだけをjqでマージする(他のキーやサーバーには触れない)。
+  # chrome-devtools-mcpはnixpkgs未収録のためnpx経由。開発元(Chrome DevToolsチーム)を
+  # 信頼し、バージョン未固定で中身が変わりうるリスクを受容したうえで@latestを使う。
   home.activation.claudeMcpServers = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     claudeJson="${config.home.homeDirectory}/.claude.json"
     if [ ! -f "$claudeJson" ]; then

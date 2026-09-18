@@ -412,7 +412,8 @@ terraform apply -replace=null_resource.prometheus_compose_up
     同居しているため、home-manager側ではファイル全体をリンクせず、
     `home.activation.claudeMcpServers`(`hosts/MacBookPro-minami/home.nix`)がrebuildのたびに
     `jq`で`mcpServers`キーだけをマージします。
-    現在`chrome-devtools`(`chrome-devtools-mcp`、npx経由)と`playwright`
+    現在`chrome-devtools`(`chrome-devtools-mcp`、nixpkgs未収録のためnpx経由。
+    開発元を信頼しリスクを受容したうえで`@latest`を使用)と`playwright`
     (nixpkgsの`playwright-mcp`)を登録しています。
     ブラウザ自動化用途のPlaywright本体(CLI)も`playwright-test`パッケージとして
     このホストの`home.packages`に含めています
