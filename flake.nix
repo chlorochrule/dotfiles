@@ -3,9 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
-    # 一部パッケージ(ollama等、リリースブランチへのバックポートが追いつかず
-    # 実用上unstable版が必要なもの)をホスト側でoverlay経由で個別に差し替えるために使う。
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     # herdrはnixpkgs未収録のため公式flakeから取得する。
     # herdr-nixはソースビルドせず、herdr本体のprebuiltバイナリ(cachix経由)を
     # ハッシュ検証込みで取得するラッパー(cachix設定はdarwin.nixのnix.extraOptions)。
@@ -23,7 +20,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, herdr-nix, nix-darwin, home-manager }:
+  outputs = { self, nixpkgs, herdr-nix, nix-darwin, home-manager }:
     let
       mkHost = hostPath:
         let host = import hostPath;
@@ -33,7 +30,6 @@
             system = host.system;
             specialArgs = {
               username = host.username;
-              pkgs-unstable = import nixpkgs-unstable { system = host.system; };
             };
             modules = [
               ./darwin.nix

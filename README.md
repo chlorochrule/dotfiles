@@ -439,12 +439,10 @@ terraform apply -replace=null_resource.prometheus_compose_up
     確認済みです。
     メモリはQwen3.6-27Bで約20GB、Qwen3-Coder-Nextで約59GB(いずれも256Kコンテキスト込み)で、
     128GB環境なら問題なく収まります
-- `hosts/MacBookPro-minami/darwin.nix`では、Ollamaパッケージだけ`flake.nix`の
-    `nixpkgs-unstable` inputからoverlayで差し替えています。
-    `nixpkgs`のDarwinリリースブランチ収録のollamaはアップストリームのバックポートが
-    追いついておらず、Qwen3.6やQwen3-Coder-Nextのような新しいモデルのマニフェストが
-    要求するバージョンを満たせず`pull`が失敗するためです。
-    将来リリースブランチ側のollamaが十分新しくなればこのoverlayは不要になる可能性があります
+- Ollamaは`nixpkgs`のDarwinリリースブランチ収録版を使っています。
+    新しいモデルのマニフェストが要求するバージョンをリリースブランチ版が満たせず`pull`が
+    失敗する場合は、`nixpkgs-unstable`をflakeのinputに追加し、`hosts/<hostname>/darwin.nix`の
+    `nixpkgs.overlays`でollamaだけ差し替えてください(以前はこの方式で運用していました)
 - `.config/nvim/lua/plugins/treesitter.lua`のnvim-treesitterは`main`ブランチを使っています
     (Neovim 0.12以降が必要。上流の開発は`main`が主流で、`master`はNeovim 0.11向けの
     後方互換用に維持されている保守版)。`main`はパーサーのビルドに外部の`tree-sitter`
