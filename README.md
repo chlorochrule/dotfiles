@@ -151,7 +151,8 @@ home-manager側の設定(zsh、git、mise、Ghostty等)もこの1コマンドで
 ```
 
 `home/`配下と`.tigrc`等の実ファイルは、home-managerの`mkOutOfStoreSymlink`で`~/`配下からシンボリックリンクされます。
-Nix storeへコピーされないため、手編集してもrebuildなしで即座に反映されます。
+Nix storeへコピーされないため、手編集してもrebuildなしで即座に反映されます
+(`~/.claude/settings.json`は例外。後述)。
 
 ### `~/.claude/{commands,skills,agents,hooks}` の共通/ホスト別マージ
 
@@ -170,6 +171,15 @@ Nix storeへコピーされないため、手編集してもrebuildなしで即�
 `settings.json`はマシンごとに内容を変えたい設定(モデル選択、権限モード、hookの登録等)なので
 `hosts/<hostname>/claude/settings.json` に置き、`CLAUDE.md`は全マシン共通なので
 `home/claude/CLAUDE.md` に置きます。
+
+ただし`settings.json`はシンボリックリンクではなく実ファイルとして置きます。
+Claude Code自身も`/model`・`/plugin`・`/config`等で書き込むためです
+(リポジトリへのリンクだとgitの差分になり、Nix storeへのリンクだと書き込めません)。
+rebuildのたびに`home.activation.claudeSettings`(`hosts/<hostname>/home.nix`)が、
+リポジトリの`settings.json`で宣言したキーだけを`~/.claude/settings.json`へ上書きマージします。
+宣言していないキー(実行時に追加された権限やプラグイン設定等)はそのまま残り、
+宣言したキーを実行時に変更した場合は次回rebuildで宣言の値へ戻ります。
+リポジトリの`settings.json`を編集した場合も、反映にはrebuildが必要です。
 
 ## よく使う運用コマンド
 
@@ -231,8 +241,11 @@ Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.
 (hookでセッションtranscriptを読み取りLangfuseへ送信するプラグイン)を使い、
 `hosts/MacBookPro-minami/claude/settings.json`の`extraKnownMarketplaces`/`enabledPlugins`/`pluginConfigs`で
 宣言的にマーケットプレイス登録、有効化、`LANGFUSE_BASE_URL`の設定までを行っています。
-APIキー(`LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY`)だけは秘密情報のためgit管理下に置かず、
-初回のみ手動設定が必要です。
+APIキー(`LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY`)はgit管理下に置かず、
+初回のみ`/plugin configure`での手動設定が必要です(下記「初回セットアップ」参照)。
+どちらも`terraform/local/`がtfstateごとに乱数で発行する値で、SECRET_KEYは秘密情報でもあるためです。
+PUBLIC_KEYは`~/.claude/settings.json`の`pluginConfigs`に書き込まれ、
+rebuild時のマージでも宣言外のキーとして維持されます。
 
 `services/langfuse/.env`(docker-compose.ymlのCHANGEME項目)や、
 組織/プロジェクト/ログイン用ユーザーやAPIキーの初回作成(Langfuseの

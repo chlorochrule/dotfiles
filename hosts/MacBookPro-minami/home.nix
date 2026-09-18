@@ -5,18 +5,22 @@
     email = "minami.polly@gmail.com";
   };
 
-  # ~/.claude/settings.json はマージ対象外の単一ファイル(home/default.nixの
-  # claudeMergedEntriesFor参照)なので、ホスト固有のここで直接宣言する。
-  #
-  # 他の~/.claude/配下と違い、あえてmkOutOfStoreSymlink(linkDotfile)は使わない。
-  # settings.jsonはClaude Code自身が`/model`等でモデル選択を「デフォルトとして保存」
-  # しようとして書き込みに来ることがあり、mkOutOfStoreSymlinkだとその書き込みが
-  # git管理下の実ファイルへ直接反映されてしまい、意図しない差分が発生することを
-  # 実際に確認した。plain path参照にしてNix storeへコピーさせる(読み取り専用の
-  # 通常のシンボリックリンクになる)ことで、そうした書き込みは単に失敗するだけになり、
-  # settings.jsonはこちらが明示的にコミットした内容だけを反映するようになる
-  # (手編集した場合は他の.claude/配下同様、darwin-rebuild switchしないと反映されない)。
-  home.file.".claude/settings.json".source = ./claude/settings.json;
+  # ~/.claude/settings.jsonはClaude Code自身も`/model`・`/plugin`・`/config`等で
+  # 書き込むため、リンクにしない。mkOutOfStoreSymlinkだと書き込みがgit管理下の
+  # 実ファイルに差分として現れ、Nix storeへのリンクだと書き込み自体が失敗する。
+  # 代わりに実ファイルとして置き、rebuildのたびに./claude/settings.jsonで宣言した
+  # キーだけを上書きマージする(宣言していないキーは実行時の値を維持する)。
+  home.activation.claudeSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    claudeSettings="${config.home.homeDirectory}/.claude/settings.json"
+    current='{}'
+    if [ -f "$claudeSettings" ]; then
+      current="$(cat "$claudeSettings")"
+    fi
+    tmp="$(mktemp)"
+    printf '%s' "$current" | ${pkgs.jq}/bin/jq -s '.[0] * .[1]' - ${./claude/settings.json} > "$tmp"
+    mkdir -p "$(dirname "$claudeSettings")"
+    mv "$tmp" "$claudeSettings"
+  '';
 
   # Playwright本体(CLI/ライブラリとしての利用)とPlaywright MCPサーバー。
   # このホストでのブラウザ自動化・DevTools連携用途に限定するためホスト固有に置く。
