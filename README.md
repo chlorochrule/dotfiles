@@ -382,6 +382,13 @@ terraform apply -replace=null_resource.prometheus_compose_up
     新しいGUIアプリをHomebrew経由で入れる場合は必ずリストに追加してください
 - `homebrew.onActivation.autoUpdate`/`upgrade` は `true` にしてあり、`darwin-rebuild switch` の
     たびにHomebrewのタップ情報が更新され、古くなったcaskは自動で最新版へアップグレードされます
+- 全リポジトリ共通のgitleaks pre-commitフックは、`core.hooksPath`ではなく`init.templateDir`
+    (`home/default.nix`の`programs.git.settings`)で配布しています。
+    `core.hooksPath`をグローバルに設定すると各リポジトリの`.git/hooks`が無視され、
+    pre-commit framework等もインストールを拒否するためです。
+    テンプレートは`git clone`/`git init`時に`.git/hooks/`へ複製されるだけなので、
+    既存のリポジトリに入れるにはそのリポジトリで`git init`を再実行してください
+    (既存のフックファイルは上書きされません)
 - BSLなどunfreeライセンスのパッケージ(`terraform`等)を`home.packages`に追加する場合は、
     `darwin.nix`の`nixpkgs.config.allowUnfreePredicate`にパッケージ名を追加する必要があります
 - `~/.claude/{commands,skills,agents,hooks}`配下に新規ファイルを追加した場合は、

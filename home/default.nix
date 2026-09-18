@@ -100,11 +100,26 @@ in
       init.defaultBranch = "main";
       push.autoSetupRemote = true;
       alias.get = "!ghq get";
+      # programs.git.hooksはグローバルなcore.hooksPathを設定し、全リポジトリの
+      # .git/hooks(pre-commit framework等)を無効化してしまうため、templateDirで
+      # clone/init時に各リポジトリへフックを複製する方式にしている。
+      # テンプレート内のシンボリックリンクはリンクのまま複製されGCで壊れるため、
+      # storeのディレクトリを直接指し、gitleaksもstoreパスでなくPATHから呼ぶ。
+      init.templateDir = "${pkgs.writeTextFile {
+        name = "git-template";
+        destination = "/hooks/pre-commit";
+        executable = true;
+        text = ''
+          #!/bin/sh
+          set -eu
+          if ! command -v gitleaks >/dev/null 2>&1; then
+            echo "pre-commit: gitleaks not found in PATH" >&2
+            exit 1
+          fi
+          exec gitleaks git --pre-commit --staged --redact -v
+        '';
+      }}";
     };
-    hooks.pre-commit = pkgs.writeShellScript "gitleaks-pre-commit" ''
-      set -eu
-      ${pkgs.gitleaks}/bin/gitleaks protect --staged --redact -v
-    '';
   };
 
   programs.fzf = {
