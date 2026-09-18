@@ -30,8 +30,8 @@ return {
   config = function()
     require("nvim-treesitter").install(ensure_installed)
 
-    -- ensure_installedに列挙した言語のfiletypeを開いたときだけ、ハイライトと
-    -- インデントを有効化する。vim.treesitter.language.get_lang/addで
+    -- パーサーが導入済み(ensure_installedの言語とNeovim同梱のもの)のfiletypeを
+    -- 開いたときだけ、ハイライトとインデントを有効化する。vim.treesitter.language.get_lang/addで
     -- filetype→パーサー名の対応(例: filetype "sh" → parser "bash")とパーサーの
     -- 導入済み判定を行い、未導入なら何もしない(pcallで安全に握り潰す)。
     vim.api.nvim_create_autocmd("FileType", {
@@ -42,7 +42,10 @@ return {
           return
         end
         vim.treesitter.start(args.buf, lang)
-        if not indent_disabled_filetypes[ft] then
+        -- Neovim同梱パーサー(c等)はensure_installed外でもここまで来るが、indentsクエリは
+        -- nvim-treesitterで導入した言語にしか無い。無い言語で設定するとfiletype標準の
+        -- インデント(cindent等)を無効化してしまうため、クエリがある場合だけ設定する
+        if not indent_disabled_filetypes[ft] and vim.treesitter.query.get(lang, "indents") then
           vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
         end
       end,
