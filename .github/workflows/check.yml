@@ -1,0 +1,42 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # Linux is enough: nothing here builds the darwin system, it's only
+    # evaluated (drvPath), and eval is platform-independent.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+
+      - name: nix flake check
+        run: nix flake check
+
+      # flake check doesn't evaluate darwinConfigurations deeply; forcing
+      # each host's drvPath catches option/typo errors a rebuild would hit.
+      - name: Evaluate every host
+        run: nix eval --json .#darwinConfigurations --apply 'builtins.mapAttrs (_: c: c.system.drvPath)'
+
+      # Formatters come from flake.lock's nixpkgs (--inputs-from .), so CI
+      # uses the same versions as home.packages / conform.nvim.
+      - name: nixfmt
+        run: nix run --inputs-from . nixpkgs#nixfmt -- --check $(git ls-files '*.nix')
+
+      - name: stylua
+        run: nix run --inputs-from . nixpkgs#stylua -- --check $(git ls-files '*.lua')
+
+      - name: terraform fmt
+        env:
+          NIXPKGS_ALLOW_UNFREE: "1" # terraform is BSL 1.1
+        run: nix run --impure --inputs-from . nixpkgs#terraform -- fmt -check -recursive terraform/
+
+      - name: editorconfig-checker
+        run: nix run --inputs-from . nixpkgs#editorconfig-checker
