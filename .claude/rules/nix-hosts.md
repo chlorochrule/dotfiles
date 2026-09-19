@@ -100,11 +100,14 @@ Human-facing setup/operation docs are in the repo README; this is the
   for files that don't exist, so a new bare-minimum host needs no stub
   files.
 
-## Known follow-up
+## zsh XDG migration (`home/default.nix`)
 
-- `programs.zsh.dotDir` is pinned to `config.home.homeDirectory` because a
-  future home-manager release (post-26.05) is expected to default zsh's
-  dotfiles into `~/.config/zsh` (XDG). Not migrated yet — treat as one
-  deliberate pass across zsh config + any path assumptions elsewhere, not
-  something to do incidentally while touching this file for something
-  else.
+- `programs.zsh.dotDir = "${config.xdg.configHome}/zsh"` moves zsh's config
+  files off `$HOME`, ahead of home-manager's own default changing to this
+  in a future release. home-manager handles the `ZDOTDIR` bootstrap itself
+  (writes `~/.zshenv` to source `$ZDOTDIR/.zshenv`) — no manual `ZDOTDIR`
+  wiring needed.
+- `programs.zsh.history.path` is pinned to `${config.home.homeDirectory}/.zsh_history`
+  (its own pre-migration default) rather than following `dotDir`, so
+  existing shell history isn't orphaned at the old path. Don't remove this
+  override without also handling the existing history file.

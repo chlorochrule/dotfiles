@@ -201,16 +201,15 @@ in
 
   programs.zsh = {
     enable = true;
-    # Pinned explicitly: home-manager's default is moving to XDG
-    # (~/.config/zsh) in a future release. See .claude/rules/nix-hosts.md
-    # for the planned migration.
-    dotDir = config.home.homeDirectory;
+    dotDir = "${config.xdg.configHome}/zsh";
     enableCompletion = true;
     syntaxHighlighting.enable = true;
     autosuggestion.enable = true;
     historySubstringSearch.enable = true;
 
     history = {
+      # Kept at the pre-XDG-migration path so existing history isn't orphaned.
+      path = "${config.home.homeDirectory}/.zsh_history";
       size = 1000000;
       save = 1000000;
       share = true;
