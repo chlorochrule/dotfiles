@@ -41,7 +41,13 @@ return {
         if not lang or not pcall(vim.treesitter.language.add, lang) then
           return
         end
-        vim.treesitter.start(args.buf, lang)
+        -- language.addが成功扱いになっても、実際にパーサーが存在しない場合は
+        -- startの内部assertで初めて失敗することがある(例: fzf-luaのピッカーバッファの
+        -- filetype "fzf")。FileType autocmd内の未捕捉errorはnvim全体のエラー表示に
+        -- 出てしまうため、こちらもpcallで守る
+        if not pcall(vim.treesitter.start, args.buf, lang) then
+          return
+        end
         -- Neovim同梱パーサー(c等)はensure_installed外でもここまで来るが、indentsクエリは
         -- nvim-treesitterで導入した言語にしか無い。無い言語で設定するとfiletype標準の
         -- インデント(cindent等)を無効化してしまうため、クエリがある場合だけ設定する
