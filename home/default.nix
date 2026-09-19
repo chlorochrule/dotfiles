@@ -64,6 +64,8 @@ in
     terraform
     pandoc
     editorconfig-checker
+    # Also picked up by bashls (nvim) for diagnostics.
+    shellcheck
     gh
     wget
     gnumake
@@ -84,6 +86,8 @@ in
   programs.direnv = {
     enable = true;
     enableZshIntegration = true;
+    # Cached, GC-rooted `use flake` for per-project flake devShells.
+    nix-direnv.enable = true;
   };
 
   programs.git = {
@@ -97,6 +101,9 @@ in
       pull.rebase = false;
       init.defaultBranch = "main";
       push.autoSetupRemote = true;
+      fetch.prune = true;
+      diff.algorithm = "histogram";
+      merge.conflictStyle = "zdiff3";
       alias.get = "!ghq get";
       # Distributed via init.templateDir, not programs.git.hooks — see
       # .claude/rules/nix-hosts.md for why.
@@ -114,6 +121,15 @@ in
           exec gitleaks git --pre-commit --staged --redact -v
         '';
       }}";
+    };
+  };
+
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate = true; # n/N jumps between files
+      line-numbers = true;
     };
   };
 
