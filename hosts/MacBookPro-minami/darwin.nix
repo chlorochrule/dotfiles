@@ -5,8 +5,12 @@
     "discord"
     "ghostty"
     "google-chrome"
-    "intellij-idea-ce"
-    "jetbrains-toolbox"
+    # greedy: auto_updates casks are otherwise left to the IDE's own updater;
+    # this also upgrades it on every rebuild (upgrade = true in darwin.nix).
+    {
+      name = "intellij-idea";
+      greedy = true;
+    }
     "menumeters"
     "nordvpn"
     "postman-agent"
@@ -25,7 +29,7 @@
     "/Applications/Slack.app"
     "/Applications/Google Chrome.app"
     "/Applications/Visual Studio Code.app"
-    "/Applications/IntelliJ IDEA CE.app"
+    "/Applications/IntelliJ IDEA.app"
     "/Applications/Spotify.app"
     "/Applications/Postman Agent.app"
     "/Applications/NordVPN.app"
