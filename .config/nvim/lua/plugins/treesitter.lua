@@ -13,6 +13,9 @@ local ensure_installed = {
   "markdown",
   "nix",
   "ruby",
+  "hcl",
+  "terraform",
+  "toml",
 }
 
 -- python: left to vim-python-pep8-indent instead (more accurate for

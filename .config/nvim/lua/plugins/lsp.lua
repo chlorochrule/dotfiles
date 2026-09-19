@@ -6,6 +6,7 @@ local mason_servers = {
   "bashls",
   "yamlls",
   "jsonls",
+  "terraformls",
 }
 
 -- Use the Nix-provided binary instead (not mason-managed).
