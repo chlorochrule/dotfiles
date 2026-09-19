@@ -30,6 +30,7 @@ return {
     -- Enable highlighting/indent only for filetypes with an installed
     -- parser (ensure_installed + Neovim's bundled ones).
     vim.api.nvim_create_autocmd("FileType", {
+      group = vim.api.nvim_create_augroup("treesitter-start", { clear = true }),
       callback = function(args)
         local ft = vim.bo[args.buf].filetype
         local lang = vim.treesitter.language.get_lang(ft)

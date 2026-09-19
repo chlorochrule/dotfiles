@@ -79,12 +79,10 @@ map("i", "<C-r>", "<C-o><C-r>")
 map("i", "<C-u>", "<C-o>u")
 map("i", "<C-d>", "<C-u>")
 map("i", "<C-b>", "<Left>")
-map("i", "<C-n>", function()
-  return vim.fn.pumvisible() == 1 and "<C-n>" or "<Down>"
-end, { expr = true })
-map("i", "<C-p>", function()
-  return vim.fn.pumvisible() == 1 and "<C-p>" or "<Up>"
-end, { expr = true })
+-- Only reached when blink.cmp's menu is closed: its <C-n>/<C-p> "fallback"
+-- runs these instead (see lua/plugins/completion.lua).
+map("i", "<C-n>", "<Down>")
+map("i", "<C-p>", "<Up>")
 map("i", "<C-f>", "<Right>")
 map("i", "<C-Space>", "<Space>")
 map("i", "<C-BS>", "<BS>")

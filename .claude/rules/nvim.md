@@ -37,7 +37,8 @@ use Neovim day to day — only when changing these files.
 
 ## Global indent settings (`lua/config/options.lua`)
 
-- `autoindent` is the only carry-forward indent option enabled globally.
+- `autoindent` is the only carry-forward indent option enabled globally
+  (Neovim's default, so `options.lua` doesn't set it explicitly).
   `cindent`/`smartindent` are deliberately NOT enabled: turning them on
   reproduces C-style indenting (unclosed brackets, trailing `{`) for any
   filetype with no indentexpr of its own (plain text, toml, etc.), which is

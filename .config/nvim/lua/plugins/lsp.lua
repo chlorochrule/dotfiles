@@ -44,6 +44,9 @@ return {
     dependencies = { "mason-org/mason.nvim" },
     opts = {
       ensure_installed = mason_servers,
+      -- Enabled explicitly below instead, so non-mason servers (nil_ls) go
+      -- through the same path and manually-installed mason servers stay off.
+      automatic_enable = false,
     },
   },
   {

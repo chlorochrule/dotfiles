@@ -7,6 +7,7 @@ return {
         vim.keymap.set("v", lhs, "S" .. char .. "gv")
       end
       vim.api.nvim_create_autocmd("BufEnter", {
+        group = vim.api.nvim_create_augroup("surround-brackets", { clear = true }),
         callback = function(args)
           vim.keymap.set("v", "[", "S]gv", { buffer = args.buf, nowait = true })
           vim.keymap.set("v", "]", "S[gv", { buffer = args.buf, nowait = true })
