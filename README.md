@@ -115,10 +115,10 @@ home-manager側の設定(zsh、git、mise、Ghostty等)もこの1コマンドで
 sudo darwin-rebuild switch --flake ~/.dotfiles
 
 # inputsを最新化(flake.lockを更新)。flake.lockの書き込みだけなのでsudo不要
-nix --extra-experimental-features "nix-command flakes" flake update
+nix flake update
 
 # 特定inputのみ更新
-nix --extra-experimental-features "nix-command flakes" flake update <input名>
+nix flake update <input名>
 
 # 世代の確認とロールバック
 darwin-rebuild --list-generations

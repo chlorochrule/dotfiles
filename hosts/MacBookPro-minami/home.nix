@@ -44,10 +44,8 @@
         ${pkgs.ollama}/bin/ollama create "$derived" -f "$modelfile" >/dev/null 2>&1 || true
       fi
     }
-    if command -v ${pkgs.ollama}/bin/ollama >/dev/null 2>&1; then
-      ollamaCreateIfBaseExists "qwen3.6:27b" "qwen3.6-27b-262k" "${./ollama/qwen3.6-27b-262k.Modelfile}"
-      ollamaCreateIfBaseExists "qwen3-coder-next" "qwen3-coder-next-262k" "${./ollama/qwen3-coder-next-262k.Modelfile}"
-    fi
+    ollamaCreateIfBaseExists "qwen3.6:27b" "qwen3.6-27b-262k" "${./ollama/qwen3.6-27b-262k.Modelfile}"
+    ollamaCreateIfBaseExists "qwen3-coder-next" "qwen3-coder-next-262k" "${./ollama/qwen3-coder-next-262k.Modelfile}"
   '';
 
   # Wrappers to run Claude Code against a local Ollama model instead of
