@@ -24,15 +24,23 @@ choices that aren't obvious from the code itself.
   container: a container can't see true host CPU/memory/disk metrics. See
   `.claude/rules/nix-hosts.md` for the launchd-specific quirk this hits.
 
-## Langfuse image pinning
+## Version pinning
 
-- `langfuse`, `langfuse-worker`, `redis`, `postgres`, `clickhouse` are pinned
-  to exact versions instead of upstream's floating tags (`:4`, `:7`, `:17`,
-  `:25.12`), because the Grafana dashboards (`langfuse_grafana*.tf`) run raw
-  SQL against ClickHouse's `events_core` table. An unannounced schema or
-  behavior change on that table would silently break the dashboards.
-- Bump these five via `.claude/skills/upgrade-langfuse` — it checks dashboard
-  impact before bumping. Don't hand-edit the tags.
+- `langfuse`, `langfuse-worker`, `redis`, `postgres`, `clickhouse` (Langfuse)
+  are pinned to exact versions instead of upstream's floating tags (`:4`,
+  `:7`, `:17`, `:25.12`), because the Grafana dashboards
+  (`langfuse_grafana*.tf`) run raw SQL against ClickHouse's `events_core`
+  table. An unannounced schema or behavior change on that table would
+  silently break the dashboards.
+- Grafana's image and its `grafana-clickhouse-datasource` plugin
+  (`GF_PLUGINS_PREINSTALL_SYNC` in `services/grafana/docker-compose.yml`)
+  are pinned for the same reason in reverse: a plugin/Grafana update could
+  change how panel queries execute against that same ClickHouse table.
+- Prometheus's image is pinned too, mainly so a bump is a deliberate,
+  verified step rather than a silent drift — see Dashboards below for what
+  could break.
+- Bump any of these via `.claude/skills/upgrade-services` — it checks
+  dashboard impact before bumping. Don't hand-edit the tags.
 - `clickhouse` tracks the latest patch within the minor series upstream
   Langfuse verifies against; only move the minor series when upstream does.
 - `minio` (`cgr.dev/chainguard/minio`) is deliberately left on `latest`:
@@ -71,6 +79,10 @@ choices that aren't obvious from the code itself.
   own dashboards (Home / Agent / Cost / Latency) as raw SQL against
   `events_core` (Langfuse v4's OTel span table). Verified via
   `/api/ds/query` to match the numbers shown in the Langfuse UI.
+- `.claude/skills/upgrade-services/scripts/check-grafana-dashboards.py`
+  re-runs every ClickHouse- and Prometheus-backed panel query via
+  `/api/ds/query` and reports failures — run it after bumping Langfuse,
+  Grafana, its ClickHouse plugin, or Prometheus.
 - Deliberately excluded: Scores panels (no score data in this project),
   most of Usage Management (duplicates the Traces/Observations stats
   already covered), Time To First Token / output-tokens-per-second

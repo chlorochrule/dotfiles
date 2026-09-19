@@ -2,10 +2,10 @@
 """Grafanaの全ダッシュボードのパネルクエリを/api/ds/query経由で実際に実行し、
 エラーが出ないか確認する。
 
-langfuse/redis/postgresのバージョンを上げた後、GrafanaダッシュボードのうちClickHouse
-(events_core、terraform/local/langfuse_grafana*.tf)に生SQLで依存しているパネルが、
-Langfuseのスキーマ変更によって壊れていないかを検証するために使う。
-ClickHouseデータソース以外のパネル(Prometheus、TestData等)は対象外。
+Langfuse(ClickHouse、events_core、terraform/local/langfuse_grafana*.tf)や
+Prometheus(terraform/local/prometheus_grafana.tf)、Grafana本体/プラグインの
+バージョンを上げた後、実データに依存するパネルが壊れていないかを検証するために使う。
+ClickHouse/Prometheus以外のパネル(TestData等)は対象外。
 
 使い方:
     GRAFANA_PASSWORD=<admin_password> check-grafana-dashboards.py <grafana_url> <admin_user>
@@ -23,7 +23,7 @@ import sys
 import urllib.error
 import urllib.request
 
-TARGET_DATASOURCE_TYPE = "grafana-clickhouse-datasource"
+TARGET_DATASOURCE_TYPES = {"grafana-clickhouse-datasource", "prometheus"}
 
 
 def api(base_url, auth_header, path, method="GET", body=None):
@@ -67,7 +67,7 @@ def main():
             for target in panel.get("targets", []):
                 target_ds = target.get("datasource") or panel_ds
                 ds_uid = target_ds.get("uid")
-                if not ds_uid or ds_type(ds_uid) != TARGET_DATASOURCE_TYPE:
+                if not ds_uid or ds_type(ds_uid) not in TARGET_DATASOURCE_TYPES:
                     continue
 
                 checked += 1
@@ -87,14 +87,14 @@ def main():
                 if err:
                     failures.append((dash_title, panel.get("title"), err))
 
-    print(f"checked {checked} ClickHouse panel query(ies) across {len(dashboards)} dashboard(s)")
+    print(f"checked {checked} panel query(ies) across {len(dashboards)} dashboard(s)")
     if failures:
         print(f"\n{len(failures)} failure(s):")
         for dash_title, panel_title, err in failures:
             print(f"- [{dash_title}] {panel_title}: {err}")
         sys.exit(1)
 
-    print("all ClickHouse panel queries succeeded")
+    print("all panel queries succeeded")
     sys.exit(0)
 
 
