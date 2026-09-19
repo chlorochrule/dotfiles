@@ -78,6 +78,9 @@ in
       gitleaks
       nodejs
       nil
+      # Format-on-save via conform.nvim (terraform below doubles as one).
+      nixfmt
+      stylua
       terraform
       pandoc
       editorconfig-checker
