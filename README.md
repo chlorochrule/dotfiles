@@ -1,6 +1,11 @@
 # dotfiles
 
 macOS環境をNix (nix-darwin + home-manager) + Homebrew (casksのみ) + miseで宣言的に管理するdotfilesリポジトリです。
+Claude Codeとも深く統合しており、rules/skills/hooksの配布から、herdr(ターミナルマルチプレクサ)連携、
+操作ログを可視化するローカル観測スタックまでこのリポジトリで管理しています。
+
+著者(minami)個人の環境設定です。`hosts/MacBookPro-minami/`はその一例で、
+自分の環境で使う場合は「セットアップ手順」に従って自分のホスト定義を追加してください。
 
 ## 設計方針
 
@@ -10,9 +15,8 @@ macOS環境をNix (nix-darwin + home-manager) + Homebrew (casksのみ) + miseで
 | **Homebrew** | GUIアプリ(casks)専用。formulaは使わない |
 | **mise** | プロジェクト単位の言語ランタイムバージョン管理(node, python等) |
 
-ランタイム(node/python等)とCLIツールを二重管理しないことが重要です。
-ランタイムはmise、CLIツールはNixで明確に分担します(ただし`nodejs`は例外です。
-`mason.nvim`がLSPサーバーをnpm経由でインストールするための裏方インフラとしてNix側に置いています。
+ランタイムはmise、CLIツールはNixで分担します(ただし`nodejs`は例外です。
+`mason.nvim`がLSPサーバーをnpm経由でインストールする裏方インフラとしてNix側に置いています。
 ディレクトリに依存せず常に同じものが使える必要があるためです)。
 
 ## 前提
@@ -104,15 +108,48 @@ sudo darwin-rebuild switch --flake ~/.dotfiles
 設定ファイルを編集したら、`git add` してから上記コマンドを実行してください(flakeはgit管理下のファイルしか見ません)。
 home-manager側の設定(zsh、git、mise、Ghostty等)もこの1コマンドで一緒に適用されます。
 
+## よく使う運用コマンド
+
+```bash
+# 設定変更を適用
+sudo darwin-rebuild switch --flake ~/.dotfiles
+
+# inputsを最新化(flake.lockを更新)。flake.lockの書き込みだけなのでsudo不要
+nix --extra-experimental-features "nix-command flakes" flake update
+
+# 特定inputのみ更新
+nix --extra-experimental-features "nix-command flakes" flake update <input名>
+
+# 世代の確認とロールバック
+darwin-rebuild --list-generations
+sudo darwin-rebuild switch --rollback
+
+# ガベージコレクション
+sudo nix-collect-garbage --delete-older-than 30d
+
+# ローカルLLMモデルの取得(MacBookPro-minami、初回のみ、数十GB)
+ollama pull qwen3.6:27b        # dense 27B, 18GB(q4_K_M)
+ollama pull qwen3-coder-next   # 80B MoE/3B active, 46GB
+
+# pull後、256Kコンテキストを焼き込んだ派生モデル(*-262k)を作るためrebuildが必要
+sudo darwin-rebuild switch --flake ~/.dotfiles
+
+# ローカルLLM(Ollama)経由でClaude Codeを起動
+claude-q36    # Qwen3.6-27B
+claude-q3cn   # Qwen3-Coder-Next
+```
+
 ## ファイル構成
 
 ```
 ~/.dotfiles/
 ├── .claude/
-│   └── skills/                  # このリポジトリで作業する時だけ使うプロジェクトスコープの
-│                                 # skill(Claude Codeがこのリポジトリ内で自動検出する)。
-│                                 # ~/.claude/配下へはデプロイされない(home/claude/skills/とは別物)。
-│                                 # 例: upgrade-langfuse(services/langfuse/のバージョンを上げる手順)
+│   ├── skills/                  # このリポジトリで作業する時だけ使うプロジェクトスコープの
+│   │                             # skill(Claude Codeがこのリポジトリ内で自動検出する)。
+│   │                             # ~/.claude/配下へはデプロイされない(home/claude/skills/とは別物)。
+│   │                             # 例: upgrade-langfuse(services/langfuse/のバージョンを上げる手順)
+│   └── rules/                   # 各設定の「なぜ」をまとめたLLM向け背景情報
+│                                 # (frontmatterのglobsでpath-scopedロード。人間が読んでも構わない)
 ├── flake.nix                    # inputs定義、ホストをdarwinConfigurationsへ自動展開
 ├── darwin.nix                   # 全マシン共通のnix-darwin設定
 │                                 # (system.defaults, フォント, unfreeパッケージの許可等)
@@ -139,14 +176,12 @@ home-manager側の設定(zsh、git、mise、Ghostty等)もこの1コマンドで
 ├── .config/herdr/config.toml    # herdr(ghosttyのマルチプレクサ)の設定
 ├── .tigrc, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
 ├── services/                    # ローカル専用サービス群(Docker Compose定義)。Nix管理外
+│   ├── README.md                 # 詳細ガイド(下記「ローカルサービス」参照)
 │   ├── langfuse/                 # ローカルLangfuse
 │   ├── grafana/                  # ローカルGrafana
 │   └── prometheus/               # ローカルPrometheus
 ├── terraform/
-│   └── local/                    # ↑3つのプロビジョニング用Terraform(ローカルMac
-│                                 #     provisioning専用ディレクトリ)。Nix管理外
-│                                 # (詳細は「ローカルサービス(Langfuse/Grafana/
-│                                 #     Prometheus)をTerraformでプロビジョニングする」参照)
+│   └── local/                    # ↑3つをプロビジョニングするTerraform(ローカルMac専用)。Nix管理外
 └── CLAUDE.md                    # このリポジトリで作業する際のClaude Code向け指示
 ```
 
@@ -156,234 +191,15 @@ Nix storeへコピーされないため、手編集してもrebuildなしで即�
 
 ### `~/.claude/{commands,skills,agents,hooks}` の共通/ホスト別マージ
 
-これらは「全マシン共通(`home/claude/<name>/`) + このホスト固有(`hosts/<hostname>/claude/<name>/`、
-存在する場合のみ)」をファイル単位でマージして`~/.claude/<name>/`を構成します
-(`home/default.nix`内のマージ処理。ホスト名は`flake.nix`が`home-manager.extraSpecialArgs`
-経由で渡すため、このロジック自体はホストを問わず共通で、新規ホスト追加時にコピーする必要はありません)。
-同名ファイルがあればホスト固有側が優先されます。
+全マシン共通(`home/claude/<name>/`)とホスト固有(`hosts/<hostname>/claude/<name>/`)をファイル単位でマージして
+`~/.claude/<name>/`を構成します(同名ファイルはホスト固有が優先)。
+ファイル単位のシンボリックリンクのため、**新規ファイルを追加した場合はrebuildが必要**です。
+詳しい仕組みは`.claude/rules/nix-hosts.md`を参照してください。
 
-この仕組みにより、例えば私用PCと仕事用PCの両方で共通のコマンド/スキルを使いつつ、
-仕事用PCだけに追加のコマンドを持たせる、といった構成が可能です。
-ただしファイル単位のシンボリックリンクになるため、**新規ファイルを追加した場合はrebuildが必要**です
-(ディレクトリ単位のシンボリックリンクと違い、置くだけでは即反映されません)。
-
-`~/.claude/settings.json` と `~/.claude/CLAUDE.md` はマージ対象外で、それぞれ単一ファイルとして扱われます。
-`settings.json`はマシンごとに内容を変えたい設定(モデル選択、権限モード、hookの登録等)なので
-`hosts/<hostname>/claude/settings.json` に置き、`CLAUDE.md`は全マシン共通なので
-`home/claude/CLAUDE.md` に置きます。
-
-ただし`settings.json`はシンボリックリンクではなく実ファイルとして置きます。
-Claude Code自身も`/model`・`/plugin`・`/config`等で書き込むためです
-(リポジトリへのリンクだとgitの差分になり、Nix storeへのリンクだと書き込めません)。
-rebuildのたびに`home.activation.claudeSettings`(`hosts/<hostname>/home.nix`)が、
-リポジトリの`settings.json`で宣言したキーだけを`~/.claude/settings.json`へ上書きマージします。
-宣言していないキー(実行時に追加された権限やプラグイン設定等)はそのまま残り、
-宣言したキーを実行時に変更した場合は次回rebuildで宣言の値へ戻ります。
-リポジトリの`settings.json`を編集した場合も、反映にはrebuildが必要です。
-
-## よく使う運用コマンド
-
-```bash
-# 設定変更を適用
-sudo darwin-rebuild switch --flake ~/.dotfiles
-
-# inputsを最新化(flake.lockを更新)。flake.lockの書き込みだけなのでsudo不要
-nix --extra-experimental-features "nix-command flakes" flake update
-
-# 特定inputのみ更新
-nix --extra-experimental-features "nix-command flakes" flake update <input名>
-
-# 世代確認・ロールバック
-darwin-rebuild --list-generations
-sudo darwin-rebuild switch --rollback
-
-# ガベージコレクション
-sudo nix-collect-garbage --delete-older-than 30d
-
-# ローカルLLMモデルの取得(MacBookPro-minami、初回のみ・数十GB)
-ollama pull qwen3.6:27b        # dense 27B, 18GB(q4_K_M), SWE-bench Verified 77.2
-ollama pull qwen3-coder-next   # 80B MoE/3B active, 46GB, コーディングエージェント特化
-
-# pull後、256Kコンテキストを焼き込んだ派生モデル(*-262k)を作るためrebuildが必要
-sudo darwin-rebuild switch --flake ~/.dotfiles
-
-# ローカルLLM(Ollama)経由でClaude Codeを起動
-claude-q36    # Qwen3.6-27B
-claude-q3cn   # Qwen3-Coder-Next
-```
-
-## ローカルサービス(Langfuse/Grafana/Prometheus)をTerraformでプロビジョニングする
-
-`terraform/local/`は、このMac上だけで完結するローカル専用サービス群をDocker Composeで起動し、
-Terraformで冪等にプロビジョニングするための共通ディレクトリです(Nix管理外)。
-1つの`terraform apply`で以下の3つがまとめて起動し、provisioningされます。
-サービスごとの資源は`langfuse.tf`/`grafana.tf`/`prometheus.tf`のようにファイル単位で分けており、
-出力名も`langfuse_*`/`grafana_*`/`prometheus_*`のようにprefixしています。
-生成したパスワード等の資格情報はローカルの`terraform/local/terraform.tfstate`(git管理外)に保存されます。
-Dockerは`hosts/MacBookPro-minami/darwin.nix`のHomebrew cask `rancher`(Rancher Desktop)で
-提供されるものを使うため、Rancher Desktopを起動しておく必要があります。
-
-各サービスは独立したdocker-compose project(`services/langfuse/`/`services/grafana/`/
-`services/prometheus/`)として起動しており、共有のDockerネットワークは作っていません。
-サービス間の通信(GrafanaからPrometheusへ、Prometheusからホストのnode_exporterへ)は
-Rancher Desktopが提供する`host.docker.internal`(127.0.0.1限定のサービスにも到達できる)
-経由で行います。
-`docker-compose.yml`で`extra_hosts`により`host.docker.internal`を明示上書きすると
-Linux流のブリッジゲートウェイIPになり127.0.0.1限定のサービスに届かなくなるため、
-あえて指定していません。
-
-### Langfuse: Claude Codeの操作ログを記録する
-
-`services/langfuse/`配下にLangfuse(LLMアプリ向けの可観測性OSS)のセルフホスト用Docker Compose定義を置いています。
-Claude Codeのユーザープロンプト、モデルの応答、ツール呼び出しの入出力を、
-このMac上だけで完結するLangfuseに記録できます(データは外部送信されません。
-`terraform/local/langfuse.tf`が`.env`に`TELEMETRY_ENABLED=false`を書き出し、
-Langfuse自体の利用統計送信も無効化しています)。
-
-Claude Code側は公式の[langfuse/Claude-Observability-Plugin](https://github.com/langfuse/Claude-Observability-Plugin)
-(hookでセッションtranscriptを読み取りLangfuseへ送信するプラグイン)を使い、
-`hosts/MacBookPro-minami/claude/settings.json`の`extraKnownMarketplaces`/`enabledPlugins`/`pluginConfigs`で
-宣言的にマーケットプレイス登録、有効化、`LANGFUSE_BASE_URL`の設定までを行っています。
-APIキー(`LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY`)はgit管理下に置かず、
-初回のみ`/plugin configure`での手動設定が必要です(下記「初回セットアップ」参照)。
-どちらも`terraform/local/`がtfstateごとに乱数で発行する値で、SECRET_KEYは秘密情報でもあるためです。
-PUBLIC_KEYは`~/.claude/settings.json`の`pluginConfigs`に書き込まれ、
-rebuild時のマージでも宣言外のキーとして維持されます。
-
-`services/langfuse/.env`(docker-compose.ymlのCHANGEME項目)や、
-組織/プロジェクト/ログイン用ユーザーやAPIキーの初回作成(Langfuseの
-[headless initialization](https://langfuse.com/self-hosting/administration/headless-initialization)、
-`LANGFUSE_INIT_*`環境変数)は手動で行わず、`terraform/local/`が`terraform apply`のたびに冪等に実施します。
-ブラウザでサインアップする必要はありません。
-`docker-compose.yml`/`.envrc`自体は`services/langfuse/`に残しており、
-`.envrc`(direnv)はTerraformが書いた`.env`をシェルにも読み込むだけの役割です。
-
-### Grafana: ダッシュボードを見る
-
-`services/grafana/`配下にGrafanaのセルフホスト用Docker Compose定義を置いています
-(`http://localhost:3001`、外部公開しません)。
-admin初期パスワードは`terraform/local/grafana.tf`が乱数で生成し`services/grafana/.env`に書き出します
-(Langfuseの`.env`生成と同じ方針)。
-`services/grafana/docker-compose.yml`では利用統計送信・バージョンチェック
-(`GF_ANALYTICS_*`)も無効化しています。
-
-ダッシュボード、データソース、adminアカウントは可能な限りTerraformの
-[grafana/grafanaプロバイダー](https://registry.terraform.io/providers/grafana/grafana/latest/docs)で管理し、
-Grafanaの管理画面からの手動設定を極力不要にしています。
-データソースは下記のPrometheusのほか、組み込みのTestDataデータソースと、
-それを使ったサンプルダッシュボード(`Local`フォルダ配下の`Welcome`)をTerraform管理下に置いています。
-実データを見るダッシュボードを追加する際は`terraform/local/`の該当ファイル
-(例: `langfuse_grafana.tf`、`prometheus_grafana.tf`)に`grafana_dashboard`リソースを追記してください。
-
-LangfuseのトレースデータはClickHouseに保存されているため、
-公式署名済みの[grafana-clickhouse-datasource](https://grafana.com/grafana/plugins/grafana-clickhouse-datasource/)
-プラグインを`services/grafana/docker-compose.yml`の`GF_PLUGINS_PREINSTALL_SYNC`で導入し、
-Langfuse自身のClickHouse(`services/langfuse/`)へのデータソースと、
-Langfuseの[Dashboards](http://localhost:3000/project/claude-code/dashboards)
-(Langfuse Home/Agent/Cost/Latency/Usage Management、Langfuse Maintained)相当のダッシュボードを
-Terraform管理しています。
-
-- `terraform/local/langfuse_grafana.tf`: Langfuse Home相当(`Langfuse Overview`)
-- `terraform/local/langfuse_grafana_extra.tf`: Agent/Cost/Latency Dashboard相当
-  (`Langfuse Agent`/`Langfuse Cost`/`Langfuse Latency`)
-
-クエリはLangfuse v4のOTel統合スパンテーブル(`events_core`)に対する生SQLで、
-Langfuse UIの数値と一致することを確認済みです。
-Scores関連(スコアデータ無し)、Usage Managementの大半(Traces/Observations統計とほぼ重複)、
-Time To First Token/出力トークン毎秒系(`completion_start_time`が未記録でLangfuse UI側も常にNo data)は
-対象外にしています。
-
-GrafanaはこのClickHouseへ、langfuse-web/workerが使うフル権限のユーザーではなく、
-SELECTのみ許可した専用ユーザー(`grafana_ro`)で接続しています。ダッシュボード定義や
-プラグインの不具合でデータが書き変わる/消えるリスクを避けるための最小権限化で、
-ユーザー自体はClickHouseの設定ファイル(`services/langfuse/clickhouse-users.d/`、
-`terraform/local/langfuse_grafana.tf`が生成、git管理外)で定義しています。
-
-### Prometheus: macOSホストのメトリクスを収集する
-
-`services/prometheus/`配下にPrometheusのセルフホスト用Docker Compose定義を置いています
-(`http://localhost:9095`、外部公開しません。
-コンテナ内部ポートは既定の9090ですが、ホスト側は`services/langfuse/`のminioが既に`9090`を
-使っているため`9095`にずらしています)。
-スクレイプ対象を定義する`services/prometheus/prometheus.yml`は秘密情報を含まないため
-Terraform管理外で直接コミットしています。
-
-CPU/メモリ/ディスク等、macOSホスト本体のメトリクスは
-[node_exporter](https://github.com/prometheus/node_exporter)で収集します。
-Dockerコンテナの中からでは真のホストメトリクスが取れないため、
-`hosts/MacBookPro-minami/darwin.nix`の`services.prometheus.exporters.node`
-(nix-darwin組み込みのlaunchd daemonモジュール)でホストに直接インストールし、
-`127.0.0.1:9100`限定でlistenさせています。
-Prometheus側はこれを`host.docker.internal:9100`としてスクレイプします。
-
-PrometheusのGrafanaデータソース登録(`terraform/local/prometheus.tf`の
-`grafana_data_source.prometheus`)もTerraform管理です。
-`terraform/local/prometheus_grafana.tf`では、そのデータソースを使ってmacOSホストの
-node_exporterメトリクス(Uptime/CPU/メモリ/バッテリー/ロードアベレージ/
-ディスクI/O/ネットワークI/O/ファイルシステム使用率)を見る`macOS Host (node_exporter)`
-ダッシュボードも管理しています。
-
-### 初回セットアップ
-
-```bash
-# 1. Claude Codeのプラグイン設定・node_exporterを適用(claude/settings.jsonの
-#    変更反映と、Prometheusがスクレイプするhost側node_exporterの有効化を兼ねる)
-sudo darwin-rebuild switch --flake ~/.dotfiles
-
-# 2. Langfuse/Grafana/Prometheusを起動(初回のprovisioningも同時に行われる)
-cd ~/.dotfiles/terraform/local
-terraform init
-terraform apply
-
-# 3. Claude Codeを起動し、Terraformが発行したLangfuseのAPIキーを登録
-#    (SECRET_KEYはOSキーチェーンに保存される)
-claude
-/plugin configure langfuse-observability@langfuse-observability
-#   LANGFUSE_PUBLIC_KEY: `terraform output -raw langfuse_public_key`
-#   LANGFUSE_SECRET_KEY: `terraform output -raw langfuse_secret_key`
-```
-
-ブラウザからログインしたい場合、Langfuse(`http://localhost:3000`)は`terraform output langfuse_login_email` /
-`terraform output -raw langfuse_login_password`、Grafana(`http://localhost:3001`)は
-`terraform output grafana_login_user` / `terraform output -raw grafana_login_password`で確認できます。
-Prometheus(`http://localhost:9095`)はログイン不要です。
-
-### 運用コマンド
-
-Langfuse本体・redis・postgres・clickhouseのイメージバージョンを上げる際は、手でdocker-compose.ymlの
-タグを書き換えるのではなく`.claude/skills/upgrade-langfuse`(このリポジトリで作業する時に
-Claude Codeが自動検出するプロジェクトスコープのskill)を使ってください。
-Grafanaダッシュボードが依存するClickHouseスキーマへの影響を確認する手順まで含みます。
-
-```bash
-cd ~/.dotfiles/terraform/local
-
-# 起動/停止(3サービスまとめて)
-terraform apply
-docker compose -f ../../services/langfuse/docker-compose.yml down
-docker compose -f ../../services/grafana/docker-compose.yml down
-docker compose -f ../../services/prometheus/docker-compose.yml down
-
-# 発行済みAPIキー・ログイン情報の確認
-terraform output -raw langfuse_public_key
-terraform output -raw langfuse_secret_key
-terraform output -raw langfuse_login_password
-terraform output -raw grafana_login_password
-
-# Langfuseの全データを消してやり直す(APIキー・ログイン情報は.envの内容を
-# 維持したまま同じ値で再作成される。値ごと変えたい場合はterraform.tfstateも消す)
-docker compose -f ../../services/langfuse/docker-compose.yml down -v
-terraform apply -replace=terraform_data.compose_up
-
-# Grafanaの全データを消してやり直す(ダッシュボード等はterraform apply時に
-# 再作成される。admin初期パスワードも同様の理由で同じ値のまま再作成される)
-docker compose -f ../../services/grafana/docker-compose.yml down -v
-terraform apply -replace=terraform_data.grafana_compose_up
-
-# Prometheusの蓄積データを消してやり直す
-docker compose -f ../../services/prometheus/docker-compose.yml down -v
-terraform apply -replace=terraform_data.prometheus_compose_up
-```
+`~/.claude/settings.json`と`~/.claude/CLAUDE.md`はマージ対象外の単一ファイルです。
+`settings.json`は`hosts/<hostname>/claude/settings.json`、`CLAUDE.md`は`home/claude/CLAUDE.md`に置きます。
+`settings.json`は実ファイルとして置かれ、rebuildのたびにリポジトリの内容だけが上書きマージされます
+(Claude Code自身が実行時に追加する権限やプラグイン設定はそのまま残ります)。
 
 ## 既知の注意点
 
@@ -398,100 +214,32 @@ terraform apply -replace=terraform_data.prometheus_compose_up
     新しいGUIアプリをHomebrew経由で入れる場合は必ずリストに追加してください
 - `homebrew.onActivation.autoUpdate`/`upgrade` は `true` にしてあり、`darwin-rebuild switch` の
     たびにHomebrewのタップ情報が更新され、古くなったcaskは自動で最新版へアップグレードされます
-- 全リポジトリ共通のgitleaks pre-commitフックは、`core.hooksPath`ではなく`init.templateDir`
-    (`home/default.nix`の`programs.git.settings`)で配布しています。
-    `core.hooksPath`をグローバルに設定すると各リポジトリの`.git/hooks`が無視され、
-    pre-commit framework等もインストールを拒否するためです。
-    テンプレートは`git clone`/`git init`時に`.git/hooks/`へ複製されるだけなので、
-    既存のリポジトリに入れるにはそのリポジトリで`git init`を再実行してください
+- 全リポジトリ共通のgitleaks pre-commitフックは`init.templateDir`経由で配布しているため、
+    既存のリポジトリに導入するにはそのリポジトリで`git init`を再実行してください
     (既存のフックファイルは上書きされません)
 - BSLなどunfreeライセンスのパッケージ(`terraform`等)を`home.packages`に追加する場合は、
     `darwin.nix`の`nixpkgs.config.allowUnfreePredicate`にパッケージ名を追加する必要があります
-- `~/.claude/{commands,skills,agents,hooks}`配下に新規ファイルを追加した場合は、
-    他の`home/`配下の変更と違ってrebuildしないと反映されません(上記「ファイル構成」セクション参照)
-- Claude Codeのユーザースコープ(全プロジェクト共通)MCPサーバーは`~/.claude.json`の
-    `mcpServers`キーで管理されます。
-    このファイルにはプロジェクト履歴やtrust状態などClaude Code自身が書き込む可変な実行時状態も
-    同居しているため、home-manager側ではファイル全体をリンクせず、
-    `home.activation.claudeMcpServers`(`hosts/MacBookPro-minami/home.nix`)がrebuildのたびに
-    `jq`で`mcpServers`キーだけをマージします。
-    現在`chrome-devtools`(`chrome-devtools-mcp`、nixpkgs未収録のためnpx経由。
-    開発元を信頼しリスクを受容したうえで`@latest`を使用)と`playwright`
-    (nixpkgsの`playwright-mcp`)を登録しています。
-    ブラウザ自動化用途のPlaywright本体(CLI)も`playwright-test`パッケージとして
-    このホストの`home.packages`に含めています
 - Anthropic公式のChrome拡張機能「Claude for Chrome」はChromeウェブストア経由での
     インストールが必要(現状ベータ/招待制のため)で、Nixでの宣言的管理はしていません。
     claude.aiのアカウント設定からベータを有効化し、案内されるリンクからインストールしてください
-- Claude Codeの`/model`コマンドはAnthropic公式モデルのみが選択肢で、
-    ローカルLLMを直接そのリストに追加する機能はありません。
-    代わりに`hosts/MacBookPro-minami/home.nix`で`services.ollama.enable = true`を有効化して
-    Ollama(Anthropic Messages API互換モード搭載、`127.0.0.1:11434`でlaunchd agentとして
-    自動起動)を常駐させ、`ANTHROPIC_BASE_URL`等の環境変数でエンドポイントごと切り替える
-    `claude-q36`/`claude-q3cn`というzsh関数(同ファイル内)を用意しています。
-    通常の`claude`コマンド(Anthropic本家)には影響しません。
-    モデル本体は`ollama pull`で別途取得が必要です(上記「よく使う運用コマンド」参照)。
-    未知モデル名に対する警告を避けるため`CLAUDE_CODE_MAX_CONTEXT_TOKENS`も
-    実際のコンテキストウィンドウ(256K)に設定しています。
-    コンテキスト長262144(256K、両モデルの実際の学習時ウィンドウ)は`services.ollama`の
-    `OLLAMA_CONTEXT_LENGTH`(サービス全体に効く)ではなく、`home.activation.ollamaContextModels`
-    (`hosts/MacBookPro-minami/home.nix`)が`ollama create`で作る派生モデル(`qwen3.6-27b-262k`/
-    `qwen3-coder-next-262k`、Modelfileは`hosts/MacBookPro-minami/ollama/`)にのみ焼き込んでおり、
-    `claude-q36`/`claude-q3cn`はこちらを指します。サービス全体の環境変数にしなかったのは、
-    将来別の軽量モデルを同じOllamaインスタンスにpullした場合にもそちらへ256Kコンテキストが
-    強制され、不要なメモリ消費や読み込み遅延を招くのを避けるためです。
-    このコンテキスト拡張自体は必須で、Ollamaのデフォルト`num_ctx`が4096しかなく、
-    Claude Codeが送る長大なsystem prompt+tool定義だけでcontext windowをほぼ使い切ってしまい、
-    肝心のユーザー指示が実質無視される(無関係な応答を返す)現象が実測で確認されたためです。
-    256Kに拡張後は実際のタスク(ファイル内容の正確な読み取り等)も問題なく遂行できることを
-    確認済みです。
-    メモリはQwen3.6-27Bで約20GB、Qwen3-Coder-Nextで約59GB(いずれも256Kコンテキスト込み)で、
-    128GB環境なら問題なく収まります
-- Ollamaは`nixpkgs`のDarwinリリースブランチ収録版を使っています。
-    新しいモデルのマニフェストが要求するバージョンをリリースブランチ版が満たせず`pull`が
-    失敗する場合は、`nixpkgs-unstable`をflakeのinputに追加し、`hosts/<hostname>/darwin.nix`の
-    `nixpkgs.overlays`でollamaだけ差し替えてください(以前はこの方式で運用していました)
-- `.config/nvim/lua/plugins/treesitter.lua`のnvim-treesitterは`main`ブランチを使っています
-    (Neovim 0.12以降が必要。上流の開発は`main`が主流で、`master`はNeovim 0.11向けの
-    後方互換用に維持されている保守版)。`main`はパーサーのビルドに外部の`tree-sitter`
-    CLIコマンドを直接呼ぶため(masterは内部で完結していた)、`home/default.nix`の
-    `home.packages`に`pkgs.tree-sitter`が無いとパーサーのビルドが失敗します
-- `herdr`(AIコーディングエージェント用のターミナルワークスペースマネージャ)はnixpkgs未収録のため、
-    `flake.nix`で公式の`herdr-nix`(herdr本体のprebuiltバイナリをcachix経由でハッシュ検証込みで
-    取得するラッパー)をinputとして追加し、`home-manager.extraSpecialArgs`経由で全マシン共通の
-    `home/default.nix`の`home.packages`に渡しています。
-    cachixの`extra-substituters`/`extra-trusted-public-keys`は`darwin.nix`の`nix.extraOptions`で
-    設定しています
-- Ghosttyのマルチプレクサはtmuxからherdrに置き換えました。関連する変更点:
-    - 起動: `home/default.nix`のzsh `initContent`が、Ghostty上の対話シェルで
-        (`$HERDR_ENV`が未設定なら)`exec herdr`します。
-        引数なしの`herdr`はデフォルトセッションへのアタッチ/新規作成を自動判定するため、
-        tmux版のような`has-session`分岐は不要です
-    - キーバインド: `.config/herdr/config.toml`でprefixを`ctrl+g`(旧tmuxと同じ)に設定し、
-        旧`.tmux.conf`の`-n`(prefixなし)バインドを`alt+`キーとして再現しています
-        (新規workspace/tab、workspace/tab切替、pane分割/削除等)。
-        rebuild時は`home.activation`で起動中のherdrサーバーへ`herdr server reload-config`が
-        自動実行されます
-    - セッション永続化: herdrはサーバー再起動時にworkspace/tab/pane/cwd/layoutを標準で
-        復元するため、旧tpm(`tmux-resurrect`/`tmux-continuum`)相当のプラグインは
-        不要になり削除しました
-    - Claude Codeとの連携: 旧`tmux-status.sh`(hookでウィンドウタブの色を手動で塗り分ける
-        仕組み)を削除し、`home/claude/hooks/herdr-agent-state.sh`
-        (`herdr integration install claude`が生成する公式フックと同内容)に置き換えました。
-        作業中/入力待ち等のエージェント状態はherdr側の画面解析で自動検知されるため、
-        hookはセッション識別情報の報告のみを行います。
-        herdrのメジャーアップデートで統合フックの内容が変わった場合は、
-        `herdr integration install claude`を再実行して生成物をこのファイルに反映してください
-    - Neovimとの連携: `vim-tmux-navigator`を削除し、
-        `.config/nvim/lua/config/keymaps.lua`に同等のCtrl+h/j/k/l境界越え移動を自前で
-        実装しました(herdr内実行時のみ`$HERDR_SOCKET_PATH`で有効化、
-        `herdr pane focus --direction`を呼びます)。
-        `vim-tmux-navigator`はlazy.nvimの起動spec(`plugins/editing.lua`)から既に
-        削除済みですが、ディスク上のプラグイン自体を消すには次回nvim起動時に
-        `:Lazy clean`を実行してください
-    - 旧`C-t`(現在のペインの状態に応じてtig/tig statusを開く動的な仕組み)は
-        `ctrl+t`でtigをポップアップ表示する固定バインドに簡略化しました
-        (`[[keys.command]]`、`.config/herdr/config.toml`)
-    - `bin/tmux-kill-pane`、`tmux-kill-session`、`tmux-renumber-sessions`は削除しました。
-        pane/tab/workspaceを閉じた際の「他へ退避してから閉じる」制御やid再割り当ては
-        herdr側の標準動作に委ねています
+- Ollama(`claude-q36`/`claude-q3cn`。上記「よく使う運用コマンド」参照)は`nixpkgs`のDarwin
+    リリースブランチ収録版です。新しいモデルが要求するバージョンを`pull`が満たせない場合は、
+    `nixpkgs-unstable`をflakeのinputに追加し、`hosts/<hostname>/darwin.nix`の
+    `nixpkgs.overlays`でollamaだけ差し替えてください
+- herdrのメジャーアップデートで統合フックの内容が変わった場合は、
+    `herdr integration install claude`を再実行し、`home/claude/hooks/herdr-agent-state.sh`へ
+    生成物を反映してください
+
+## ローカルサービス(Langfuse/Grafana/Prometheus)
+
+Claude Codeの操作ログ(Langfuse)、そのダッシュボード(Grafana)、macOSホストのメトリクス(Prometheus)を
+このMac上だけで動かすオプション機能です。3つまとめてTerraformでプロビジョニングします。
+
+```bash
+cd ~/.dotfiles/terraform/local
+terraform init
+terraform apply
+```
+
+各サービスの役割、初回セットアップの完全な手順、バージョンアップ等の運用コマンドは
+[services/README.md](services/README.md) を参照してください。
