@@ -1,4 +1,6 @@
 .claude/skills/japanese-tech-writing/
+result
+result-*
 services/langfuse/.env
 services/langfuse/clickhouse-users.d/
 services/grafana/.env
