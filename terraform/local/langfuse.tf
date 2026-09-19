@@ -92,7 +92,7 @@ resource "terraform_data" "compose_up" {
     env_sha256     = local_sensitive_file.env.content_sha256
     compose_sha256 = filesha256("${local.langfuse_dir}/docker-compose.yml")
     # clickhouse-users.d must exist before first container creation (compose
-    # mounts it); content changes are picked up live by ClickHouse itself.
+    # mounts it), and content changes need a container restart — see rules.
     clickhouse_users_xml_sha256 = local_sensitive_file.clickhouse_grafana_ro_users_xml.content_sha256
     # destroy-time provisioners can only read `self`, not top-level locals.
     langfuse_dir = local.langfuse_dir

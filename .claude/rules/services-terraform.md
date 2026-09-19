@@ -69,11 +69,16 @@ choices that aren't obvious from the code itself.
 - Uses profile `readonly=2`, not `readonly=1`: `readonly=1` also blocks
   `SET` statements, which the Grafana ClickHouse plugin issues for session
   settings like `max_execution_time`.
-- ClickHouse picks up `users.d` changes live via `config_reload_interval`
-  (~2s) — no restart needed after rotating the password. The file still has
-  to exist before first container creation (compose mounts it as a
-  read-only file), which is what forces the `depends_on` ordering in
+- The file has to exist before first container creation (compose mounts it
+  as a read-only file), which is what forces the `depends_on` ordering in
   `langfuse.tf`.
+- Rotating the password needs a container restart, which is why the file's
+  hash is in `compose_up`'s `triggers_replace`. ClickHouse itself reloads
+  `users.d` live (`config_reload_interval`, ~2s), but only for in-place
+  edits: Terraform rewrites the file with a new inode, and a single-file
+  bind mount keeps pointing at the old, deleted one — the container then
+  sees "No such file or directory" (verified on Rancher Desktop). Don't
+  drop the trigger on the assumption that live reload covers it.
 
 ## Dashboards
 
