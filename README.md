@@ -1,42 +1,40 @@
 # dotfiles
 
-macOS環境をNix (nix-darwin + home-manager) + Homebrew (casksのみ) + miseで宣言的に管理するdotfilesリポジトリです。
-Claude Codeとも深く統合しており、rules/skills/hooksの配布から、herdr(ターミナルマルチプレクサ)連携、
-操作ログを可視化するローカル観測スタックまでこのリポジトリで管理しています。
+macOSの環境設定を、Nix(nix-darwin、home-manager)とHomebrewとmiseで宣言的に管理するリポジトリです。
+Claude Codeの設定一式(rules、skills、hooks)の配布、ターミナルマルチプレクサherdrとの連携、操作ログを可視化するローカルの観測スタックも、このリポジトリで管理しています。
 
-著者(minami)個人の環境設定です。`hosts/MacBookPro-minami/`はその一例で、
-自分の環境で使う場合は「セットアップ手順」に従って自分のホスト定義を追加してください。
+内容は著者(minami)個人の環境設定です。
+`hosts/MacBookPro-minami/`は著者のマシンの定義なので、自分の環境で使う場合は「新しいマシンのセットアップ」の手順で自分のホスト定義を追加してください。
 
-## 設計方針
+## 管理ツールの分担
 
 | ツール | 役割 |
 |---|---|
-| **Nix** (nix-darwin + home-manager) | macOSシステム設定の宣言管理、グローバルCLIツール、dotfiles配置、Homebrew自体の宣言管理 |
-| **Homebrew** | GUIアプリ(casks)専用。formulaは使わない |
-| **mise** | プロジェクト単位の言語ランタイムバージョン管理(node, python等) |
+| Nix(nix-darwin、home-manager) | macOSのシステム設定、グローバルなCLIツール、dotfilesの配置、Homebrew自体の設定 |
+| Homebrew | GUIアプリ(cask)のインストールだけに使う。formulaは使わない |
+| mise | プロジェクトごとの言語ランタイム(node、python等)のバージョン管理 |
 
-ランタイムはmise、CLIツールはNixで分担します(ただし`nodejs`は例外です。
-`mason.nvim`がLSPサーバーをnpm経由でインストールする裏方インフラとしてNix側に置いています。
-ディレクトリに依存せず常に同じものが使える必要があるためです)。
+ランタイムはmise、CLIツールはNixという分担ですが、`nodejs`だけはNix側に置いています。
+`mason.nvim`がLSPサーバーをnpm経由でインストールするため、ディレクトリに関係なく常に同じ`nodejs`を使える必要があるからです。
 
-## 前提
+## 前提となる環境
 
-- macOS (Apple Silicon / `aarch64-darwin`)
-- zsh(ログインシェル)
+- macOS(Apple Silicon、`aarch64-darwin`)
+- ログインシェルがzsh
 
-## セットアップ手順(新規マシン)
+## 新しいマシンのセットアップ
 
 ### 1. Nixのインストール
 
-upstream Nix(Determinate Nixではない)を、daemon方式(multi-user)でインストールします。
+Nixは、Determinate Nixではなくupstream版を、daemon方式(multi-user)でインストールします。
 
 ```bash
 sh <(curl -L https://nixos.org/nix/install) --daemon
 ```
 
-インストール後、ターミナルを開き直してください。
+インストールが終わったら、ターミナルを開き直してください。
 
-### 2. リポジトリを取得
+### 2. リポジトリの取得
 
 ```bash
 mkdir -p ~/src/github.com/chlorochrule
@@ -44,99 +42,126 @@ git clone https://github.com/chlorochrule/dotfiles ~/src/github.com/chlorochrule
 ln -s ~/src/github.com/chlorochrule/dotfiles ~/.dotfiles
 ```
 
-### 3. ホスト定義を追加
+### 3. ホスト定義の追加
 
-現在のホスト名を確認します。
+ホスト定義のディレクトリ名には、マシンのホスト名を使います。
+ホスト名は次のコマンドで確認できます。
 
 ```bash
 scutil --get LocalHostName
 ```
 
-`hosts/<ホスト名>/` を新規作成します(既存の `hosts/MacBookPro-minami/` を参考にしてください)。
-最低限必要なのは `default.nix` だけです。
+`hosts/<ホスト名>/`を作り、`default.nix`を置きます。
+必須のファイルはこれだけです。
 
 ```nix
 # hosts/<ホスト名>/default.nix
 {
-    hostname = "<ホスト名>";   # scutil --get LocalHostName の出力と一致させる
-    username = "<ユーザー名>";
-    system = "aarch64-darwin";
+  hostname = "<ホスト名>"; # scutil --get LocalHostName の出力と一致させる
+  username = "<ユーザー名>";
+  system = "aarch64-darwin";
 }
 ```
 
-このマシン固有の設定を追加したい場合は、同じディレクトリに以下を置きます(どれも任意、無くてもよい)。
+そのマシンだけの設定は、同じディレクトリに次のファイルを置いて書きます。
+どちらも任意です。
 
-- **`darwin.nix`**：このマシンだけのnix-darwin設定(例: Homebrew casksの構成)
-- **`home.nix`**：このマシンだけのhome-manager設定(例: git identity、`~/.claude/settings.json`)
+- **`darwin.nix`**：そのマシンだけのnix-darwin設定(Homebrewのcaskの一覧、Dockの構成など)
+- **`home.nix`**：そのマシンだけのhome-manager設定(gitのユーザー情報、`~/.claude/settings.json`など)
 
-`flake.nix` の `hosts` リストに、追加したパスを1行加えます。
+最後に、`flake.nix`の`hosts`リストへ追加したディレクトリを1行加えます。
 
 ```nix
 hosts = [
-    ./hosts/MacBookPro-minami
-    ./hosts/<新ホストのディレクトリ名>
+  ./hosts/MacBookPro-minami
+  ./hosts/<ホスト名>
 ];
 ```
 
-新規ファイルはgitに `add` してからでないとflakeから見えないので、忘れずに:
+flakeはgit管理下のファイルしか読まないので、追加したファイルは`git add`しておきます。
 
 ```bash
 cd ~/.dotfiles
-git add hosts/<新ホストのディレクトリ名> flake.nix
+git add hosts/<ホスト名> flake.nix
 ```
 
-### 4. nix-darwinをブートストラップ
+### 4. nix-darwinのブートストラップ
 
-初回は `darwin-rebuild` コマンドがまだ存在しないため、`nix run` 経由で実行します。
+初回は`darwin-rebuild`コマンドがまだ無いので、`nix run`で実行します。
 
 ```bash
 sudo nix --extra-experimental-features "nix-command flakes" \
-    run nix-darwin/nix-darwin-26.05#darwin-rebuild -- switch --flake ~/.dotfiles
+  run nix-darwin/nix-darwin-26.05#darwin-rebuild -- switch --flake ~/.dotfiles
 ```
 
-`/etc/bashrc` や `/etc/zshrc` など、nix-darwinが管理しようとするファイルが既に存在する場合は `Unexpected files in /etc` のようなエラーで止まります。
-表示される指示に従い、対象ファイルを `<ファイル名>.before-nix-darwin` にリネームしてから再実行してください。
+`/etc/bashrc`や`/etc/zshrc`のように、nix-darwinが管理するファイルがすでに存在すると、`Unexpected files in /etc`のようなエラーで止まります。
+その場合は、表示される指示に従って対象ファイルを`<ファイル名>.before-nix-darwin`にリネームしてから、もう一度実行してください。
 
-### 5. 以降の運用
+2回目以降は`darwin-rebuild`コマンドを直接使えます。
+home-manager側の設定(zsh、git、mise、Ghostty等)も、このコマンドで一緒に適用されます。
 
-2回目以降は通常の `darwin-rebuild` コマンドが使えます。
-
-```bash
-sudo darwin-rebuild switch --flake ~/.dotfiles
-```
-
-設定ファイルを編集したら、`git add` してから上記コマンドを実行してください(flakeはgit管理下のファイルしか見ません)。
-home-manager側の設定(zsh、git、mise、Ghostty等)もこの1コマンドで一緒に適用されます。
-
-## よく使う運用コマンド
+## 日常の運用コマンド
 
 ```bash
-# 設定変更を適用
+# 設定の変更を適用する(編集したファイルはgit addしておく)
 sudo darwin-rebuild switch --flake ~/.dotfiles
 
-# inputsを最新化(flake.lockを更新)。flake.lockの書き込みだけなのでsudo不要
+# flakeのinputsを最新にする(flake.lockを書き換えるだけなのでsudoは不要)
 nix flake update
+nix flake update <input名>   # 特定のinputだけ
 
-# 特定inputのみ更新
-nix flake update <input名>
-
-# 世代の確認とロールバック
+# 世代の一覧とロールバック
 darwin-rebuild --list-generations
 sudo darwin-rebuild switch --rollback
 
-# ガベージコレクション(darwin.nixのnix.gcで毎週日曜3時にも自動実行される)
+# ガベージコレクション
 sudo nix-collect-garbage --delete-older-than 30d
+```
 
-# ローカルLLMモデルの取得(MacBookPro-minami、初回のみ、数十GB)
-ollama pull qwen3.6:27b        # dense 27B, 18GB(q4_K_M)
-ollama pull qwen3-coder-next   # 80B MoE/3B active, 46GB
+ガベージコレクションは、`darwin.nix`の`nix.gc`で毎週日曜3時にも自動で実行されます。
+Nix storeの重複ファイルをまとめる`nix-store --optimise`も、`nix.optimise`で同じ日の4時15分に実行されます。
 
-# pull後、256Kコンテキストを焼き込んだ派生モデル(*-262k)を作るためrebuildが必要
-sudo darwin-rebuild switch --flake ~/.dotfiles
+### ローカルLLM(Ollama)の準備と起動
 
-# ローカルLLM(Ollama)経由でClaude Codeを起動
+`hosts/MacBookPro-minami/`は、Claude CodeをローカルのOllamaのモデルで動かすラッパーを定義しています。
+モデルは初回だけ手動で取得します(合わせて数十GB)。
+
+```bash
+ollama pull qwen3.6:27b        # dense 27B、18GB(q4_K_M)
+ollama pull qwen3-coder-next   # 80B MoE(3B active)、46GB
+```
+
+取得した後にもう一度rebuildすると、256Kのコンテキスト長を設定した派生モデル(`*-262k`)が作られます[^ollama-ctx]。
+以降は次のコマンドでClaude Codeを起動できます。
+
+```bash
 claude-q36    # Qwen3.6-27B
 claude-q3cn   # Qwen3-Coder-Next
+```
+
+[^ollama-ctx]: Ollamaの既定のコンテキスト長(4096)は、Claude Codeのシステムプロンプトだけでほぼ埋まってしまいます。
+    詳しくは`.claude/rules/nix-hosts.md`を参照してください。
+
+## コードの整形とCI
+
+Neovimでは、保存時にconform.nvimがLua(stylua)、Nix(nixfmt)、Terraform(`terraform fmt`)のファイルを整形します。
+これ以外のファイルタイプは、保存しても整形しません。
+
+GitHub Actions(`.github/workflows/check.yml`)は、mainへのpushとプルリクエストのたびに次の検査を実行します。
+
+- `nix flake check`と、全ホストの`darwinConfigurations`の評価
+- nixfmt、stylua、`terraform fmt`による整形の検査
+- editorconfig-checkerによる検査
+
+整形ツールは`flake.lock`のnixpkgsから取得するので、CIとローカルで同じバージョンが使われます。
+各ステップはローカルでも同じコマンドで実行できます(terraformのステップだけは環境変数`NIXPKGS_ALLOW_UNFREE=1`が必要です)。
+
+リポジトリ全体を一括で整形したコミットは、`.git-blame-ignore-revs`に登録しています。
+GitHubのblame表示はこのファイルを自動で読み込むので、一括整形のコミットは表示されません。
+ローカルの`git blame`でも除外したい場合は、次の設定を一度だけ実行してください。
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 ## ファイル構成
@@ -144,96 +169,99 @@ claude-q3cn   # Qwen3-Coder-Next
 ```
 ~/.dotfiles/
 ├── .claude/
-│   ├── skills/                  # このリポジトリで作業する時だけ使うプロジェクトスコープの
-│   │                             # skill(Claude Codeがこのリポジトリ内で自動検出する)。
-│   │                             # ~/.claude/配下へはデプロイされない(home/claude/skills/とは別物)。
-│   │                             # 例: upgrade-services(services/配下のバージョンを上げる手順)
-│   └── rules/                   # 各設定の「なぜ」をまとめたLLM向け背景情報
-│                                 # (frontmatterのpathsでpath-scopedロード。人間が読んでも構わない)
-├── flake.nix                    # inputs定義、ホストをdarwinConfigurationsへ自動展開
+│   ├── skills/                  # このリポジトリでの作業に使うskill(Claude Codeが自動で検出する)
+│   │                            # ~/.claude/へは配置しない(home/claude/skills/とは別物)
+│   │                            # 例: upgrade-services(services/のバージョンを上げる手順)
+│   └── rules/                   # 各設定の理由をまとめたClaude Code向けの背景情報
+│                                # frontmatterのpathsで、該当ファイルを読んだときだけロードされる
+├── .github/workflows/check.yml  # CI(「コードの整形とCI」参照)
+├── .git-blame-ignore-revs       # git blameから除外する一括整形コミット
+├── flake.nix                    # inputsの定義と、hosts/をdarwinConfigurationsへ展開する処理
 ├── darwin.nix                   # 全マシン共通のnix-darwin設定
-│                                 # (system.defaults, フォント, unfreeパッケージの許可等)
+│                                # (system.defaults、フォント、sudoのTouch ID、Nixの自動GC等)
 ├── hosts/
 │   └── <hostname>/
-│       ├── default.nix          # マシン固有の値(hostname, username, system)
-│       ├── darwin.nix           # (任意)マシン固有のnix-darwin設定。例: Homebrew casks
+│       ├── default.nix          # マシン固有の値(hostname、username、system)
+│       ├── darwin.nix           # (任意)マシン固有のnix-darwin設定。例: Homebrewのcask
 │       ├── home.nix             # (任意)マシン固有のhome-manager設定
-│       │                         # 例: git identity、~/.claude/settings.json、
-│       │                         #     commands/skills/agents/hooksへの追加分、
-│       │                         #     ローカルLLM(Ollama)関連設定
-│       └── claude/
-│           └── settings.json    # (任意)このホスト用の~/.claude/settings.json
+│       │                        # 例: gitのユーザー情報、ローカルLLM(Ollama)関連
+│       └── claude/              # (任意)このマシンだけの~/.claude/の中身
+│           └── settings.json    # このマシンの~/.claude/settings.json
 ├── home/
 │   ├── default.nix              # 全マシン共通のhome-manager設定
-│   │                             # (zsh, git, mise, fzf, eza, starship, ghostty等)
-│   └── claude/                  # ~/.claude/配下、全マシン共通の内容
+│   │                            # (zsh、git、delta、mise、direnv、fzf、starship、Ghostty等)
+│   └── claude/                  # 全マシン共通の~/.claude/の中身
 │       ├── CLAUDE.md
-│       ├── commands/            # (任意)現在は中身が無いためgit上には存在しない
-│       ├── skills/              # (任意)同上
-│       ├── agents/              # (任意)同上
-│       └── hooks/               # editorconfig-check.sh, herdr-agent-state.sh
-├── .config/nvim/                # Neovim設定(Lua + lazy.nvim)
-├── .config/herdr/config.toml    # herdr(ghosttyのマルチプレクサ)の設定
-├── .tigrc, .editorconfig, bin/  # mkOutOfStoreSymlinkで~/に実ファイル参照
-├── services/                    # ローカル専用サービス群(Docker Compose定義)。Nix管理外
-│   ├── README.md                 # 詳細ガイド(下記「ローカルサービス」参照)
-│   ├── langfuse/                 # ローカルLangfuse
-│   ├── grafana/                  # ローカルGrafana
-│   └── prometheus/               # ローカルPrometheus
-├── terraform/
-│   └── local/                    # ↑3つをプロビジョニングするTerraform(ローカルMac専用)。Nix管理外
-└── CLAUDE.md                    # このリポジトリで作業する際のClaude Code向け指示
+│       └── hooks/               # editorconfig-check.sh、herdr-agent-state.sh
+├── .config/nvim/                # Neovimの設定(Lua、lazy.nvim)
+├── .config/herdr/config.toml    # herdrの設定
+├── .tigrc, .editorconfig, bin/  # ~/から実ファイルへシンボリックリンクする
+├── services/                    # ローカル専用サービス(Docker Compose定義)。Nixの管理外
+│   ├── README.md                # 詳細な手順(「ローカルサービス」参照)
+│   ├── langfuse/
+│   ├── grafana/
+│   └── prometheus/
+├── terraform/local/             # 上の3サービスをプロビジョニングするTerraform。Nixの管理外
+└── CLAUDE.md                    # このリポジトリで作業するClaude Code向けの指示
 ```
 
-`home/`配下と`.tigrc`等の実ファイルは、home-managerの`mkOutOfStoreSymlink`で`~/`配下からシンボリックリンクされます。
-Nix storeへコピーされないため、手編集してもrebuildなしで即座に反映されます
-(`~/.claude/settings.json`は例外。後述)。
+`home/`配下や`.tigrc`などの実ファイルは、home-managerの`mkOutOfStoreSymlink`で`~/`からシンボリックリンクされます。
+Nix storeにコピーされないので、編集した内容はrebuildしなくてもすぐに反映されます。
+ただし`~/.claude/settings.json`だけは扱いが異なります(次節)。
 
-### `~/.claude/{commands,skills,agents,hooks}` の共通/ホスト別マージ
+### `~/.claude/`への配置
 
-全マシン共通(`home/claude/<name>/`)とホスト固有(`hosts/<hostname>/claude/<name>/`)をファイル単位でマージして
-`~/.claude/<name>/`を構成します(同名ファイルはホスト固有が優先)。
-ファイル単位のシンボリックリンクのため、**新規ファイルを追加した場合はrebuildが必要**です。
-詳しい仕組みは`.claude/rules/nix-hosts.md`を参照してください。
+`~/.claude/`の`commands/`、`skills/`、`agents/`、`hooks/`は、2つのディレクトリをファイル単位でマージして作ります。
+マージ元は、全マシン共通の`home/claude/<name>/`と、マシン固有の`hosts/<hostname>/claude/<name>/`です。
+同じ名前のファイルがあれば、マシン固有のほうが優先されます。
+リンクはファイル単位で張るので、新しいファイルを追加したときはrebuildが必要です[^claude-merge]。
 
-`~/.claude/settings.json`と`~/.claude/CLAUDE.md`はマージ対象外の単一ファイルです。
-`settings.json`は`hosts/<hostname>/claude/settings.json`、`CLAUDE.md`は`home/claude/CLAUDE.md`に置きます。
-`settings.json`は実ファイルとして置かれ、rebuildのたびにリポジトリの内容だけが上書きマージされます
-(Claude Code自身が実行時に追加する権限やプラグイン設定はそのまま残ります)。
+`~/.claude/CLAUDE.md`は`home/claude/CLAUDE.md`へのシンボリックリンクです。
 
-## 既知の注意点
+`~/.claude/settings.json`は、シンボリックリンクではなく実ファイルとして置きます。
+Claude Code自身が実行時にこのファイルへ書き込む(モデルの選択、権限の追加、プラグインの設定など)ためです。
+rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書きマージされ、リポジトリに書いていないキーはそのまま残ります。
+リポジトリに書いたキーは、実行時に変えても次のrebuildで元に戻ります。
 
-- `darwin-rebuild switch` は `sudo` が必須です
-- flakeはgit管理下のファイルしか見ません。
-    新規ファイル追加後は必ず `git add` してから rebuild してください
-- `$HOME is not owned by you` という警告は、
-    `sudo` 実行時にrootへのfallbackが起きているだけで実害はありません
-- Homebrewは casks 専用です。
-    `homebrew.onActivation.cleanup = "zap"` にしており、`hosts/<hostname>/darwin.nix` の
-    `casks` リストに宣言していないcaskはrebuild時に自動アンインストールされます。
-    新しいGUIアプリをHomebrew経由で入れる場合は必ずリストに追加してください
-- `homebrew.onActivation.autoUpdate`/`upgrade` は `true` にしてあり、`darwin-rebuild switch` の
-    たびにHomebrewのタップ情報が更新され、古くなったcaskは自動で最新版へアップグレードされます
-- 全リポジトリ共通のgitleaks pre-commitフックは`init.templateDir`経由で配布しているため、
-    既存のリポジトリに導入するにはそのリポジトリで`git init`を再実行してください
-    (既存のフックファイルは上書きされません)
-- BSLなどunfreeライセンスのパッケージ(`terraform`等)を`home.packages`に追加する場合は、
-    `darwin.nix`の`nixpkgs.config.allowUnfreePredicate`にパッケージ名を追加する必要があります
-- Anthropic公式のChrome拡張機能「Claude for Chrome」はChromeウェブストア経由での
-    インストールが必要(現状ベータ/招待制のため)で、Nixでの宣言的管理はしていません。
-    claude.aiのアカウント設定からベータを有効化し、案内されるリンクからインストールしてください
-- Ollama(`claude-q36`/`claude-q3cn`。上記「よく使う運用コマンド」参照)は`nixpkgs`のDarwin
-    リリースブランチ収録版です。新しいモデルが要求するバージョンを`pull`が満たせない場合は、
-    `nixpkgs-unstable`をflakeのinputに追加し、`hosts/<hostname>/darwin.nix`の
-    `nixpkgs.overlays`でollamaだけ差し替えてください
-- herdrのメジャーアップデートで統合フックの内容が変わった場合は、
-    `herdr integration install claude`を再実行し、`home/claude/hooks/herdr-agent-state.sh`へ
-    生成物を反映してください
+[^claude-merge]: マージの仕組みは`.claude/rules/nix-hosts.md`を参照してください。
 
-## ローカルサービス(Langfuse/Grafana/Prometheus)
+## 運用上の注意
 
-Claude Codeの操作ログ(Langfuse)、そのダッシュボード(Grafana)、macOSホストのメトリクス(Prometheus)を
-このMac上だけで動かすオプション機能です。3つまとめてTerraformでプロビジョニングします。
+### Nixとflake
+
+- `darwin-rebuild switch`には`sudo`が必要です。
+  `$HOME is not owned by you`という警告が出ますが、`sudo`で実行したためrootのホームディレクトリが使われているだけで、実害はありません。
+- flakeはgit管理下のファイルしか読みません。
+  新しいファイルを追加したら、rebuildの前に`git add`してください。
+- unfreeライセンスのパッケージ(BSLの`terraform`など)を追加するときは、`darwin.nix`の`nixpkgs.config.allowUnfreePredicate`にパッケージ名も追加してください。
+
+### Homebrewのcask
+
+- `homebrew.onActivation.cleanup`を`"zap"`にしているので、`homebrew.casks`に書いていないcaskはrebuild時にアンインストールされます。
+  caskの一覧は`hosts/<hostname>/darwin.nix`にあります。
+  GUIアプリをHomebrewで入れるときは、必ずこのリストに追加してください。
+- zapは、アプリ本体だけでなく、caskが定義する設定ディレクトリやキャッシュも削除します。
+  リストからcaskを外すときに設定を残したい場合(別のcaskへ移行するときなど)は、先に設定ディレクトリを別の場所へコピーしておいてください。
+- `autoUpdate`と`upgrade`を`true`にしているので、rebuildのたびにHomebrewの情報が更新され、古くなったcaskがアップグレードされます。
+  ただし、アプリ自身に更新機能があるcask(`auto_updates`)はHomebrewのアップグレード対象から外れ、アプリ自身の更新機能で更新されます。
+  rebuild時にHomebrewで更新させたいcaskには、`greedy = true`を付けてください(現在は`intellij-idea`だけです)。
+
+### その他
+
+- 全リポジトリ共通のgitleaksのpre-commitフックは、`init.templateDir`で配布しています。
+  テンプレートは`git clone`と`git init`のときにだけコピーされるので、既存のリポジトリに入れるには、そのリポジトリで`git init`を実行し直してください(既存のフックは上書きされません)。
+- Chrome拡張機能のClaude for Chromeは、Chromeウェブストアから手動でインストールします。
+  Nixでは管理していません。
+- Ollamaは、nixpkgsのDarwinリリースブランチに収録されたバージョンです。
+  新しいモデルが要求するバージョンに届かない場合は、`nixpkgs-unstable`をflakeのinputに追加してください。
+  そのうえで、`hosts/<hostname>/darwin.nix`の`nixpkgs.overlays`でollamaだけを差し替えます。
+- herdrのメジャーアップデートで統合フックの内容が変わったときは、`herdr integration install claude`を実行し直してください。
+  生成されたファイルは`home/claude/hooks/herdr-agent-state.sh`へ反映します。
+
+## ローカルサービス(Langfuse、Grafana、Prometheus)
+
+Claude Codeの操作ログを記録するLangfuse、そのダッシュボードを表示するGrafana、macOSのメトリクスを集めるPrometheusを、このMacの中だけで動かせます。
+使うかどうかは任意で、3つまとめてTerraformでプロビジョニングします。
 
 ```bash
 cd ~/.dotfiles/terraform/local
@@ -241,5 +269,4 @@ terraform init
 terraform apply
 ```
 
-各サービスの役割、初回セットアップの完全な手順、バージョンアップ等の運用コマンドは
-[services/README.md](services/README.md) を参照してください。
+各サービスの役割、初回セットアップの手順、バージョンアップなどの運用コマンドは、[services/README.md](services/README.md)にまとめています。
