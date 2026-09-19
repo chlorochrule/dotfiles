@@ -66,7 +66,10 @@ map("n", "<Leader>Q", "<Cmd>bd<CR>", { silent = true })
 map("n", "<Leader>-", "<Cmd>split<CR>", { silent = true })
 map("n", "<Leader>\\", "<Cmd>vsplit<CR>", { silent = true })
 map("n", "<C-o>", "o<ESC>")
-map("n", "Q", "<C-o>", { silent = true })
+-- vim.keymap.setはデフォルトでnoremap相当のため、"<C-o>"へのマッピングでは
+-- 上の再定義を辿らずVim組み込みのジャンプリスト逆方向移動になってしまう。
+-- 同じ動作にするためRHSを直接指定する
+map("n", "Q", "o<ESC>", { silent = true })
 
 -- insert mode
 map("i", "jj", "<ESC>")
