@@ -23,7 +23,13 @@
   outputs = { self, nixpkgs, herdr-nix, nix-darwin, home-manager }:
     let
       mkHost = hostPath:
-        let host = import hostPath;
+        let
+          host = import hostPath;
+          # darwin.nix/home.nixはホスト固有の追加設定なので任意(README「セットアップ手順」
+          # 参照)。無いホストでも評価が壊れないよう、存在する場合だけmodules/importsに含める。
+          optionalHostFile = name:
+            let path = hostPath + "/${name}";
+            in if builtins.pathExists path then [ path ] else [ ];
         in {
           name = host.hostname;
           value = nix-darwin.lib.darwinSystem {
@@ -33,7 +39,7 @@
             };
             modules = [
               ./darwin.nix
-              (hostPath + "/darwin.nix")
+            ] ++ optionalHostFile "darwin.nix" ++ [
               home-manager.darwinModules.home-manager
               {
                 home-manager.useGlobalPkgs = true;
@@ -45,7 +51,7 @@
                   herdr = herdr-nix.packages.${host.system}.default;
                 };
                 home-manager.users.${host.username} = {
-                  imports = [ ./home (hostPath + "/home.nix") ];
+                  imports = [ ./home ] ++ optionalHostFile "home.nix";
                 };
               }
             ];
