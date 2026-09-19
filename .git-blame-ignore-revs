@@ -1,0 +1,5 @@
+# Formatting-only commits, skipped by `git blame` on GitHub (and locally via
+# `git blame --ignore-revs-file .git-blame-ignore-revs`).
+
+# 全体をnixfmt/styluaで整形する
+c5fda653c06931236251b073f55ee961b4cd7de9
