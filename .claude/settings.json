@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(editorconfig-checker*)",
+      "Bash(nix eval *)",
+      "Bash(terraform validate*)",
+      "Bash(terraform plan*)",
+      "Bash(terraform output)",
+      "Bash(nix build *)",
+      "Bash(terraform fmt -check*)",
+      "Bash(nix run nix-darwin/nix-darwin-26.05#darwin-rebuild -- build*)",
+      "Bash(nix flake check*)",
+      "Bash(nix flake metadata*)",
+      "Bash(nix flake prefetch*)",
+      "Bash(launchctl print*)",
+      "Bash(darwin-rebuild build*)",
+      "Bash(docker compose config*)",
+      "Bash(docker compose ps*)",
+      "mcp__claude-in-chrome__tabs_context_mcp"
+    ]
+  }
+}
