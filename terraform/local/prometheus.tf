@@ -1,22 +1,19 @@
-# Prometheusのdocker-compose.yml/prometheus.ymlの実体は../../services/prometheus
-# (このディレクトリではない)に置く。scrape対象の定義に秘密情報を含まないため
-# langfuse/grafanaと異なり.envの生成は不要で、docker-compose.ymlと合わせて
-# 直接コミットしている。
+# Prometheus's docker-compose.yml/prometheus.yml live in
+# ../../services/prometheus. No secrets in the scrape config, so unlike
+# langfuse/grafana there's no .env generation step here.
 
 locals {
   prometheus_dir = "${path.module}/../../services/prometheus"
-  # ホスト側ポートは9095(9090はlangfuse/minioが既に使用しているため)。
-  # コンテナ内部は既定の9090のまま(services/prometheus/docker-compose.yml参照)。
+  # 9095: 9090 is already used by langfuse's minio.
   prometheus_url = "http://localhost:9095"
 }
 
-# docker-compose.ymlの実体はTerraform化せず、`docker compose up`を呼ぶだけの
-# terraform_dataにする(langfuse/grafanaと同じ方針)。
+# Same lifecycle pattern as langfuse.tf/grafana.tf.
 resource "terraform_data" "prometheus_compose_up" {
   triggers_replace = {
     compose_sha256    = filesha256("${local.prometheus_dir}/docker-compose.yml")
     prometheus_sha256 = filesha256("${local.prometheus_dir}/prometheus.yml")
-    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers_replace経由で渡す
+    # destroy-time provisioners can only read `self`, not top-level locals.
     prometheus_dir = local.prometheus_dir
   }
 
@@ -32,10 +29,8 @@ resource "terraform_data" "prometheus_compose_up" {
   }
 }
 
-# GrafanaコンテナからはRancher Desktopが提供するhost.docker.internal経由で
-# Prometheusの公開ポート(127.0.0.1:9095)へアクセスする(services/grafana/
-# docker-compose.ymlのコメント参照)。accessは既定のproxy(Grafanaバックエンド
-# 経由)のまま。
+# Reached via host.docker.internal from the Grafana container — see
+# .claude/rules/services-terraform.md.
 resource "grafana_data_source" "prometheus" {
   type = "prometheus"
   name = "Prometheus"

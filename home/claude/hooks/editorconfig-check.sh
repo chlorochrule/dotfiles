@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# PostToolUse(Edit/Write)フック。編集・作成されたファイルが.editorconfigに
-# 準拠しているかチェックし、違反があればClaudeに差し戻す。
+# PostToolUse (Edit/Write) hook: checks edited/created files against
+# .editorconfig and hands violations back to Claude.
 set -eu
 
 input="$(cat)"
@@ -9,8 +9,8 @@ file="$(jq -r '.tool_input.file_path // empty' <<<"$input")"
 [ -n "$file" ] || exit 0
 [ -f "$file" ] || exit 0
 
-# .editorconfig自身は大量の自動生成値を含むテンプレートで、自身の型チェックには
-# そもそも適さないため対象外にする
+# .editorconfig itself is a template full of generated values, so it's not
+# a meaningful target for its own lint.
 case "$file" in
   */.editorconfig|.editorconfig) exit 0 ;;
 esac

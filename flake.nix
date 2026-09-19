@@ -3,9 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
-    # herdrはnixpkgs未収録のため公式flakeから取得する。
-    # herdr-nixはソースビルドせず、herdr本体のprebuiltバイナリ(cachix経由)を
-    # ハッシュ検証込みで取得するラッパー(cachix設定はdarwin.nixのnix.extraOptions)。
+    # herdr isn't in nixpkgs; see .claude/rules/nix-hosts.md for why this input exists.
     herdr-nix = {
       url = "github:herdrdev/herdr-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -25,8 +23,8 @@
       mkHost = hostPath:
         let
           host = import hostPath;
-          # darwin.nix/home.nixはホスト固有の追加設定なので任意(README「セットアップ手順」
-          # 参照)。無いホストでも評価が壊れないよう、存在する場合だけmodules/importsに含める。
+          # darwin.nix/home.nix are optional per-host extras (see README);
+          # include them only if present so a bare host still evaluates.
           optionalHostFile = name:
             let path = hostPath + "/${name}";
             in if builtins.pathExists path then [ path ] else [ ];

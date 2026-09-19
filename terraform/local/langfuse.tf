@@ -1,9 +1,9 @@
-# docker-compose.ymlのCHANGEME項目を乱数で生成する。
-# random_id.*.hexは`openssl rand -hex <byte_length>`と同じ16進文字列を返す
-# (ENCRYPTION_KEYはAES-256鍵として32byte/64文字が必須)。
+# Generates docker-compose.yml's CHANGEME values.
+# random_id.*.hex mirrors `openssl rand -hex <n>` (ENCRYPTION_KEY needs a
+# 32-byte/64-char AES-256 key).
 
 locals {
-  # docker-compose.yml/.envの実体は../../services/langfuse(このディレクトリではない)に置く
+  # docker-compose.yml/.env live in ../../services/langfuse, not here.
   langfuse_dir = "${path.module}/../../services/langfuse"
 }
 
@@ -19,8 +19,8 @@ resource "random_id" "nextauth_secret" {
   byte_length = 32
 }
 
-# special=falseは.env(dotenv形式)への書き出しやdocker-compose.ymlの
-# シェルコマンド展開(redisのcommand:等)で問題になる記号(#, ' 等)を避けるため
+# special=false: symbols (#, ' etc.) break .env parsing and shell
+# interpolation (e.g. redis's `command:`).
 resource "random_password" "postgres" {
   length  = 32
   special = false
@@ -36,8 +36,8 @@ resource "random_password" "redis" {
   special = false
 }
 
-# minio root password / S3アップロード用シークレットは同一のminioインスタンスに
-# 対する認証情報なので、docker-compose.yml側の複数の環境変数に同じ値を配る
+# One minio instance backs both root auth and S3 upload credentials, so the
+# same password is reused across several env vars in docker-compose.yml.
 resource "random_password" "minio" {
   length  = 32
   special = false
@@ -85,19 +85,16 @@ resource "local_sensitive_file" "env" {
   EOT
 }
 
-# docker-compose.ymlの実体はTerraform化せず(healthcheck/depends_on込みで
-# 上流のdocker-compose.ymlをそのまま追従させたいため)、.env生成後に
-# `docker compose up`を呼ぶだけのterraform_dataにする
+# Just runs `docker compose up` after .env exists — see rules for why the
+# compose file itself isn't reimplemented in Terraform.
 resource "terraform_data" "compose_up" {
   triggers_replace = {
     env_sha256     = local_sensitive_file.env.content_sha256
     compose_sha256 = filesha256("${local.langfuse_dir}/docker-compose.yml")
-    # clickhouseのusers.d(langfuse_grafana.tf)はdocker-compose.ymlのvolumeマウント先
-    # なので、初回起動前に必ず存在している必要がある(depends_onで順序も保証)。
-    # 内容の変更自体はClickHouseがconfig_reload_intervalで自動検知するため、
-    # ここでのtrigger化はコンテナ未作成時の初回マウント漏れを防ぐためのもの
+    # clickhouse-users.d must exist before first container creation (compose
+    # mounts it); content changes are picked up live by ClickHouse itself.
     clickhouse_users_xml_sha256 = local_sensitive_file.clickhouse_grafana_ro_users_xml.content_sha256
-    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers_replace経由で渡す
+    # destroy-time provisioners can only read `self`, not top-level locals.
     langfuse_dir = local.langfuse_dir
   }
 

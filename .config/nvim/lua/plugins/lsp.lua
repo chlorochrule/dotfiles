@@ -1,4 +1,4 @@
--- mason経由でインストールするサーバー
+-- Installed via mason.
 local mason_servers = {
   "lua_ls",
   "pyright",
@@ -8,8 +8,8 @@ local mason_servers = {
   "jsonls",
 }
 
--- Nixで入れたバイナリをそのまま使うサーバー(mason管理外)
--- nil_ls: pkgs.nil (cargoが無い環境でもmasonでビルドせずに済む)
+-- Use the Nix-provided binary instead (not mason-managed).
+-- nil_ls: pkgs.nil, so it doesn't need cargo to build via mason.
 local extra_servers = {
   "nil_ls",
 }

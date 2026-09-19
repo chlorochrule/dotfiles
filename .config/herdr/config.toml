@@ -3,10 +3,10 @@ onboarding = false
 # https://herdr.dev/docs/configuration/
 
 [keys]
-# 旧.tmux.confのprefix('C-g')を維持
+# Kept from the old tmux config, for muscle memory.
 prefix = "ctrl+g"
 
-# 旧.tmux.confの"-n"(prefixなし)バインドをalt+キーとして維持
+# Old tmux's "-n" (no-prefix) binds, kept as alt+<key>.
 new_workspace = "alt+n"
 previous_workspace = "alt+j"
 next_workspace = "alt+k"
@@ -20,8 +20,7 @@ split_vertical = "alt+backslash"
 split_horizontal = "alt+minus"
 close_pane = "alt+w"
 
-# 旧: C-t new-window -> tig(またはtig status)。
-# ポップアップで一時的にtigを開き、終了時に自動で閉じる。
+# Pops tig up temporarily; closes automatically on exit.
 [[keys.command]]
 key = "ctrl+t"
 type = "popup"
@@ -30,6 +29,6 @@ width = "90%"
 height = "90%"
 
 [ui]
-# 旧new-window(M-c)相当。名前入力を求めず即座にtabを作る
+# Skip the name prompt; create the tab immediately.
 prompt_new_tab_name = false
 agent_panel_sort = "priority"

@@ -1,14 +1,10 @@
-# ローカルMacでの個人利用専用(外部公開しない)Grafana。ポートは127.0.0.1限定。
-# ダッシュボード/データソース/アカウントのprovisioningはterraform/local/の
-# grafana.tf・prometheus.tf・langfuse_grafana*.tfで行うため、起動は
-# `terraform/local/`で`terraform apply`を実行してください
-# (.envの生成、admin初期パスワードの発行まで含みます)。
+# Committed directly (not terraform-managed): local-only Grafana, ports
+# restricted to 127.0.0.1. Dashboards/datasources/admin account are
+# Terraform-managed (grafana.tf/prometheus.tf/langfuse_grafana*.tf) — start
+# via `terraform apply` in terraform/local/ (also generates .env and the
+# admin password).
 #
-# 別のdocker-compose project(services/prometheus/)で起動しているPrometheus(127.0.0.1限定)は
-# Rancher Desktopが提供するhost.docker.internal経由で参照する(terraform/local/
-# prometheus.tfのgrafana_data_source.prometheus)。extra_hostsで明示上書きすると
-# Linux流のブリッジゲートウェイIPになり127.0.0.1限定のサービスに届かなくなるため
-# 指定しない。
+# See .claude/rules/services-terraform.md for why extra_hosts isn't set here.
 services:
   grafana:
     image: docker.io/grafana/grafana:13.0.2
@@ -16,18 +12,16 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin} # CHANGEME
-      # ローカル専用サービスなので利用統計送信・バージョンチェックのための外部通信を止める
+      # Local-only service: disable telemetry/update checks.
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
-      # Langfuseのトレースデータ(ClickHouse)をGrafanaダッシュボードで可視化するために使う
-      # (terraform/local/langfuse_grafana.tf参照)。公式署名済みプラグインのため
-      # GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINSは不要。
-      # GF_INSTALL_PLUGINSは非推奨(起動ログにdeprecation警告が出る)。
-      # SYNC版を使うのは、terraform apply側の`docker compose up -d --wait`が
-      # ヘルスチェック通過を待つ前提であり、プラグインの読み込み完了後にGrafanaが
-      # 起動する(非同期のGF_PLUGINS_PREINSTALLではインストール未完了のまま
-      # ヘルスチェックが通ってしまう可能性がある)必要があるため。
+      # Renders Langfuse's ClickHouse trace data (see terraform/local/
+      # langfuse_grafana.tf). Officially signed, so no
+      # GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS needed. SYNC, not the
+      # deprecated GF_INSTALL_PLUGINS or async GF_PLUGINS_PREINSTALL: `docker
+      # compose up --wait` must not pass its healthcheck before the plugin
+      # finishes installing.
       GF_PLUGINS_PREINSTALL_SYNC: grafana-clickhouse-datasource@4.21.2
     ports:
       - 127.0.0.1:3001:3000

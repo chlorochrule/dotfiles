@@ -10,4 +10,4 @@
     ただし、upstreamのdocker-compose.yml自体をそのまま追従させたいファイルや、
     秘密情報を含まない静的な設定ファイル(例: 各`docker-compose.yml`、
     `services/prometheus/prometheus.yml`)は対象外とし、直接コミットしてよい
-    (個別の理由は各ファイル冒頭のコメントを参照)。
+    (背景は`.claude/rules/services-terraform.md`および各ファイル冒頭のコメントを参照)。

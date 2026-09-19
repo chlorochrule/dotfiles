@@ -1,10 +1,9 @@
-# macOSホスト本体(node_exporter、hosts/MacBookPro-minami/darwin.nix参照)のメトリクスを
-# 見るためのGrafanaダッシュボード。データソースはprometheus.tfのgrafana_data_source.prometheus。
+# macOS host dashboard (node_exporter, see
+# hosts/MacBookPro-minami/darwin.nix). Datasource:
+# prometheus.tf's grafana_data_source.prometheus.
 #
-# darwin版node_exporterはLinux版と収集項目が異なる(/procが無いためnode_cpu_seconds_totalの
-# modeはidle/user/system/niceのみ、node_memory_*はLinuxのavailable/buffers/cached相当が無く
-# wired/active/compressed/free/purgeable等のmacOS固有フィールドになる等)。ここでのPromQLは
-# 127.0.0.1:9100の実際のメトリクス出力を確認したうえで書いている。
+# The PromQL here targets darwin's node_exporter field set specifically —
+# see .claude/rules/services-terraform.md before changing these queries.
 
 locals {
   prom_ds = { type = "prometheus", uid = grafana_data_source.prometheus.uid }
@@ -18,8 +17,8 @@ locals {
       / node_memory_total_bytes * 100
   EOT
 
-  # /と/nixは同一APFSコンテナ内のボリュームのため使用率はほぼ同じ値になるが、
-  # 将来別ディスクに分かれた場合にも対応できるようmountpointでフィルタしている。
+  # / and /nix are the same APFS container today (same usage %), but this
+  # scopes by mountpoint so it still works if they're split later.
   pq_filesystem_used_percent = <<-EOT
     100 * (1 - (
       node_filesystem_avail_bytes{mountpoint=~"^(/|/nix)$"}
@@ -37,7 +36,7 @@ resource "grafana_dashboard" "node_exporter" {
     schemaVersion = 39
     time          = { from = "now-6h", to = "now" }
     panels = [
-      # --- 上段: サマリー統計 ---
+      # -- summary stats --
       {
         id          = 1
         title       = "Uptime"
@@ -90,7 +89,7 @@ resource "grafana_dashboard" "node_exporter" {
           instant = true
         }]
       },
-      # --- 中段: 時系列 ---
+      # -- time series --
       {
         id         = 5
         title      = "Load average"
@@ -142,7 +141,7 @@ resource "grafana_dashboard" "node_exporter" {
           { refId = "B", expr = "rate(node_disk_written_bytes_total[5m])", legendFormat = "write" },
         ]
       },
-      # --- 下段: ネットワーク/ファイルシステム ---
+      # -- network / filesystem --
       {
         id          = 9
         title       = "Network I/O (en0)"
@@ -176,7 +175,7 @@ resource "grafana_dashboard" "node_exporter" {
           instant = true
           format  = "table"
         }]
-        # device/fstype/instance/job/Time列はノイズなので隠し、mountpoint/使用率だけを見せる
+        # Hide noisy columns; keep just mountpoint + used %.
         transformations = [{
           id = "organize"
           options = {

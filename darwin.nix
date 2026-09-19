@@ -8,13 +8,13 @@
 
   nix.settings.experimental-features = "nix-command flakes";
 
-  # herdr(nixpkgs未収録)のprebuiltバイナリをソースビルドせず取得するためのcachix設定
+  # Cachix binary cache for herdr's prebuilt binary (not in nixpkgs).
   nix.extraOptions = ''
     extra-substituters = https://herdr.cachix.org
     extra-trusted-public-keys = herdr.cachix.org-1:3nH7IStRsS0ASfdonA0DCRR2ZrSCeWitZ7Kwew0cR4I=
   '';
 
-  # terraformはBSL1.1(unfree)なので個別に許可する
+  # terraform is BSL 1.1 (unfree), so allow it explicitly.
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
     "terraform"
   ];
@@ -70,7 +70,7 @@
       autohide-time-modifier = 0.4;
       showhidden = true;
       expose-animation-duration = 0.12;
-      wvous-br-corner = 14;  # 右下ホットコーナー: クイックメモ
+      wvous-br-corner = 14;  # bottom-right hot corner: Quick Note
     };
 
     screencapture = {
@@ -96,9 +96,9 @@
     onActivation = {
       autoUpdate = true;
       upgrade = true;
-      # 宣言していないcaskは`brew bundle --zap --force-cleanup`で自動アンインストールする。
+      # Undeclared casks are auto-uninstalled via `brew bundle --zap --force-cleanup`.
       cleanup = "zap";
     };
-    # casksはホスト固有(hosts/<hostname>/darwin.nix)で宣言する
+    # casks are declared per-host (hosts/<hostname>/darwin.nix)
   };
 }

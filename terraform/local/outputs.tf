@@ -1,5 +1,4 @@
-# terraform/local/はLangfuse/Grafana等、複数のローカルサービスを
-# 一括プロビジョニングするため、出力名はサービスごとにprefixする。
+# One output namespace per service (langfuse_*/grafana_*/prometheus_*).
 
 output "langfuse_url" {
   value = "http://localhost:3000"

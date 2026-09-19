@@ -1,5 +1,5 @@
-# Grafanaのdocker-compose.yml/.envの実体は../../services/grafana(このディレクトリ
-# ではない)に置く。admin初期パスワードを乱数で生成し.envへ書き出す方針はlangfuse.tfと同じ。
+# Grafana's docker-compose.yml/.env live in ../../services/grafana, not
+# here. Admin password: same random-generation approach as langfuse.tf.
 
 locals {
   grafana_dir = "${path.module}/../../services/grafana"
@@ -21,15 +21,13 @@ resource "local_sensitive_file" "grafana_env" {
   EOT
 }
 
-# docker-compose.ymlの実体はTerraform化せず、.env生成後に`docker compose up`を
-# 呼ぶだけのterraform_dataにする(langfuse側と同じ方針)。`--wait`がhealthcheck
-# 通過(GrafanaのREST APIが応答可能になるまで)を待つため、これ以降のgrafana
-# providerリソースはAPIに安全にアクセスできる。
+# Same lifecycle pattern as langfuse.tf. `--wait` blocks until Grafana's
+# API is reachable, so later grafana provider resources can rely on it.
 resource "terraform_data" "grafana_compose_up" {
   triggers_replace = {
     env_sha256     = local_sensitive_file.grafana_env.content_sha256
     compose_sha256 = filesha256("${local.grafana_dir}/docker-compose.yml")
-    # destroy時のprovisionerはself経由でしか値を参照できないためtriggers_replace経由で渡す
+    # destroy-time provisioners can only read `self`, not top-level locals.
     grafana_dir = local.grafana_dir
   }
 
@@ -47,9 +45,8 @@ resource "terraform_data" "grafana_compose_up" {
   depends_on = [local_sensitive_file.grafana_env]
 }
 
-# authはbasic認証(admin:生成済みパスワード)。grafana_userリソース(組織を
-# 跨いだユーザー管理)はAPIキー/サービスアカウントトークンでは動作せず
-# basic認証必須のため、この方式に統一している。
+# Basic auth, not a token: grafana_user (cross-org user management) doesn't
+# support API key/service account auth.
 provider "grafana" {
   url  = local.grafana_url
   auth = "${var.grafana_admin_user}:${random_password.grafana_admin.result}"
@@ -61,9 +58,8 @@ resource "grafana_folder" "local" {
   depends_on = [terraform_data.grafana_compose_up]
 }
 
-# Grafana組み込みのTestDataデータソース。terraform管理のサンプルとして
-# welcomeダッシュボードから参照している(実データはprometheus.tfの
-# grafana_data_source.prometheus参照)。
+# Built-in TestData source, used by the sample "Welcome" dashboard below.
+# Real data sources: prometheus.tf / langfuse_grafana.tf.
 resource "grafana_data_source" "testdata" {
   type = "grafana-testdata-datasource"
   name = "TestData"
@@ -71,8 +67,8 @@ resource "grafana_data_source" "testdata" {
   depends_on = [terraform_data.grafana_compose_up]
 }
 
-# grafana_data_source/grafana_folder同様、terraform管理下にあることを示す
-# サンプルダッシュボード。TestDataソースのrandom_walkシナリオを表示するだけ。
+# Sample dashboard proving Terraform management works; just shows
+# TestData's random_walk scenario.
 resource "grafana_dashboard" "welcome" {
   folder = grafana_folder.local.uid
 

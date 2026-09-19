@@ -1,5 +1,5 @@
-# LANGFUSE_INIT_*(headless initialization)で作成する組織/プロジェクト/
-# ユーザーの識別子・表示名。秘密情報ではないためコミット対象のデフォルト値で問題ない。
+# Defaults for LANGFUSE_INIT_* (headless initialization) — not secrets, so
+# safe to commit.
 # https://langfuse.com/self-hosting/administration/headless-initialization
 
 variable "init_org_id" {

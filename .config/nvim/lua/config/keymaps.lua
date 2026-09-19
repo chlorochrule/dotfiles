@@ -1,10 +1,10 @@
 local map = vim.keymap.set
 
--- herdr ignore keys(prefix)
+-- herdr ignore keys (prefix)
 map("", "<C-g>", "<Nop>")
 
--- herdrのpane境界をまたいでvim-tmux-navigator風にCtrl+h/j/k/lで移動する。
--- herdr内で実行している時だけ有効化(通常のnvim単体使用時は素のwincmdのまま)
+-- Cross herdr pane boundaries with Ctrl+h/j/k/l. Only active inside herdr —
+-- see .claude/rules/nvim.md.
 if vim.env.HERDR_SOCKET_PATH then
   local function nav(wincmd, direction)
     return function()
@@ -66,9 +66,9 @@ map("n", "<Leader>Q", "<Cmd>bd<CR>", { silent = true })
 map("n", "<Leader>-", "<Cmd>split<CR>", { silent = true })
 map("n", "<Leader>\\", "<Cmd>vsplit<CR>", { silent = true })
 map("n", "<C-o>", "o<ESC>")
--- vim.keymap.setはデフォルトでnoremap相当のため、"<C-o>"へのマッピングでは
--- 上の再定義を辿らずVim組み込みのジャンプリスト逆方向移動になってしまう。
--- 同じ動作にするためRHSを直接指定する
+-- vim.keymap.set is noremap by default, so mapping to "<C-o>" here wouldn't
+-- follow the redefinition above — it'd fall back to Vim's builtin jumplist
+-- command. Spelling out the RHS directly keeps the two in sync.
 map("n", "Q", "o<ESC>", { silent = true })
 
 -- insert mode

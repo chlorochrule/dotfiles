@@ -19,7 +19,7 @@
     "zoom"
   ];
 
-  # Dockの常駐アプリ(並び順どおり)。casks同様ホスト固有
+  # Dock pinned apps, in display order. Host-specific, like casks above.
   system.defaults.dock.persistent-apps = [
     "/Applications/Ghostty.app"
     "/Applications/Slack.app"
@@ -43,29 +43,22 @@
     "/Users/${username}/Downloads"
   ];
 
-  # macOSホスト本体(CPU/メモリ/ディスク等)のメトリクスをterraform/local/の
-  # Prometheus(Docker)へ提供するnode_exporter。DockerコンテナからではOSの
-  # 真のホストメトリクスが取れないため、nix-darwinのlaunchd daemonとして
-  # ホストに直接インストールする(home-managerのservices.*には
-  # node_exporter用のdarwin対応launchdモジュールが存在しないため)。
-  # 127.0.0.1限定でlistenし、外部・他コンテナからは直接到達できないようにする
-  # (Prometheus側はhost.docker.internal経由でアクセスする)。
+  # Provides host (CPU/memory/disk) metrics to terraform/local/'s
+  # Prometheus. Installed as a nix-darwin launchd daemon rather than in a
+  # container, since a container can't see true host metrics and
+  # home-manager has no darwin launchd module for node_exporter. Listens on
+  # 127.0.0.1 only; Prometheus reaches it via host.docker.internal.
   services.prometheus.exporters.node = {
     enable = true;
     listenAddress = "127.0.0.1";
     port = 9100;
   };
 
-  # services.prometheus.exporters.nodeが内部で作る_prometheus-node-exporter
-  # ユーザーのデフォルトhomeは"/var/lib/prometheus-node-exporter"だが、
-  # 実際にdscl上へ記録された既存アカウントのhomeは"/private/var/lib/..."
-  # (同一パスだが/varは/private/varへのシンボリックリンクのため文字列が異なる)。
-  # nix-darwinは既存ユーザーのhome変更に対応しておらず文字列不一致で
-  # activationが失敗するため、実際の値でmkForceして上書きする。
+  # Works around a home path string mismatch — see .claude/rules/nix-hosts.md.
   users.users._prometheus-node-exporter.home = lib.mkForce "/private/var/lib/prometheus-node-exporter";
 
   system.defaults.CustomUserPreferences = {
-    # Spotlightの⌘Space(symbolic hotkey 64)を無効化し、Raycastに割り当てる
+    # Disable Spotlight's Cmd+Space (symbolic hotkey 64) and give it to Raycast.
     "com.apple.symbolichotkeys" = {
       AppleSymbolicHotKeys = {
         "64" = {
@@ -74,7 +67,7 @@
       };
     };
     "com.raycast.macos" = {
-      raycastGlobalHotkey = "Command-49";  # 49 = Spaceのkeycode
+      raycastGlobalHotkey = "Command-49";  # 49 = Space's keycode
     };
   };
 }

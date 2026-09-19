@@ -5,11 +5,7 @@
     email = "minami.polly@gmail.com";
   };
 
-  # ~/.claude/settings.jsonはClaude Code自身も`/model`・`/plugin`・`/config`等で
-  # 書き込むため、リンクにしない。mkOutOfStoreSymlinkだと書き込みがgit管理下の
-  # 実ファイルに差分として現れ、Nix storeへのリンクだと書き込み自体が失敗する。
-  # 代わりに実ファイルとして置き、rebuildのたびに./claude/settings.jsonで宣言した
-  # キーだけを上書きマージする(宣言していないキーは実行時の値を維持する)。
+  # Merged in place, not symlinked — see .claude/rules/nix-hosts.md.
   home.activation.claudeSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     claudeSettings="${config.home.homeDirectory}/.claude/settings.json"
     current='{}'
@@ -22,32 +18,23 @@
     mv "$tmp" "$claudeSettings"
   '';
 
-  # Playwright本体(CLI/ライブラリとしての利用)とPlaywright MCPサーバー。
-  # このホストでのブラウザ自動化・DevTools連携用途に限定するためホスト固有に置く。
+  # Playwright CLI/library and its MCP server. Host-specific: scoped to
+  # this machine's browser automation / DevTools use.
   home.packages = with pkgs; [
     playwright-test
     playwright-mcp
   ];
 
-  # ollama serveをlaunchd agentとして自動起動する(127.0.0.1:11434)。
-  # ollama CLIパッケージもこのオプション経由で自動的にhome.packagesへ入る。
-  # Claude Codeからはclaude-q36/claude-q3cn(下記zsh関数)経由で利用する。
-  # コンテキスト長はサービス全体のOLLAMA_CONTEXT_LENGTHではなく、下のactivationで
-  # モデルごとに派生モデル(*-262k)を作りPARAMETER num_ctxとして焼き込む方式にしている。
-  # サービス全体の環境変数にすると、将来別の軽量モデルをこのOllamaインスタンスに
-  # 追加pullした際にもそちらへ256Kコンテキストが強制され、不要なメモリ消費や
-  # 読み込み遅延を招くため。
+  # Runs ollama serve as a launchd agent (127.0.0.1:11434); also pulls in
+  # the ollama CLI. Used from Claude Code via claude-q36/claude-q3cn below.
+  # See .claude/rules/nix-hosts.md for the context-window setup.
   services.ollama = {
     enable = true;
   };
 
-  # ollama pull済みの基本モデルから、コンテキスト長262144(256K)を焼き込んだ
-  # 派生モデル(*-262k)をollama createで作る。Ollamaのデフォルトnum_ctxは4096しか
-  # 無く、Claude Codeが送る長大なsystem prompt+tool定義だけでcontext windowを
-  # 使い切ってしまい、実際のユーザー指示が無視される問題が実測(4016トークンで
-  # 既に4096に迫る)で確認できたため、両モデルの実際のコンテキストウィンドウ
-  # (256K)に合わせる。基本モデルが未pullの間(初回provisioning前等)は
-  # 何もしない(次回rebuild時にpull済みなら作られる)。
+  # Creates 256K-context derived models (*-262k) from already-pulled base
+  # models — see .claude/rules/nix-hosts.md for why. No-op if the base
+  # model isn't pulled yet; picked up on a later rebuild once it is.
   home.activation.ollamaContextModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ollamaCreateIfBaseExists() {
       base="$1"
@@ -63,13 +50,10 @@
     fi
   '';
 
-  # Ollama経由でローカルLLMをClaude Codeから使うためのラッパー。
-  # 通常の`claude`(Anthropic本家)には一切影響しない。
-  # ANTHROPIC_MODELは上のactivationが作る262kコンテキスト版の派生モデル名を指す。
-  # CLAUDE_CODE_MAX_CONTEXT_TOKENSは、Claude Codeのモデルカタログに
-  # 無いモデル名を指定した際に出る"unrecognized_model"警告を避けるため
-  # (指定しないとauto-compactが実際のウィンドウを知らず200kと仮定する)。
-  # どちらのモデルも実際のコンテキストウィンドウは256K。
+  # Wrappers to run Claude Code against a local Ollama model instead of
+  # Anthropic's service; plain `claude` is unaffected. ANTHROPIC_MODEL
+  # names the 262k-context derived model from the activation above — see
+  # .claude/rules/nix-hosts.md for CLAUDE_CODE_MAX_CONTEXT_TOKENS.
   programs.zsh.initContent = ''
     claude-q36() {
       ANTHROPIC_BASE_URL=http://localhost:11434 \
@@ -88,12 +72,11 @@
     }
   '';
 
-  # Claude Codeのユーザースコープ(全プロジェクト共通)MCPサーバー設定。
-  # ~/.claude.jsonにはプロジェクト履歴やtrust状態などClaude Codeが書き込む
-  # 可変な実行時状態も同居しているため、home.fileでファイル全体をリンクせず、
-  # mcpServersキーだけをjqでマージする(他のキーやサーバーには触れない)。
-  # chrome-devtools-mcpはnixpkgs未収録のためnpx経由。開発元(Chrome DevToolsチーム)を
-  # 信頼し、バージョン未固定で中身が変わりうるリスクを受容したうえで@latestを使う。
+  # User-scoped (all-projects) Claude Code MCP servers, merged into
+  # ~/.claude.json — see .claude/rules/nix-hosts.md for why this is a jq
+  # merge rather than a full-file link. chrome-devtools-mcp: not in
+  # nixpkgs, so run via npx; pinned to @latest, accepting the Chrome
+  # DevTools team as a trusted-but-unpinned upstream.
   home.activation.claudeMcpServers = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     claudeJson="${config.home.homeDirectory}/.claude.json"
     if [ ! -f "$claudeJson" ]; then

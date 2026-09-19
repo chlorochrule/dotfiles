@@ -1,38 +1,21 @@
-# LangfuseのトレースデータはClickHouse(services/langfuse、events_coreテーブル)に
-# 保存されている。Grafana組み込みのTestDataとは別に、実データを可視化するための
-# ClickHouseデータソースとダッシュボードをここで管理する(services/grafana/
-# docker-compose.ymlのGF_PLUGINS_PREINSTALL_SYNCでgrafana-clickhouse-datasourceを導入)。
-#
-# 接続先(host.docker.internal:8123)はLangfuse自身のClickHouseインスタンスを
-# そのまま参照している。ただしGrafanaはダッシュボードのSELECTクエリしか発行しない
-# ため、langfuse.tfのrandom_password.clickhouse(langfuse-web/workerが使うフル権限の
-# ユーザー)ではなく、SELECTのみ許可した専用ユーザーを別途作成して使う
-# (壊れたダッシュボード定義やプラグインの不具合でデータが書き変わる/消える
-# リスクを避けるための最小権限化)。
+# ClickHouse datasource + dashboards for Langfuse's own trace data
+# (services/langfuse's ClickHouse, events_core table). See
+# .claude/rules/services-terraform.md for the grafana_ro user design and
+# dashboard verification notes.
 
 resource "random_password" "clickhouse_grafana_ro" {
   length  = 32
   special = false
 }
 
-# CREATE USER/GRANTをSQLで発行する方式は、langfuse.tfのrandom_password.clickhouse
-# ユーザー自身がACCESS MANAGEMENT権限(他ユーザーの作成・権限付与)を持たず
-# 失敗した(docker公式clickhouseイメージのCLICKHOUSE_USER/PASSWORDで作られる
-# ユーザーはデータ操作権限のみで管理者権限は持たない)。
-# 代わりにClickHouseの設定ファイル(users.d、組み込みのreadonlyプロファイルを使う)
-# でユーザーを直接定義する。ClickHouseはconfig_reload_interval(既定2秒)で
-# users.d配下の変更を自動検知するため、パスワードを変更してもコンテナの
-# 再作成は不要(ただし初回はservices/langfuse/docker-compose.ymlの
-# volumeマウント自体が必要なので、コンテナ作成前にファイルが存在する必要がある)。
+# Defined via ClickHouse's users.d config, not SQL — see rules for why.
 resource "local_sensitive_file" "clickhouse_grafana_ro_users_xml" {
   filename        = "${local.langfuse_dir}/clickhouse-users.d/grafana-ro.xml"
   file_permission = "0600"
 
   content = <<-EOT
     <clickhouse>
-      <!-- 組み込みのreadonlyプロファイル(readonly=1)はSET文自体を禁止し、Grafanaの -->
-      <!-- ClickHouseプラグインが送るmax_execution_time等のセッション設定変更まで -->
-      <!-- 拒否してしまう。readonly=2はSETによる設定変更は許しつつ、書き込みは禁止する -->
+      <!-- readonly=2, not 1: allows session SET (needed by the Grafana plugin) but blocks writes. -->
       <profiles>
         <grafana_ro_profile>
           <readonly>2</readonly>
@@ -76,12 +59,9 @@ resource "grafana_data_source" "langfuse_clickhouse" {
   ]
 }
 
-# LangfuseのHomeダッシュボード(Traces/Model costs/Observations by time/Model Usage/
-# 各種latency percentiles)相当をClickHouseへの生SQLで再現したもの。
-# クエリはevents_core(Langfuse v4のOTel統合スパンテーブル)に対して直接発行しており、
-# 実際にLangfuse UI(http://localhost:3000)に表示される数値と一致することを
-# `/api/ds/query`経由で確認済み。Scores関連パネル(このプロジェクトではデータ無し)は
-# 対応するデータが無いため実装していない。
+# Reproduces Langfuse's Home dashboard as raw SQL against events_core.
+# Verified against the Langfuse UI (http://localhost:3000) via
+# /api/ds/query. Scores panels excluded: no score data in this project.
 locals {
   ch_ds = { type = "grafana-clickhouse-datasource", uid = grafana_data_source.langfuse_clickhouse.uid }
 
@@ -167,7 +147,7 @@ resource "grafana_dashboard" "langfuse_overview" {
     schemaVersion = 39
     time          = { from = "now-1d", to = "now" }
     panels = [
-      # --- 上段: サマリー統計(Langfuse Homeの Traces / Model costs / Scores 相当) ---
+      # -- summary stats (Traces / Model costs / Scores in Langfuse Home) --
       {
         id         = 1
         title      = "Traces"
@@ -208,7 +188,7 @@ resource "grafana_dashboard" "langfuse_overview" {
           rawSql     = local.q_observations
         }]
       },
-      # --- 中段: 時系列(Langfuse Homeの Observations by time / Model Usage 相当) ---
+      # -- time series (Observations by time / Model Usage in Langfuse Home) --
       {
         id         = 4
         title      = "Observations by time"
@@ -236,7 +216,7 @@ resource "grafana_dashboard" "langfuse_overview" {
           rawSql     = local.q_cost_by_time
         }]
       },
-      # --- 下段: テーブル(Langfuse Homeの Model costs / *latency percentiles 相当) ---
+      # -- tables (Model costs / *latency percentiles in Langfuse Home) --
       {
         id         = 6
         title      = "Model usage"

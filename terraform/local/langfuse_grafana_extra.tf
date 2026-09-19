@@ -1,14 +1,10 @@
-# LangfuseのDashboards一覧(Langfuse Agent/Cost/Latency Dashboard、Langfuse
-# Maintained)のうち、langfuse_grafana.tf(Langfuse Home相当)でカバーしていない
-# 項目をGrafanaへ移植したもの。Usage Managementダッシュボードの項目は既存の
-# Traces/Observations統計とほぼ重複するため、Scores関連(このプロジェクトには
-# スコアデータが無い)と合わせて対象外。TTFT(Time To First Token)/出力トークン
-# 毎秒系のウィジェットも、completion_start_timeが一度も記録されていない
-# (Langfuse UI側でも常にNo data)ため対象外にしている。
+# Agent/Cost/Latency dashboards from Langfuse's own Dashboards page, filling
+# in what langfuse_grafana.tf (Home) doesn't cover. See
+# .claude/rules/services-terraform.md for what's excluded and why.
 
 locals {
-  # piechart/bargaugeは既定では複数行を1値に集約表示してしまうため、行ごとに
-  # 個別の値として表示させる(Langfuse UIのbar chart/donutと同じ見た目にするため)。
+  # piechart/bargauge default to aggregating all rows into one value; this
+  # keeps each row as its own value (matches Langfuse UI's chart style).
   multi_value_options = { reduceOptions = { values = true, calcs = [] } }
 
   q_total_tool_calls = <<-SQL
@@ -148,7 +144,7 @@ locals {
   SQL
 }
 
-# --- Langfuse Agent Dashboard相当 ---
+# -- Agent dashboard --
 resource "grafana_dashboard" "langfuse_agent" {
   folder = grafana_folder.local.uid
 
@@ -231,7 +227,7 @@ resource "grafana_dashboard" "langfuse_agent" {
   depends_on = [grafana_data_source.langfuse_clickhouse]
 }
 
-# --- Langfuse Cost Dashboard相当 ---
+# -- Cost dashboard --
 resource "grafana_dashboard" "langfuse_cost" {
   folder = grafana_folder.local.uid
 
@@ -314,7 +310,7 @@ resource "grafana_dashboard" "langfuse_cost" {
   depends_on = [grafana_data_source.langfuse_clickhouse]
 }
 
-# --- Langfuse Latency Dashboard相当 ---
+# -- Latency dashboard --
 resource "grafana_dashboard" "langfuse_latency" {
   folder = grafana_folder.local.uid
 

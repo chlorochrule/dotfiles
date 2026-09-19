@@ -7,7 +7,7 @@ opt.ruler = true
 opt.wrap = false
 opt.title = false
 opt.colorcolumn = "119"
--- laststatusはlualineのglobalstatus有効時に3へ自動設定されるためここでは触らない
+-- laststatus: left untouched — lualine's globalstatus sets it to 3.
 opt.showtabline = 2
 opt.termguicolors = true
 opt.signcolumn = "yes"
@@ -27,9 +27,7 @@ opt.shiftwidth = 4
 opt.expandtab = true
 opt.smarttab = true
 opt.shiftround = true
--- indentexprの無いファイルタイプ(text, toml等)のフォールバックは前行のインデントを
--- 引き継ぐだけにする。cindent/smartindentを全体で有効にすると、閉じていない括弧や
--- 行末の{でC言語風にインデントされてしまう
+-- cindent/smartindent are deliberately not enabled — see .claude/rules/nvim.md.
 opt.autoindent = true
 
 -- search
@@ -48,7 +46,7 @@ opt.undofile = true
 
 -- cmd
 opt.wildmenu = true
--- historyの上限は10000で、Neovimのデフォルトも既に10000のため明示設定は不要
+-- History limit: Neovim's default is already 10000, no need to set it.
 opt.showcmd = true
 opt.inccommand = "split"
 opt.confirm = true
