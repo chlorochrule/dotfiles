@@ -124,7 +124,7 @@ nix flake update <input名>
 darwin-rebuild --list-generations
 sudo darwin-rebuild switch --rollback
 
-# ガベージコレクション
+# ガベージコレクション(darwin.nixのnix.gcで毎週日曜3時にも自動実行される)
 sudo nix-collect-garbage --delete-older-than 30d
 
 # ローカルLLMモデルの取得(MacBookPro-minami、初回のみ、数十GB)

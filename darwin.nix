@@ -8,6 +8,15 @@
 
   nix.settings.experimental-features = "nix-command flakes";
 
+  nix.gc = {
+    automatic = true;
+    interval = { Weekday = 0; Hour = 3; Minute = 0; }; # Sundays 03:00
+    options = "--delete-older-than 30d";
+  };
+  # Scheduled rather than nix.settings.auto-optimise-store, which has known
+  # store-corruption issues on macOS.
+  nix.optimise.automatic = true;
+
   # Cachix binary cache for herdr's prebuilt binary (not in nixpkgs).
   nix.extraOptions = ''
     extra-substituters = https://herdr.cachix.org
@@ -18,6 +27,13 @@
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
     "terraform"
   ];
+
+  # Touch ID for sudo (falls back to a password on Macs without it).
+  # reattach: needed for Touch ID to work inside herdr (a multiplexer).
+  security.pam.services.sudo_local = {
+    touchIdAuth = true;
+    reattach = true;
+  };
 
   environment.systemPackages = [ pkgs.vim ];
 
