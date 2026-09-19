@@ -1,5 +1,6 @@
 ---
-globs: ".claude/skills/**"
+paths:
+  - ".claude/skills/**"
 ---
 
 # .claude/skills/ background

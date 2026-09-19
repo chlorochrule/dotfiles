@@ -1,5 +1,6 @@
 ---
-globs: ".config/nvim/**"
+paths:
+  - ".config/nvim/**"
 ---
 
 # .config/nvim background

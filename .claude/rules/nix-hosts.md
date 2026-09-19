@@ -1,5 +1,9 @@
 ---
-globs: "hosts/**, home/**, darwin.nix, flake.nix"
+paths:
+  - "hosts/**"
+  - "home/**"
+  - "darwin.nix"
+  - "flake.nix"
 ---
 
 # hosts/, home/, darwin.nix, flake.nix background

@@ -149,7 +149,7 @@ claude-q3cn   # Qwen3-Coder-Next
 │   │                             # ~/.claude/配下へはデプロイされない(home/claude/skills/とは別物)。
 │   │                             # 例: upgrade-services(services/配下のバージョンを上げる手順)
 │   └── rules/                   # 各設定の「なぜ」をまとめたLLM向け背景情報
-│                                 # (frontmatterのglobsでpath-scopedロード。人間が読んでも構わない)
+│                                 # (frontmatterのpathsでpath-scopedロード。人間が読んでも構わない)
 ├── flake.nix                    # inputs定義、ホストをdarwinConfigurationsへ自動展開
 ├── darwin.nix                   # 全マシン共通のnix-darwin設定
 │                                 # (system.defaults, フォント, unfreeパッケージの許可等)

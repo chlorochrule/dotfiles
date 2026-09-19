@@ -1,5 +1,7 @@
 ---
-globs: "services/**, terraform/**"
+paths:
+  - "services/**"
+  - "terraform/**"
 ---
 
 # services/ and terraform/local/ background
