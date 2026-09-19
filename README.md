@@ -204,6 +204,9 @@ sudo nix-collect-garbage --delete-older-than 30d
 ollama pull qwen3.6:27b        # dense 27B, 18GB(q4_K_M), SWE-bench Verified 77.2
 ollama pull qwen3-coder-next   # 80B MoE/3B active, 46GB, コーディングエージェント特化
 
+# pull後、256Kコンテキストを焼き込んだ派生モデル(*-262k)を作るためrebuildが必要
+sudo darwin-rebuild switch --flake ~/.dotfiles
+
 # ローカルLLM(Ollama)経由でClaude Codeを起動
 claude-q36    # Qwen3.6-27B
 claude-q3cn   # Qwen3-Coder-Next
@@ -430,11 +433,16 @@ terraform apply -replace=terraform_data.prometheus_compose_up
     モデル本体は`ollama pull`で別途取得が必要です(上記「よく使う運用コマンド」参照)。
     未知モデル名に対する警告を避けるため`CLAUDE_CODE_MAX_CONTEXT_TOKENS`も
     実際のコンテキストウィンドウ(256K)に設定しています。
-    `services.ollama`の`OLLAMA_CONTEXT_LENGTH`も262144(256K、両モデルの実際の学習時
-    ウィンドウ)に設定していますが、これは必須です。
-    Ollamaのデフォルト`num_ctx`は4096しかなく、Claude Codeが送る長大なsystem prompt+tool
-    定義だけでcontext windowをほぼ使い切ってしまい、肝心のユーザー指示が実質無視される
-    (無関係な応答を返す)現象が実測で確認されたため。
+    コンテキスト長262144(256K、両モデルの実際の学習時ウィンドウ)は`services.ollama`の
+    `OLLAMA_CONTEXT_LENGTH`(サービス全体に効く)ではなく、`home.activation.ollamaContextModels`
+    (`hosts/MacBookPro-minami/home.nix`)が`ollama create`で作る派生モデル(`qwen3.6-27b-262k`/
+    `qwen3-coder-next-262k`、Modelfileは`hosts/MacBookPro-minami/ollama/`)にのみ焼き込んでおり、
+    `claude-q36`/`claude-q3cn`はこちらを指します。サービス全体の環境変数にしなかったのは、
+    将来別の軽量モデルを同じOllamaインスタンスにpullした場合にもそちらへ256Kコンテキストが
+    強制され、不要なメモリ消費や読み込み遅延を招くのを避けるためです。
+    このコンテキスト拡張自体は必須で、Ollamaのデフォルト`num_ctx`が4096しかなく、
+    Claude Codeが送る長大なsystem prompt+tool定義だけでcontext windowをほぼ使い切ってしまい、
+    肝心のユーザー指示が実質無視される(無関係な応答を返す)現象が実測で確認されたためです。
     256Kに拡張後は実際のタスク(ファイル内容の正確な読み取り等)も問題なく遂行できることを
     確認済みです。
     メモリはQwen3.6-27Bで約20GB、Qwen3-Coder-Nextで約59GB(いずれも256Kコンテキスト込み)で、

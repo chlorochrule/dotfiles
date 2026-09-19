@@ -32,19 +32,40 @@
   # ollama serveをlaunchd agentとして自動起動する(127.0.0.1:11434)。
   # ollama CLIパッケージもこのオプション経由で自動的にhome.packagesへ入る。
   # Claude Codeからはclaude-q36/claude-q3cn(下記zsh関数)経由で利用する。
-  # OLLAMA_CONTEXT_LENGTHはデフォルトの4096のままだと、Claude Codeが送る
-  # 長大なsystem prompt+tool定義だけでcontext windowを使い切ってしまい、
-  # 実際のユーザー指示が無視される問題が実測(4016トークンで既に4096に迫る)で
-  # 確認できたため、両モデルの実際のコンテキストウィンドウ(256K)に合わせる。
+  # コンテキスト長はサービス全体のOLLAMA_CONTEXT_LENGTHではなく、下のactivationで
+  # モデルごとに派生モデル(*-262k)を作りPARAMETER num_ctxとして焼き込む方式にしている。
+  # サービス全体の環境変数にすると、将来別の軽量モデルをこのOllamaインスタンスに
+  # 追加pullした際にもそちらへ256Kコンテキストが強制され、不要なメモリ消費や
+  # 読み込み遅延を招くため。
   services.ollama = {
     enable = true;
-    environmentVariables = {
-      OLLAMA_CONTEXT_LENGTH = "262144";
-    };
   };
+
+  # ollama pull済みの基本モデルから、コンテキスト長262144(256K)を焼き込んだ
+  # 派生モデル(*-262k)をollama createで作る。Ollamaのデフォルトnum_ctxは4096しか
+  # 無く、Claude Codeが送る長大なsystem prompt+tool定義だけでcontext windowを
+  # 使い切ってしまい、実際のユーザー指示が無視される問題が実測(4016トークンで
+  # 既に4096に迫る)で確認できたため、両モデルの実際のコンテキストウィンドウ
+  # (256K)に合わせる。基本モデルが未pullの間(初回provisioning前等)は
+  # 何もしない(次回rebuild時にpull済みなら作られる)。
+  home.activation.ollamaContextModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ollamaCreateIfBaseExists() {
+      base="$1"
+      derived="$2"
+      modelfile="$3"
+      if ${pkgs.ollama}/bin/ollama list 2>/dev/null | grep -qF "$base"; then
+        ${pkgs.ollama}/bin/ollama create "$derived" -f "$modelfile" >/dev/null 2>&1 || true
+      fi
+    }
+    if command -v ${pkgs.ollama}/bin/ollama >/dev/null 2>&1; then
+      ollamaCreateIfBaseExists "qwen3.6:27b" "qwen3.6-27b-262k" "${./ollama/qwen3.6-27b-262k.Modelfile}"
+      ollamaCreateIfBaseExists "qwen3-coder-next" "qwen3-coder-next-262k" "${./ollama/qwen3-coder-next-262k.Modelfile}"
+    fi
+  '';
 
   # Ollama経由でローカルLLMをClaude Codeから使うためのラッパー。
   # 通常の`claude`(Anthropic本家)には一切影響しない。
+  # ANTHROPIC_MODELは上のactivationが作る262kコンテキスト版の派生モデル名を指す。
   # CLAUDE_CODE_MAX_CONTEXT_TOKENSは、Claude Codeのモデルカタログに
   # 無いモデル名を指定した際に出る"unrecognized_model"警告を避けるため
   # (指定しないとauto-compactが実際のウィンドウを知らず200kと仮定する)。
@@ -53,7 +74,7 @@
     claude-q36() {
       ANTHROPIC_BASE_URL=http://localhost:11434 \
       ANTHROPIC_AUTH_TOKEN=ollama \
-      ANTHROPIC_MODEL=qwen3.6:27b \
+      ANTHROPIC_MODEL=qwen3.6-27b-262k \
       CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000 \
       command claude "$@"
     }
@@ -61,7 +82,7 @@
     claude-q3cn() {
       ANTHROPIC_BASE_URL=http://localhost:11434 \
       ANTHROPIC_AUTH_TOKEN=ollama \
-      ANTHROPIC_MODEL=qwen3-coder-next \
+      ANTHROPIC_MODEL=qwen3-coder-next-262k \
       CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000 \
       command claude "$@"
     }
