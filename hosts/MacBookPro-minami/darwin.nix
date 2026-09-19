@@ -67,7 +67,7 @@
       };
     };
     "com.raycast.macos" = {
-      raycastGlobalHotkey = "Command-49";  # 49 = Space's keycode
+      raycastGlobalHotkey = "Command-49"; # 49 = Space's keycode
     };
   };
 }

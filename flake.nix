@@ -18,17 +18,29 @@
     };
   };
 
-  outputs = { self, nixpkgs, herdr-nix, nix-darwin, home-manager }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      herdr-nix,
+      nix-darwin,
+      home-manager,
+    }:
     let
-      mkHost = hostPath:
+      mkHost =
+        hostPath:
         let
           host = import hostPath;
           # darwin.nix/home.nix are optional per-host extras (see README);
           # include them only if present so a bare host still evaluates.
-          optionalHostFile = name:
-            let path = hostPath + "/${name}";
-            in if builtins.pathExists path then [ path ] else [ ];
-        in {
+          optionalHostFile =
+            name:
+            let
+              path = hostPath + "/${name}";
+            in
+            if builtins.pathExists path then [ path ] else [ ];
+        in
+        {
           name = host.hostname;
           value = nix-darwin.lib.darwinSystem {
             system = host.system;
@@ -37,7 +49,9 @@
             };
             modules = [
               ./darwin.nix
-            ] ++ optionalHostFile "darwin.nix" ++ [
+            ]
+            ++ optionalHostFile "darwin.nix"
+            ++ [
               home-manager.darwinModules.home-manager
               {
                 home-manager.useGlobalPkgs = true;
@@ -59,7 +73,8 @@
       hosts = [
         ./hosts/MacBookPro-minami
       ];
-    in {
+    in
+    {
       darwinConfigurations = builtins.listToAttrs (map mkHost hosts);
     };
 }

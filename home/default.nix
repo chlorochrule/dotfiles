@@ -1,4 +1,11 @@
-{ config, pkgs, lib, herdr, hostname, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  herdr,
+  hostname,
+  ...
+}:
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   linkDotfile = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
@@ -6,18 +13,26 @@ let
   # Merges home/claude/<name>/ (all machines) with
   # hosts/<hostname>/claude/<name>/ (this machine only, if present) into
   # ~/.claude/<name>/ at the file level. See .claude/rules/nix-hosts.md.
-  claudeDirNames = [ "commands" "skills" "agents" "hooks" ];
+  claudeDirNames = [
+    "commands"
+    "skills"
+    "agents"
+    "hooks"
+  ];
 
   readDirIfExists = path: if builtins.pathExists path then builtins.readDir path else { };
 
-  claudeMergedEntriesFor = name:
+  claudeMergedEntriesFor =
+    name:
     let
       commonPath = ./claude + "/${name}";
       hostPath = ../hosts/${hostname}/claude + "/${name}";
       commonRel = "home/claude/${name}";
       hostRel = "hosts/${hostname}/claude/${name}";
-      toEntries = relDir: files:
-        lib.mapAttrs' (fname: _:
+      toEntries =
+        relDir: files:
+        lib.mapAttrs' (
+          fname: _:
           lib.nameValuePair ".claude/${name}/${fname}" { source = linkDotfile "${relDir}/${fname}"; }
         ) files;
     in
@@ -42,36 +57,39 @@ in
   xdg.configFile."nvim".source = linkDotfile ".config/nvim";
   xdg.configFile."herdr/config.toml".source = linkDotfile ".config/herdr/config.toml";
 
-  home.packages = with pkgs; [
-    tig
-    ghq
-    cloc
-    tree
-    # Picked up by fzf-lua (grep/files/preview).
-    ripgrep
-    fd
-    bat
-    neovim
-    # Required by nvim-treesitter's `main` branch — see .claude/rules/nvim.md.
-    tree-sitter
-    jq
-    yq
-    awscli2
-    gnupg
-    gitleaks
-    nodejs
-    nil
-    terraform
-    pandoc
-    editorconfig-checker
-    # Also picked up by bashls (nvim) for diagnostics.
-    shellcheck
-    gh
-    wget
-    gnumake
-  ] ++ [
-    herdr
-  ];
+  home.packages =
+    with pkgs;
+    [
+      tig
+      ghq
+      cloc
+      tree
+      # Picked up by fzf-lua (grep/files/preview).
+      ripgrep
+      fd
+      bat
+      neovim
+      # Required by nvim-treesitter's `main` branch — see .claude/rules/nvim.md.
+      tree-sitter
+      jq
+      yq
+      awscli2
+      gnupg
+      gitleaks
+      nodejs
+      nil
+      terraform
+      pandoc
+      editorconfig-checker
+      # Also picked up by bashls (nvim) for diagnostics.
+      shellcheck
+      gh
+      wget
+      gnumake
+    ]
+    ++ [
+      herdr
+    ];
 
   programs.mise = {
     enable = true;
@@ -150,7 +168,11 @@ in
     settings = {
       macos-option-as-alt = true;
 
-      font-family = [ "Menlo" "Sarasa Mono J" "Symbols Nerd Font Mono" ];
+      font-family = [
+        "Menlo"
+        "Sarasa Mono J"
+        "Symbols Nerd Font Mono"
+      ];
       font-size = 14;
 
       cursor-style-blink = false;
@@ -277,70 +299,70 @@ in
 
     initContent = lib.mkMerge [
       ''
-      # Rancher Desktop
-      export PATH="$HOME/.rd/bin:$PATH"
+        # Rancher Desktop
+        export PATH="$HOME/.rd/bin:$PATH"
 
-      export GPG_TTY=$TTY
+        export GPG_TTY=$TTY
 
-      # zsh's default kills the whole line regardless of cursor position;
-      # override to bash/readline-style (only before the cursor).
-      bindkey '^U' backward-kill-line
+        # zsh's default kills the whole line regardless of cursor position;
+        # override to bash/readline-style (only before the cursor).
+        bindkey '^U' backward-kill-line
 
-      # herdr ignore keys (keep the 'C-g prefix free of zsh's own zle binding)
-      bindkey -r '\C-g'
+        # herdr ignore keys (keep the 'C-g prefix free of zsh's own zle binding)
+        bindkey -r '\C-g'
 
-      # ghq fuzzy cd (MRU-first, like the old peco-src)
-      ghq-fzf-cd() {
-        local ghq_root mru_file selected d
-        local -a mru
-        ghq_root="$(ghq root)"
-        mru_file="$XDG_CACHE_HOME/ghq-fzf/mru.txt"
-        mkdir -p "$XDG_CACHE_HOME/ghq-fzf"
+        # ghq fuzzy cd (MRU-first, like the old peco-src)
+        ghq-fzf-cd() {
+          local ghq_root mru_file selected d
+          local -a mru
+          ghq_root="$(ghq root)"
+          mru_file="$XDG_CACHE_HOME/ghq-fzf/mru.txt"
+          mkdir -p "$XDG_CACHE_HOME/ghq-fzf"
 
-        # Drop deleted repos from the MRU list
-        if [[ -f $mru_file ]]; then
-          for d in "''${(@f)$(<$mru_file)}"; do
-            [[ -n $d && -d $ghq_root/$d ]] && mru+=("$d")
-          done
-        fi
-
-        selected="$({ (( $#mru )) && print -rl -- $mru; ghq list; } | awk '!a[$0]++' | fzf)"
-
-        if [[ -n $selected ]]; then
-          print -rl -- "$selected" $mru | awk '!a[$0]++' > "$mru_file"
-          BUFFER="builtin cd -- ''${(q)ghq_root}/''${(q)selected}"
-          zle accept-line
-        fi
-        zle reset-prompt
-      }
-      zle -N ghq-fzf-cd
-      bindkey '^L' ghq-fzf-cd
-
-      # word separator
-      autoload -Uz select-word-style
-      select-word-style default
-      zstyle ':zle:*' word-chars " /=;@:{},.&'\"|"
-      zstyle ':zle:*' word-style unspecified
-
-      # option
-      setopt print_eight_bit no_beep no_flow_control ignore_eof interactive_comments
-      setopt auto_cd auto_pushd pushd_ignore_dups correct
-      setopt magic_equal_subst auto_list auto_menu list_packed list_types
-      setopt hist_reduce_blanks
-      setopt extended_glob
-      unsetopt caseglob
-
-      ## aws
-      source ${pkgs.awscli2}/bin/aws_zsh_completer.sh
-
-      # exec herdr (bare `herdr` auto-attaches/creates the default session)
-      if ! command -v herdr &> /dev/null; then
-          echo "herdr not found" 1>&2
-      else
-          if [[ "$TERM_PROGRAM" == "ghostty" && -z "$HERDR_ENV" && -n "$PS1" ]]; then
-              exec herdr
+          # Drop deleted repos from the MRU list
+          if [[ -f $mru_file ]]; then
+            for d in "''${(@f)$(<$mru_file)}"; do
+              [[ -n $d && -d $ghq_root/$d ]] && mru+=("$d")
+            done
           fi
-      fi
+
+          selected="$({ (( $#mru )) && print -rl -- $mru; ghq list; } | awk '!a[$0]++' | fzf)"
+
+          if [[ -n $selected ]]; then
+            print -rl -- "$selected" $mru | awk '!a[$0]++' > "$mru_file"
+            BUFFER="builtin cd -- ''${(q)ghq_root}/''${(q)selected}"
+            zle accept-line
+          fi
+          zle reset-prompt
+        }
+        zle -N ghq-fzf-cd
+        bindkey '^L' ghq-fzf-cd
+
+        # word separator
+        autoload -Uz select-word-style
+        select-word-style default
+        zstyle ':zle:*' word-chars " /=;@:{},.&'\"|"
+        zstyle ':zle:*' word-style unspecified
+
+        # option
+        setopt print_eight_bit no_beep no_flow_control ignore_eof interactive_comments
+        setopt auto_cd auto_pushd pushd_ignore_dups correct
+        setopt magic_equal_subst auto_list auto_menu list_packed list_types
+        setopt hist_reduce_blanks
+        setopt extended_glob
+        unsetopt caseglob
+
+        ## aws
+        source ${pkgs.awscli2}/bin/aws_zsh_completer.sh
+
+        # exec herdr (bare `herdr` auto-attaches/creates the default session)
+        if ! command -v herdr &> /dev/null; then
+            echo "herdr not found" 1>&2
+        else
+            if [[ "$TERM_PROGRAM" == "ghostty" && -z "$HERDR_ENV" && -n "$PS1" ]]; then
+                exec herdr
+            fi
+        fi
       ''
       (lib.mkOrder 1500 ''
         # uv (ordered after mise activates). Guarded because uv/uvx aren't

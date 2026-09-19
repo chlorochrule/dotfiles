@@ -1,4 +1,10 @@
-{ pkgs, lib, username, ... }: {
+{
+  pkgs,
+  lib,
+  username,
+  ...
+}:
+{
   system.stateVersion = 6;
   system.primaryUser = username;
 
@@ -10,7 +16,12 @@
 
   nix.gc = {
     automatic = true;
-    interval = { Weekday = 0; Hour = 3; Minute = 0; }; # Sundays 03:00
+    # Sundays 03:00
+    interval = {
+      Weekday = 0;
+      Hour = 3;
+      Minute = 0;
+    };
     options = "--delete-older-than 30d";
   };
   # Scheduled rather than nix.settings.auto-optimise-store, which has known
@@ -24,9 +35,11 @@
   '';
 
   # terraform is BSL 1.1 (unfree), so allow it explicitly.
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "terraform"
-  ];
+  nixpkgs.config.allowUnfreePredicate =
+    pkg:
+    builtins.elem (lib.getName pkg) [
+      "terraform"
+    ];
 
   # Touch ID for sudo (falls back to a password on Macs without it).
   # reattach: needed for Touch ID to work inside herdr (a multiplexer).
@@ -37,9 +50,15 @@
 
   environment.systemPackages = [ pkgs.vim ];
 
-  fonts.packages = [ pkgs.nerd-fonts.symbols-only pkgs.sarasa-gothic ];
+  fonts.packages = [
+    pkgs.nerd-fonts.symbols-only
+    pkgs.sarasa-gothic
+  ];
 
-  environment.systemPath = [ "/opt/homebrew/bin" "/opt/homebrew/sbin" ];
+  environment.systemPath = [
+    "/opt/homebrew/bin"
+    "/opt/homebrew/sbin"
+  ];
 
   system.defaults = {
     NSGlobalDomain = {
@@ -86,7 +105,7 @@
       autohide-time-modifier = 0.4;
       showhidden = true;
       expose-animation-duration = 0.12;
-      wvous-br-corner = 14;  # bottom-right hot corner: Quick Note
+      wvous-br-corner = 14; # bottom-right hot corner: Quick Note
     };
 
     screencapture = {
