@@ -47,6 +47,10 @@ in
     ghq
     cloc
     tree
+    # Picked up by fzf-lua (grep/files/preview).
+    ripgrep
+    fd
+    bat
     neovim
     # Required by nvim-treesitter's `main` branch — see .claude/rules/nvim.md.
     tree-sitter
@@ -247,7 +251,7 @@ in
       zstyle ':completion:*:processes' command 'ps x -o pid,s,args'
 
       autoload -Uz compinit
-      for dump in ~/.zcompdump(N.mh+24); do
+      for dump in ''${ZDOTDIR:-$HOME}/.zcompdump(N.mh+24); do
         compinit -u
       done
       compinit -u -C
