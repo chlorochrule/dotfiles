@@ -151,6 +151,17 @@ in
       fetch.prune = true;
       diff.algorithm = "histogram";
       merge.conflictStyle = "zdiff3";
+      # From "How Core Git Developers Configure Git" (GitButler blog), minus
+      # the ones that delete data (fetch.pruneTags) or change pull behavior.
+      column.ui = "auto";
+      branch.sort = "-committerdate";
+      tag.sort = "version:refname";
+      diff.colorMoved = "plain"; # delta renders moved lines distinctly
+      push.followTags = true;
+      help.autocorrect = "prompt";
+      commit.verbose = true;
+      rebase.autoSquash = true;
+      rebase.updateRefs = true;
       alias.get = "!ghq get";
       # Structural diffs via difftastic, alongside (not instead of) delta:
       # diff.external is only set per-invocation, so plain `git diff` keeps
