@@ -50,6 +50,7 @@ in
     "bin/license".source = linkDotfile "bin/license";
 
     ".claude/CLAUDE.md".source = linkDotfile "home/claude/CLAUDE.md";
+    ".claude/statusline.sh".source = linkDotfile "home/claude/statusline.sh";
 
     "Pictures/ss/.keep".text = "";
   };

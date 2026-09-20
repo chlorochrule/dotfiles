@@ -79,7 +79,9 @@
   # ~/.claude.json — see .claude/rules/nix-hosts.md for why this is a jq
   # merge rather than a full-file link. chrome-devtools-mcp: not in
   # nixpkgs, so run via npx; pinned to @latest, accepting the Chrome
-  # DevTools team as a trusted-but-unpinned upstream.
+  # DevTools team as a trusted-but-unpinned upstream. context7: up-to-date,
+  # version-specific library docs; uses Upstash's hosted endpoint (no local
+  # code runs) without an API key, so it's on the anonymous rate limit.
   home.activation.claudeMcpServers = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     claudeJson="${config.home.homeDirectory}/.claude.json"
     if [ ! -f "$claudeJson" ]; then
@@ -90,6 +92,7 @@
       --arg pwBin "${pkgs.playwright-mcp}/bin/playwright-mcp" \
       '.mcpServers = ((.mcpServers // {}) + {
         "chrome-devtools": { type: "stdio", command: "npx", args: ["-y", "chrome-devtools-mcp@latest"] },
+        "context7": { type: "http", url: "https://mcp.context7.com/mcp" },
         "playwright": { type: "stdio", command: $pwBin }
       })' \
       "$claudeJson" > "$tmp"

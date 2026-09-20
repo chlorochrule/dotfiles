@@ -118,6 +118,10 @@
       }
     }
   },
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/statusline.sh"
+  },
   "tui": "fullscreen",
   "theme": "dark"
 }

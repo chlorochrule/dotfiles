@@ -208,6 +208,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 │   │                            # (zsh、git、delta、mise、direnv、fzf、starship、Ghostty等)
 │   └── claude/                  # 全マシン共通の~/.claude/の中身
 │       ├── CLAUDE.md
+│       ├── statusline.sh        # Claude Codeのステータスライン
 │       ├── hooks/               # editorconfig-check.sh、guard-bash.sh、herdr-agent-state.sh
 │       └── skills/              # 全プロジェクトで使うskill
 │                                # commit-message(コミットメッセージの規約)
@@ -234,7 +235,7 @@ Nix storeにコピーされないので、編集した内容はrebuildしなく�
 同じ名前のファイルがあれば、マシン固有のほうが優先されます。
 リンクはファイル単位で張るので、新しいファイルを追加したときはrebuildが必要です[^claude-merge]。
 
-`~/.claude/CLAUDE.md`は`home/claude/CLAUDE.md`へのシンボリックリンクです。
+`~/.claude/CLAUDE.md`と`~/.claude/statusline.sh`は、`home/claude/`の同名のファイルへのシンボリックリンクです。
 
 `~/.claude/settings.json`は、シンボリックリンクではなく実ファイルとして置きます。
 Claude Code自身が実行時にこのファイルへ書き込む(モデルの選択、権限の追加、プラグインの設定など)ためです。
@@ -278,6 +279,12 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
 
 ### Claude Codeのその他の設定
 
+- **ステータスライン**：`home/claude/statusline.sh`が、モデル、effort、ディレクトリとブランチ、コンテキストの使用率を表示します。
+  claude.aiのプランで使っているときは5時間枠のレート制限の使用率を、それ以外(APIキーやローカルのOllama)ではセッションのコストを表示します。
+- **MCPサーバー**：Chrome DevTools、Playwright、Context7を、全プロジェクト共通で使えるように`~/.claude.json`へ登録します。
+  登録の処理は`hosts/MacBookPro-minami/home.nix`にあります。
+  Context7は、ライブラリのバージョンごとのドキュメントを返すサービスです。
+  Upstashがホストするエンドポイントに、APIキーなし(匿名のレート制限)で接続します。
 - **skill**：`home/claude/skills/`のskillは、全プロジェクトで使えます。
   `commit-message`は、コミットメッセージとプルリクエスト本文の書き方の規約です。
 
