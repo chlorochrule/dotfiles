@@ -105,6 +105,10 @@ home-manager側の設定(zsh、git、mise、Ghostty等)も、このコマンド�
 ```bash
 # 設定の変更を適用する(編集したファイルはgit addしておく)
 sudo darwin-rebuild switch --flake ~/.dotfiles
+# nhでも同じことができる。ビルドの進み具合と、変わるパッケージの差分が表示される
+# (flakeの場所は環境変数NH_DARWIN_FLAKEで指定済み。sudoはnhが内部で求める)
+nh darwin switch
+nh darwin build              # 適用せずにビルドと差分の確認だけ行う
 
 # flakeのinputsを最新にする(flake.lockを書き換えるだけなのでsudoは不要)
 nix flake update
@@ -120,6 +124,18 @@ sudo nix-collect-garbage --delete-older-than 30d
 
 ガベージコレクションは、`darwin.nix`の`nix.gc`で毎週日曜3時にも自動で実行されます。
 Nix storeの重複ファイルをまとめる`nix-store --optimise`も、`nix.optimise`で同じ日の4時15分に実行されます。
+
+### Nixで入れたツールの使い方
+
+```bash
+, cowsay hello        # 入れていないコマンドを、その場で1回だけ実行する(comma)
+git dft               # 構文を解析したdiff(difftastic)。普通のgit diffはdeltaのまま
+git dlog / git dshow  # log -pとshowのdifftastic版
+ast-grep run -l python -p 'f($A)' -r 'g($A)'   # 構文木で検索・置換する
+```
+
+存在しないコマンドを打つと、そのコマンドを含むnixpkgsのパッケージが表示されます(nix-indexのcommand-not-found)。
+表示される`nix-env -iA`での導入は使わず、必要ならflakeの`home.packages`に追加してください。
 
 ### ローカルLLM(Ollama)の準備と起動
 

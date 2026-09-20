@@ -97,6 +97,19 @@ Human-facing setup/operation docs are in the repo README; this is the
   with hash verification — the Cachix cache config itself lives in
   `darwin.nix`'s `nix.extraOptions`.
 
+## `nix-index-database` flake input
+
+- Provides the prebuilt nix-index database (updated weekly upstream) for
+  `,` (comma) and zsh's command-not-found handler. Running `nix-index`
+  locally instead would take a long, CPU-heavy indexing pass per update.
+- Wired via `home-manager.sharedModules` in `flake.nix` so every host gets
+  the module; each host still opts in through `programs.nix-index` /
+  `programs.nix-index-database.comma` in `home/default.nix`.
+- Don't also add `nix-index` to `home.packages`: the module's wrapper
+  (which points at the prebuilt database) would conflict with it.
+- `,` and `nh` talk to the nix daemon, so they're in the Claude Code
+  sandbox's `excludedCommands` along with `nix` (see README).
+
 ## `flake.nix` host wiring
 
 - `optionalHostFile` lets a host directory omit `darwin.nix`/`home.nix`

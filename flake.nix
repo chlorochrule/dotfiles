@@ -16,6 +16,12 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Prebuilt, weekly-updated nix-index database (for `,` and
+    # command-not-found) instead of running nix-index locally.
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -25,6 +31,7 @@
       herdr-nix,
       nix-darwin,
       home-manager,
+      nix-index-database,
     }:
     let
       mkHost =
@@ -57,6 +64,7 @@
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
                 home-manager.backupFileExtension = "backup";
+                home-manager.sharedModules = [ nix-index-database.homeModules.default ];
                 home-manager.extraSpecialArgs = {
                   username = host.username;
                   hostname = host.hostname;

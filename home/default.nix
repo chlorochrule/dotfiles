@@ -89,9 +89,18 @@ in
       gh
       wget
       gnumake
+      # Syntax-aware search/rewrite (`ast-grep run -p 'foo($A)' -r 'bar($A)'`),
+      # for refactors where a regex would also hit strings and comments.
+      ast-grep
     ]
     ++ [
       herdr
+      # herdr-nix's package ships no zsh completion; generate it at build
+      # time rather than `eval`ing `herdr completion zsh` on every shell start.
+      (pkgs.runCommand "herdr-zsh-completion" { } ''
+        mkdir -p $out/share/zsh/site-functions
+        ${herdr}/bin/herdr completion zsh > $out/share/zsh/site-functions/_herdr
+      '')
     ];
 
   programs.mise = {
@@ -102,6 +111,23 @@ in
       deno = "latest";
     };
   };
+
+  # `nh darwin switch` wraps darwin-rebuild with a build tree
+  # (nix-output-monitor) and a diff of what changes. clean isn't enabled:
+  # darwin.nix's nix.gc already does the periodic GC.
+  programs.nh = {
+    enable = true;
+    darwinFlake = dotfiles;
+  };
+
+  # command-not-found suggests which nixpkgs package provides a missing
+  # command; `, <cmd>` runs it once without installing. Both read the
+  # prebuilt database from the nix-index-database flake input.
+  programs.nix-index = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+  programs.nix-index-database.comma.enable = true;
 
   # Used by services/langfuse/.envrc etc. to auto-load per-directory .env files.
   programs.direnv = {
@@ -126,6 +152,12 @@ in
       diff.algorithm = "histogram";
       merge.conflictStyle = "zdiff3";
       alias.get = "!ghq get";
+      # Structural diffs via difftastic, alongside (not instead of) delta:
+      # diff.external is only set per-invocation, so plain `git diff` keeps
+      # going through delta. log/show ignore diff.external without --ext-diff.
+      alias.dft = "-c diff.external=difft diff";
+      alias.dlog = "-c diff.external=difft log -p --ext-diff";
+      alias.dshow = "-c diff.external=difft show --ext-diff";
       # Distributed via init.templateDir, not programs.git.hooks — see
       # .claude/rules/nix-hosts.md for why.
       init.templateDir = "${pkgs.writeTextFile {
@@ -144,6 +176,10 @@ in
       }}";
     };
   };
+
+  # Installs difft for the git dft/dlog/dshow aliases above. git.enable is
+  # left off: it would set diff.external globally and replace delta.
+  programs.difftastic.enable = true;
 
   programs.delta = {
     enable = true;
