@@ -80,7 +80,7 @@ GrafanaはこのClickHouseへ、SELECTのみ許可した専用ユーザー(`graf
 (設計の詳細は同上。ユーザー定義は`services/langfuse/clickhouse-users.d/`、
 `terraform/local/langfuse_grafana.tf`が生成、git管理外)。
 
-## Prometheus: macOSホストのメトリクスを収集する
+## Prometheus: macOSホストとClaude Codeのメトリクスを収集する
 
 `services/prometheus/`配下にPrometheusのセルフホスト用Docker Compose定義を置いています
 (`http://localhost:9095`、外部公開しません。9090は`services/langfuse/`のminioが
@@ -100,6 +100,15 @@ PrometheusのGrafanaデータソース登録(`terraform/local/prometheus.tf`の
 node_exporterメトリクス(Uptime/CPU/メモリ/バッテリー/ロードアベレージ/
 ディスクI/O/ネットワークI/O/ファイルシステム使用率)を見る`macOS Host (node_exporter)`
 ダッシュボードも管理しています。
+
+Claude Codeの利用状況(コスト、トークン数、セッション数、変更行数、稼働時間、リポジトリごとのコスト)も、
+Claude Code自身のOpenTelemetryのメトリクスとしてPrometheusに記録します。
+Claude Codeの各セッションは短命なプロセスなのでスクレイプではなく、
+PrometheusのOTLP受信口(`http://localhost:9095/api/v1/otlp/v1/metrics`)へClaude Codeから送信します。
+送信の設定は`hosts/MacBookPro-minami/claude/settings.json`の`env`にあります。
+`terraform/local/claude_code_grafana.tf`の`Claude Code Usage`ダッシュボードで確認できます。
+コストはClaude Codeが定価で計算した推定値で、実際の請求額とは異なる場合があります。
+Prometheusが起動していなくても、Claude Codeの動作には影響しません(送信が失敗するだけです)。
 
 ## 初回セットアップ
 

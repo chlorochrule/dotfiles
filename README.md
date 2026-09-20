@@ -349,7 +349,7 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
 
 ## ローカルサービス(Langfuse、Grafana、Prometheus)
 
-Claude Codeの操作ログを記録するLangfuse、そのダッシュボードを表示するGrafana、macOSのメトリクスを集めるPrometheusを、このMacの中だけで動かせます。
+Claude Codeの操作ログを記録するLangfuse、そのダッシュボードを表示するGrafana、macOSとClaude Codeのメトリクスを集めるPrometheusを、このMacの中だけで動かせます。
 使うかどうかは任意で、3つまとめてTerraformでプロビジョニングします。
 
 ```bash

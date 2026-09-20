@@ -101,6 +101,35 @@ choices that aren't obvious from the code itself.
   `available`/`buffers`/`cached`. Written against the actual output of
   `127.0.0.1:9100`, not the Linux docs — verify against that endpoint
   before changing these queries.
+- `claude_code_grafana.tf` reads Claude Code's own OpenTelemetry metrics,
+  pushed to Prometheus's OTLP receiver (`--web.enable-otlp-receiver`;
+  client env in `hosts/MacBookPro-minami/claude/settings.json`). Findings
+  behind the current setup, all verified against a throwaway Prometheus:
+  - Claude Code exports delta temporality by default, which Prometheus
+    rejects ("invalid temporality and type combination"), so the client
+    sets `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative`.
+  - The series have no `instance` label; `session_id` is the only thing
+    separating concurrent sessions. Don't set
+    `OTEL_METRICS_INCLUDE_SESSION_ID=false`: two live sessions would then
+    write conflicting cumulative values into one series.
+  - Each session is a new series whose first sample is already non-zero,
+    so without `--enable-feature=created-timestamp-zero-ingestion` the
+    first export interval's usage never shows up in any delta query.
+  - Range totals use `max_over_time - min_over_time` per series instead
+    of `increase()`: series never reset, and `increase()`'s extrapolation
+    overshot on short sessions (2.33 for 2 sessions in testing). The
+    per-session cost this yields matched `claude -p --output-format json`'s
+    `total_cost_usd` exactly.
+  - `OTEL_METRICS_INCLUDE_REPOSITORY=true` adds `vcs_owner_name` /
+    `vcs_repository_name` (from the `origin` remote) for the "Cost by
+    repository" panel. Sessions outside a git repo have no vcs_* labels
+    and show up as the empty row.
+  - Only metrics-over-OTLP-HTTP/protobuf is configured; logs/traces
+    exporters stay off.
+  - Every series carries account identifiers as labels (`user_email`,
+    `user_account_uuid`, `organization_id`). That's fine for this
+    local-only Prometheus, but this repo is public: never commit exported
+    query results or dashboard snapshots that include label values.
 
 ## docker-compose lifecycle (the `terraform_data` pattern)
 

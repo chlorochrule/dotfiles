@@ -118,6 +118,14 @@
       }
     }
   },
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL": "http/protobuf",
+    "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT": "http://localhost:9095/api/v1/otlp/v1/metrics",
+    "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE": "cumulative",
+    "OTEL_METRICS_INCLUDE_REPOSITORY": "true"
+  },
   "statusLine": {
     "type": "command",
     "command": "$HOME/.claude/statusline.sh"

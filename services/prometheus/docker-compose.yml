@@ -9,6 +9,17 @@ services:
   prometheus:
     image: docker.io/prom/prometheus:v3.14.0
     restart: always
+    # The image's default args plus the OTLP receiver
+    # (/api/v1/otlp/v1/metrics), which Claude Code pushes its metrics to —
+    # see the otlp section in prometheus.yml. created-timestamp-zero-ingestion
+    # writes a 0 at each counter's OTLP start time: every Claude Code session
+    # is a new series whose first sample is already non-zero, and without the
+    # 0 that first increment is invisible to increase()/max-min queries.
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-otlp-receiver
+      - --enable-feature=created-timestamp-zero-ingestion
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
