@@ -192,7 +192,9 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 │   │                            # (zsh、git、delta、mise、direnv、fzf、starship、Ghostty等)
 │   └── claude/                  # 全マシン共通の~/.claude/の中身
 │       ├── CLAUDE.md
-│       └── hooks/               # editorconfig-check.sh、herdr-agent-state.sh
+│       ├── hooks/               # editorconfig-check.sh、guard-bash.sh、herdr-agent-state.sh
+│       └── skills/              # 全プロジェクトで使うskill
+│                                # commit-message(コミットメッセージの規約)
 ├── .config/nvim/                # Neovimの設定(Lua、lazy.nvim)
 ├── .config/herdr/config.toml    # herdrの設定
 ├── .tigrc, .editorconfig, bin/  # ~/から実ファイルへシンボリックリンクする
@@ -257,6 +259,11 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
 
 [^sandbox-go]: 公式ドキュメントに、Go製のCLIはSeatbelt下でTLSの検証に失敗するという既知の問題として記載されています。
     このマシンでも、`terraform validate`がsandboxの中ではプラグインを読み込めずに失敗しました。
+
+### Claude Codeのその他の設定
+
+- **skill**：`home/claude/skills/`のskillは、全プロジェクトで使えます。
+  `commit-message`は、コミットメッセージとプルリクエスト本文の書き方の規約です。
 
 ## 運用上の注意
 
