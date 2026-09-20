@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Run by update-flake-lock.yml on its PR branch (see the comment there).
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,29 +17,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # gitleaks scans the whole history
       - uses: cachix/install-nix-action@v31
 
+      # Each step is a Makefile target, so `make check` runs the same thing
+      # locally (terraform fmt runs in terraform.yml instead, only when it
+      # can be affected). Tools come from flake.lock's nixpkgs (--inputs-from .), the
+      # same versions as home.packages / conform.nvim.
       - name: nix flake check
-        run: nix flake check
+        run: make flake-check
 
-      # flake check doesn't evaluate darwinConfigurations deeply; forcing
-      # each host's drvPath catches option/typo errors a rebuild would hit.
       - name: Evaluate every host
-        run: |
-          nix eval --json .#darwinConfigurations --apply 'builtins.mapAttrs (_: c: c.system.drvPath)'
+        run: make eval
 
-      # Formatters come from flake.lock's nixpkgs (--inputs-from .), so CI
-      # uses the same versions as home.packages / conform.nvim.
       - name: nixfmt
-        run: git ls-files -z '*.nix' | xargs -0 nix run --inputs-from . nixpkgs#nixfmt -- --check
+        run: make nixfmt
 
       - name: stylua
-        run: git ls-files -z '*.lua' | xargs -0 nix run --inputs-from . nixpkgs#stylua -- --check
-
-      - name: terraform fmt
-        env:
-          NIXPKGS_ALLOW_UNFREE: "1" # terraform is BSL 1.1
-        run: nix run --impure --inputs-from . nixpkgs#terraform -- fmt -check -recursive terraform/
+        run: make stylua
 
       - name: editorconfig-checker
-        run: nix run --inputs-from . nixpkgs#editorconfig-checker
+        run: make editorconfig
+
+      - name: shellcheck
+        run: make shellcheck
+
+      - name: actionlint
+        run: make actionlint
+
+      - name: Claude Code settings schema
+        run: make claude-settings
+
+      - name: docker-compose / dependabot schemas
+        run: make schemas
+
+      - name: Claude Code script tests
+        run: make test
+
+      # Also runs as a pre-commit hook locally (init.templateDir), but that
+      # only covers clones made after it was set up.
+      - name: gitleaks
+        run: make gitleaks

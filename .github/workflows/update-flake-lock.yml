@@ -1,0 +1,40 @@
+name: update-flake-lock
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Saturdays 03:00 JST
+    - cron: "0 18 * * 5"
+
+permissions:
+  contents: write
+  pull-requests: write
+  # `gh workflow run` below
+  actions: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+
+      - name: Update flake.lock and open a PR
+        id: update
+        uses: DeterminateSystems/update-flake-lock@v28
+        with:
+          commit-msg: "flake.lock: inputsを更新する"
+          pr-title: "flake.lock: inputsを更新する"
+
+      # A PR opened with GITHUB_TOKEN only gets pull_request runs in an
+      # approval-required state, so check.yml wouldn't run on it unattended.
+      # workflow_dispatch always creates a run even from GITHUB_TOKEN, and
+      # that run is reported on the PR's head commit.
+      - name: Run check.yml and terraform.yml on the PR branch
+        if: contains(fromJSON('["created", "updated"]'), steps.update.outputs.pull-request-operation)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for workflow in check.yml terraform.yml; do
+            gh workflow run "$workflow" --repo "$GITHUB_REPOSITORY" --ref update_flake_lock_action
+          done

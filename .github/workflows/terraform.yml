@@ -1,0 +1,35 @@
+name: terraform
+
+# Split out of check.yml because terraform is unfree, so cache.nixos.org has
+# no build of it and every run compiles it from source (~5.5 min, most of the
+# old check.yml runtime). Runs only when something that can change the
+# formatting result changes: the .tf files, or flake.lock (terraform's
+# version). `make check` still runs it locally.
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "terraform/**"
+      - flake.lock
+      - Makefile
+      - .github/workflows/terraform.yml
+  pull_request:
+    paths: *paths
+  # Run by update-flake-lock.yml on its PR branch (see the comment there).
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+
+      - name: terraform fmt
+        run: make terraform-fmt
+
+      - name: terraform validate
+        run: make terraform-validate

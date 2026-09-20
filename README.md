@@ -166,11 +166,35 @@ Neovimでは、保存時にconform.nvimがLua(stylua)、Nix(nixfmt)、Terraform(
 GitHub Actions(`.github/workflows/check.yml`)は、mainへのpushとプルリクエストのたびに次の検査を実行します。
 
 - `nix flake check`と、全ホストの`darwinConfigurations`の評価
-- nixfmt、stylua、`terraform fmt`による整形の検査
-- editorconfig-checkerによる検査
+- nixfmt、styluaによる整形の検査
+- editorconfig-checker、shellcheck、actionlint(ワークフローの検査)による検査
+- Claude Codeの`settings.json`の、schemastoreのスキーマによる検査(Claude Codeは綴りを誤ったキーを黙って無視するため)
+- `docker-compose.yml`と`dependabot.yml`の、スキーマによる検査
+- `tests/claude-scripts.sh`による、Claude Code用スクリプト(`guard-bash.sh`、`statusline.sh`)の回帰テスト
+- gitleaksによる、履歴全体の秘密情報の検査
 
-整形ツールは`flake.lock`のnixpkgsから取得するので、CIとローカルで同じバージョンが使われます。
-各ステップはローカルでも同じコマンドで実行できます(terraformのステップだけは環境変数`NIXPKGS_ALLOW_UNFREE=1`が必要です)。
+`terraform fmt`と`terraform validate`だけは、別のワークフロー(`.github/workflows/terraform.yml`)で実行します。
+実行するのは、`terraform/`か`flake.lock`が変わったときだけです。
+terraformはunfreeライセンスなのでNixのバイナリキャッシュに無く、CIでは毎回ソースからビルドされて5分以上かかるためです。
+
+`.github/workflows/update-flake-lock.yml`は、毎週土曜の3時(JST)に`flake.lock`のinputsを更新し、プルリクエストを作ります。
+GitHub Actionsのトークンで作ったプルリクエストでは検査が自動では実行されません。
+そのため、このワークフローが`workflow_dispatch`で`check.yml`と`terraform.yml`を起動します[^flake-lock-pr]。
+Actionsの画面から手動で実行することもできます。
+
+CIの各ステップは`Makefile`のターゲットを呼んでいるだけなので、ローカルでも同じ検査を実行できます。
+検査のツールは`flake.lock`のnixpkgsから取得するので、CIとローカルで同じバージョンが使われます。
+
+```bash
+make check      # CIと同じ検査をすべて実行する
+make nixfmt     # 1つだけ実行する(ターゲットの一覧はMakefileを参照)
+make fmt        # nixfmt、stylua、terraform fmtでの整形を一括で適用する
+```
+
+GitHub Actionsで使っているアクションのバージョンは、Dependabot(`.github/dependabot.yml`)が毎週まとめて更新のプルリクエストを作ります。
+
+[^flake-lock-pr]: プルリクエストを作れるようにするには、リポジトリの設定を1つ変える必要があります。
+    Settings → Actions → Generalで、「Allow GitHub Actions to create and approve pull requests」を有効にしてください。
 
 リポジトリ全体を一括で整形したコミットは、`.git-blame-ignore-revs`に登録しています。
 GitHubのblame表示はこのファイルを自動で読み込むので、一括整形のコミットは表示されません。
@@ -190,7 +214,8 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 │   │                            # 例: upgrade-services(services/のバージョンを上げる手順)
 │   └── rules/                   # 各設定の理由をまとめたClaude Code向けの背景情報
 │                                # frontmatterのpathsで、該当ファイルを読んだときだけロードされる
-├── .github/workflows/check.yml  # CI(「コードの整形とCI」参照)
+├── .github/                     # CI、flake.lockの自動更新、Dependabot(「コードの整形とCI」参照)
+├── Makefile                     # CIと同じ検査をローカルで実行する(make check)
 ├── .git-blame-ignore-revs       # git blameから除外する一括整形コミット
 ├── flake.nix                    # inputsの定義と、hosts/をdarwinConfigurationsへ展開する処理
 ├── darwin.nix                   # 全マシン共通のnix-darwin設定
@@ -221,6 +246,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 │   ├── grafana/
 │   └── prometheus/
 ├── terraform/local/             # 上の3サービスをプロビジョニングするTerraform。Nixの管理外
+├── tests/claude-scripts.sh      # home/claude/のスクリプトの回帰テスト(CIでも実行する)
 └── CLAUDE.md                    # このリポジトリで作業するClaude Code向けの指示
 ```
 
