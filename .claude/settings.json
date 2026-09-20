@@ -17,6 +17,12 @@
       "Bash(docker compose config*)",
       "Bash(docker compose ps*)",
       "mcp__claude-in-chrome__tabs_context_mcp"
+    ],
+    "deny": [
+      "Read(/services/*/.env)",
+      "Edit(/services/*/.env)",
+      "Read(/terraform/local/terraform.tfstate*)",
+      "Edit(/terraform/local/terraform.tfstate*)"
     ]
   }
 }

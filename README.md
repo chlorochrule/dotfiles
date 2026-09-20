@@ -222,8 +222,41 @@ Nix storeにコピーされないので、編集した内容はrebuildしなく�
 Claude Code自身が実行時にこのファイルへ書き込む(モデルの選択、権限の追加、プラグインの設定など)ためです。
 rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書きマージされ、リポジトリに書いていないキーはそのまま残ります。
 リポジトリに書いたキーは、実行時に変えても次のrebuildで元に戻ります。
+逆に、リポジトリからキーを消しても`~/.claude/settings.json`からは消えません。
+設定を無効にしたいときは、キーを消すのではなく値を変えてください(例: `"sandbox": {"enabled": false}`)。
 
 [^claude-merge]: マージの仕組みは`.claude/rules/nix-hosts.md`を参照してください。
+
+### Claude Codeの安全設定
+
+`hosts/MacBookPro-minami/claude/settings.json`は、`permissions.defaultMode`を`"auto"`にしてコマンドの実行を広く任せる代わりに、次の4つで守りを固めています。
+
+- **sandbox**：Bashのコマンドを、macOSのSeatbeltで隔離して実行します。
+  書き込めるのは作業ディレクトリとセッション用の一時ディレクトリだけで、`~/.ssh`、`~/.aws`、`~/.gnupg`と、GitHubやAWSのトークンの環境変数は読めません。
+  sandboxの中では動かないコマンドは、`excludedCommands`でsandboxの外で実行します。
+  対象は、nix daemonのソケットに接続する`nix`、`darwin-rebuild`、`nh`、`,`(comma)と、Dockerのソケットに接続する`docker`です。
+  Go製で、Seatbelt下では失敗する`gh`と`terraform`も外しています[^sandbox-go]。
+  `git push`などのリモート操作も、sandboxの中からは`~/.ssh`を読めずSSHでの接続に失敗するので外しています。
+  `git init`(と、内部でそれを呼ぶ`uv init`)も外しています。
+  sandboxは`.git/config`と`.git/hooks`への書き込みを常に拒否するからです(この2つはコードを実行させる経路になり得るため)。
+  同じ理由で`git remote add`や`git config`もsandboxの中では失敗しますが、頻度が低いので外していません。
+  失敗したときは、Claude Codeがsandboxの外で実行し直し、auto modeの分類器がその可否を判断します。
+  この一覧は、このリポジトリでの作業と、npmやuvでの一般的な作業で使うコマンドを実際に試して決めたものです。
+  ほかのプロジェクトで失敗するコマンドがあれば、`excludedCommands`に追加してください。
+  ただし、除外が効くのはそのコマンドを単独で実行したときだけです。
+  `cd ... && terraform ...`や`terraform ... | grep ...`のようにほかのコマンドと組み合わせると、sandboxの中で実行されます。
+- **sandboxの書き込み許可**：npm、uv、pip、denoのキャッシュ(`~/.npm`、`~/.cache/uv`など)だけは書き込めるようにしています。
+  これが無いと、`npm install`や`uv add`がキャッシュに書き込めずに失敗します。
+  パッケージマネージャー自体をsandboxの外に出すと、`npm install`のpostinstallスクリプトなども無制限に動いてしまうので、キャッシュだけを許可しています。
+- **`permissions.deny`**：Claude Codeのファイル操作ツールから、上の3つのディレクトリを読み書きできないようにします。
+  このリポジトリの`.claude/settings.json`でも、Terraformが生成するファイルを同じように保護しています。
+  対象は`services/*/.env`と`terraform/local/terraform.tfstate*`で、どちらも秘密情報を含みます。
+- **`home/claude/hooks/guard-bash.sh`**(PreToolUseフック)：危険なコマンドを、権限の設定に関係なく止めます。
+  対象は、ホームディレクトリやルートを対象にした再帰的な`rm`と、`--force-with-lease`ではない強制pushです。
+  コマンドの文字列で判定しているだけなので、`sh -c`やスクリプトの中までは見ません。
+
+[^sandbox-go]: 公式ドキュメントに、Go製のCLIはSeatbelt下でTLSの検証に失敗するという既知の問題として記載されています。
+    このマシンでも、`terraform validate`がsandboxの中ではプラグインを読み込めずに失敗しました。
 
 ## 運用上の注意
 
