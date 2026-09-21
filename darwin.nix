@@ -60,10 +60,20 @@
     "/opt/homebrew/sbin"
   ];
 
+  # CapsLock -> Left Control. Applied with hidutil (no --matching, so every
+  # keyboard, not one per-device entry like System Settings' Modifier Keys),
+  # both on rebuild and at boot via nix-darwin's activate-system daemon.
+  system.keyboard = {
+    enableKeyMapping = true;
+    remapCapsLockToControl = true;
+  };
+
   system.defaults = {
     NSGlobalDomain = {
       InitialKeyRepeat = 12;
       KeyRepeat = 1;
+      # F1-F12 send function keys; media controls need fn.
+      "com.apple.keyboard.fnState" = true;
       ApplePressAndHoldEnabled = false;
       NSAutomaticQuoteSubstitutionEnabled = false;
       NSAutomaticDashSubstitutionEnabled = false;
@@ -74,6 +84,10 @@
       NSWindowResizeTime = 0.001;
       AppleInterfaceStyle = "Dark";
     };
+
+    # The globe/fn key switches input source (ABC <-> Japanese) instead of
+    # opening the emoji picker. Takes effect after a restart.
+    hitoolbox.AppleFnUsageType = "Change Input Source";
 
     trackpad = {
       Clicking = true;
