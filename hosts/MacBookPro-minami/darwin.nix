@@ -1,8 +1,18 @@
 { lib, username, ... }: {
+  # For cmd-eikana below. The homebrew-cask one is a different upstream
+  # (iMasanari's, last released 2017, Intel-only) and was disabled in
+  # September 2026 for failing the Gatekeeper check.
+  homebrew.taps = [ "dominion525/tap" ];
+
   homebrew.casks = [
+    "adobe-acrobat-reader"
     "claude"
     "claude-code@latest"
     "discord"
+    # ⌘英かな: maps the left/right Command keys to 英数/かな. arm64 build
+    # from the maintained fork; it updates itself through Sparkle, which is
+    # why its cask sets auto_updates (so no greedy here).
+    "dominion525/tap/cmd-eikana"
     "ghostty"
     "google-chrome"
     # greedy: auto_updates casks are otherwise left to the IDE's own updater;
