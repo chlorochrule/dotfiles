@@ -238,6 +238,12 @@ in
 
       link-url = true; # cmd+click opens URLs in the system default app (Ghostty's default; set explicitly)
 
+      # Over ssh, send TERM=xterm-256color (remotes lack xterm-ghostty's
+      # terminfo). ssh-terminfo is left off: it installs that terminfo into
+      # the remote's ~/.terminfo, i.e. writes files on hosts that may not be
+      # mine. Unlisted features (cursor, title, path, ...) keep their defaults.
+      shell-integration-features = "ssh-env";
+
       keybind = [
         "global:ctrl+i=toggle_visibility"
       ];
