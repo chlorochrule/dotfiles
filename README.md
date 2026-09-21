@@ -344,9 +344,15 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
 - `autoUpdate`と`upgrade`を`true`にしているので、rebuildのたびにHomebrewの情報が更新され、古くなったcaskがアップグレードされます。
   ただし、アプリ自身に更新機能があるcask(`auto_updates`)はHomebrewのアップグレード対象から外れ、アプリ自身の更新機能で更新されます。
   rebuild時にHomebrewで更新させたいcaskには、`greedy = true`を付けてください(現在は`intellij-idea`だけです)。
+- 公式以外のtapのcask(例: `dominion525/tap/cmd-eikana`)は、tapも`homebrew.taps`に書いてください。
+  zapによるcleanupは、書いていないtapも外します。
+- 手で入れたアプリをcaskに追加すると、rebuild時にHomebrewがそのアプリをそのまま管理下に取り込みます。
+  アプリを入れ直す必要はありません。
 
 ### その他
 
+- キー配列(CapsLock→Ctrl、F1〜F12をファンクションキーにする設定、🌐キーでの入力ソースの切り替え)は`darwin.nix`で管理しています。
+  システム設定で変えても、rebuildのたびにこちらの値へ戻ります。🌐キーの設定は、再起動するまで反映されません。
 - 全リポジトリ共通のgitleaksのpre-commitフックは、`init.templateDir`で配布しています。
   テンプレートは`git clone`と`git init`のときにだけコピーされるので、既存のリポジトリに入れるには、そのリポジトリで`git init`を実行し直してください(既存のフックは上書きされません)。
 - Chrome拡張機能のClaude for Chromeは、Chromeウェブストアから手動でインストールします。
