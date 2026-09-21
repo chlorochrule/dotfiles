@@ -21,7 +21,7 @@ jobs:
 
       - name: Update flake.lock and open a PR
         id: update
-        uses: DeterminateSystems/update-flake-lock@v28
+        uses: DeterminateSystems/update-flake-lock@v29
         with:
           commit-msg: "flake.lock: inputsを更新する"
           pr-title: "flake.lock: inputsを更新する"
