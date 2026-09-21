@@ -280,6 +280,7 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
   書き込めるのは作業ディレクトリとセッション用の一時ディレクトリだけで、`~/.ssh`、`~/.aws`、`~/.gnupg`と、GitHubやAWSのトークンの環境変数は読めません。
   sandboxの中では動かないコマンドは、`excludedCommands`でsandboxの外で実行します。
   対象は、nix daemonのソケットに接続する`nix`、`darwin-rebuild`、`nh`、`,`(comma)と、Dockerのソケットに接続する`docker`です。
+  `make`も外しています。各ターゲットが`nix run`でツールを取得するためです。
   Go製で、Seatbelt下では失敗する`gh`と`terraform`も外しています[^sandbox-go]。
   `git push`などのリモート操作も、sandboxの中からは`~/.ssh`を読めずSSHでの接続に失敗するので外しています。
   `git init`(と、内部でそれを呼ぶ`uv init`)も外しています。

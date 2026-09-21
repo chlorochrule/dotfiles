@@ -18,6 +18,7 @@
       "nh *",
       ", *",
       "comma *",
+      "make *",
       "docker *",
       "gh *",
       "terraform *",
