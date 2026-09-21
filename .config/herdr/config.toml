@@ -32,3 +32,12 @@ height = "90%"
 # Skip the name prompt; create the tab immediately.
 prompt_new_tab_name = false
 agent_panel_sort = "priority"
+
+# Both are for typing Japanese; they're under [experimental], so the key
+# names can change between herdr releases (checked against 0.8.0).
+[experimental]
+# Puts the IME candidate window at the cursor instead of the screen corner.
+reveal_hidden_cursor_for_cjk_ime = true
+# Switches to an ASCII input source while the prefix (ctrl+g) is held, so
+# pane/tab keys still work in the middle of Japanese input.
+switch_ascii_input_source_in_prefix = true
