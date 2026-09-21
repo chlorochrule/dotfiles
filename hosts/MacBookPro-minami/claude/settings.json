@@ -118,6 +118,16 @@
       }
     }
   },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "**Organization**: none. This is one developer's personal MacBook, not a company machine. Claude Code is used for software development and for maintaining this Mac's own configuration (the nix-darwin/home-manager dotfiles repo).",
+      "**Source control**: github.com/chlorochrule is the user's own account; its repos (e.g. chlorochrule/dotfiles) are public. Other clones under ~/src/github.com (e.g. neo4j/*) are third-party upstreams the user does not own.",
+      "**Key internal services**: local-only services on this Mac, bound to 127.0.0.1 and owned by the user: Langfuse (localhost:3000), Grafana (localhost:3001), Prometheus (localhost:9095), Ollama (localhost:11434), node_exporter (localhost:9100). They hold only this user's own Claude Code telemetry and host metrics.",
+      "**Local infrastructure**: terraform/local in the dotfiles repo manages only local Docker containers (Langfuse, Grafana, Prometheus) and their configuration on this Mac. It has no cloud or shared resources. Destroying it or deleting its Docker volumes loses the local telemetry data.",
+      "**Secrets management**: generated credentials for the local services are in the dotfiles repo's terraform/local/terraform.tfstate and services/*/.env (both gitignored); API keys are in the macOS Keychain; SSH keys are in ~/.ssh. None of these may be printed, committed, or sent off this machine."
+    ]
+  },
   "env": {
     "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
     "OTEL_METRICS_EXPORTER": "otlp",

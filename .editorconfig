@@ -730,3 +730,7 @@ indent_style = tab
 
 [{*.go,go.mod,go.work}]
 indent_style = tab
+
+# autoMode.environment entries are prose rules that JSON can't wrap.
+[hosts/*/claude/settings.json]
+max_line_length = off

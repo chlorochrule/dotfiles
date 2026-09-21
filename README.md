@@ -305,6 +305,10 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
 
 ### Claude Codeのその他の設定
 
+- **auto modeの分類器への前提**:`autoMode.environment`で、分類器にこのマシンの前提を伝えています。
+  個人のMacであること、自分のGitHubアカウント、ローカル専用のサービス、`terraform/local`の範囲、秘密情報の置き場所です。
+  分類器は既定では何も知らないので、これが無いと、ローカルのサービスへの操作を外部への操作と同じように警戒します。
+  書いてあるのは事実の説明だけで、許可のルールで判断を上書きしてはいません。
 - **ステータスライン**：`home/claude/statusline.sh`が、モデル、effort、ディレクトリとブランチ、コンテキストの使用率を表示します。
   claude.aiのプランで使っているときは5時間枠のレート制限の使用率を、それ以外(APIキーやローカルのOllama)ではセッションのコストを表示します。
 - **MCPサーバー**：Chrome DevTools、Playwright、Context7を、全プロジェクト共通で使えるように`~/.claude.json`へ登録します。
