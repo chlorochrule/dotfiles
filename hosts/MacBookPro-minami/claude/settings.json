@@ -111,6 +111,7 @@
       }
     }
   },
+  "cleanupPeriodDays": 180,
   "language": "japanese",
   "pluginConfigs": {
     "langfuse-observability@langfuse-observability": {

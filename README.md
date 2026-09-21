@@ -319,6 +319,8 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
 - **Neovimとの連携**：claudecode.nvimで、NeovimをClaude CodeのIDEとして接続できます。
   Neovimを開いたまま、同じディレクトリで起動したClaude Codeから`/ide`を実行すると、開いているファイル、選択範囲、LSPの診断がClaudeに伝わります。
   選択範囲の送信は`<Leader>cs`、表示されたdiffの受け入れと拒否は`<Leader>cy`と`<Leader>cn`です。
+- **会話履歴の保持期間**：`cleanupPeriodDays`を180日にしています(既定は30日)。
+  `~/.claude/projects/`に残るセッションの記録で、`/resume`で再開できる範囲であり、過去の作業を読み返せる範囲でもあります。
 - **skill**：`home/claude/skills/`のskillは、全プロジェクトで使えます。
   `commit-message`は、コミットメッセージとプルリクエスト本文の書き方の規約です。
 
