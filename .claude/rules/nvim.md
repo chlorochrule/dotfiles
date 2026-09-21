@@ -54,3 +54,40 @@ use Neovim day to day — only when changing these files.
   actually move the window (current window is unchanged before/after) —
   that's the signal that nvim hit a window boundary and the move should
   cross into herdr's own pane grid.
+
+## Claude Code IDE integration (`lua/plugins/claudecode.lua`)
+
+- `coder/claudecode.nvim` implements the protocol of Anthropic's official
+  VS Code/JetBrains extensions: a WebSocket MCP server on a random port,
+  advertised via `~/.claude/ide/<port>.lock` (removed again on a normal
+  exit). Claude Code finds it via `/ide` or `claude --ide`.
+- `terminal.provider = "none"`: Claude runs in its own herdr pane, not in
+  an nvim terminal. That's also why snacks.nvim isn't a dependency — the
+  plugin only `pcall(require, "snacks")`s it for the snacks terminal
+  provider, despite the README listing it.
+- Loaded on `VeryLazy`, which only fires with a UI. In `nvim --headless`
+  the server never starts unless you `doautocmd User VeryLazy` yourself
+  (that's how it was verified: MCP `initialize` + `tools/list` +
+  `getOpenEditors` over the WebSocket, and a wrong auth token got 400).
+- `claude -p` doesn't connect to IDEs, so it can't be used to test this.
+
+## Reloading files changed on disk (`lua/config/autocmds.lua`)
+
+- `checktime` runs on FocusGained/BufEnter/CursorHold(I) so edits Claude
+  Code makes from another herdr pane show up without `:e`. `'autoread'` is
+  on by default but only acts when nvim checks, and focus events don't
+  reliably arrive through the multiplexer.
+- Verified headless: an external write reloads an unmodified buffer after
+  CursorHold (plain `nvim --clean` keeps the stale text); with unsaved
+  edits in the buffer, neither side is lost — nvim raises its W12 conflict
+  prompt instead.
+
+## JSON schemas for jsonls (`lua/plugins/lsp.lua`)
+
+- jsonls gets schemastore's catalog from `b0o/SchemaStore.nvim`: unlike
+  VS Code, nvim hands jsonls no schemas, so it validated nothing (a
+  misspelled key in `.claude/settings.json` produced zero diagnostics).
+  yamlls needs no equivalent — it fetches the catalog itself by default.
+- The `extra` entry maps `hosts/*/claude/settings.json` to the Claude Code
+  settings schema, since the catalog only matches `.claude/settings.json`.
+  CI checks the same files against the same schema (`make claude-settings`).

@@ -56,7 +56,7 @@ return {
   },
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "saghen/blink.cmp" },
+    dependencies = { "saghen/blink.cmp", "b0o/SchemaStore.nvim" },
     config = function()
       local capabilities = require("blink.cmp").get_lsp_capabilities()
 
@@ -66,6 +66,28 @@ return {
         })
         vim.lsp.enable(server)
       end
+
+      -- jsonls has no schema catalog of its own in nvim (VS Code supplies
+      -- one); yamlls fetches schemastore's by default. The extra entry
+      -- covers this repo's hosts/<host>/claude/settings.json, which the
+      -- catalog's `.claude/settings.json` pattern doesn't match.
+      vim.lsp.config("jsonls", {
+        settings = {
+          json = {
+            schemas = require("schemastore").json.schemas({
+              extra = {
+                {
+                  name = "claude-code-settings (dotfiles hosts/)",
+                  description = "Claude Code settings.json merged into ~/.claude",
+                  fileMatch = { "**/hosts/*/claude/settings.json" },
+                  url = "https://json.schemastore.org/claude-code-settings.json",
+                },
+              },
+            }),
+            validate = { enable = true },
+          },
+        },
+      })
 
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),

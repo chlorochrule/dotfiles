@@ -311,6 +311,9 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
   登録の処理は`hosts/MacBookPro-minami/home.nix`にあります。
   Context7は、ライブラリのバージョンごとのドキュメントを返すサービスです。
   Upstashがホストするエンドポイントに、APIキーなし(匿名のレート制限)で接続します。
+- **Neovimとの連携**：claudecode.nvimで、NeovimをClaude CodeのIDEとして接続できます。
+  Neovimを開いたまま、同じディレクトリで起動したClaude Codeから`/ide`を実行すると、開いているファイル、選択範囲、LSPの診断がClaudeに伝わります。
+  選択範囲の送信は`<Leader>cs`、表示されたdiffの受け入れと拒否は`<Leader>cy`と`<Leader>cn`です。
 - **skill**：`home/claude/skills/`のskillは、全プロジェクトで使えます。
   `commit-message`は、コミットメッセージとプルリクエスト本文の書き方の規約です。
 
