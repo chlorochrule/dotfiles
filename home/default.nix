@@ -75,6 +75,12 @@ in
       jq
       yq
       awscli2
+      # nixpkgs disables gcloud's own component manager, so extra components
+      # are declared here instead of `gcloud components install`.
+      # gke-gcloud-auth-plugin: required by kubectl to authenticate to GKE.
+      (google-cloud-sdk.withExtraComponents [
+        google-cloud-sdk.components.gke-gcloud-auth-plugin
+      ])
       gnupg
       gitleaks
       nodejs
