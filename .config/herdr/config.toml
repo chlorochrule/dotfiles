@@ -38,6 +38,9 @@ agent_panel_sort = "priority"
 [experimental]
 # Puts the IME candidate window at the cursor instead of the screen corner.
 reveal_hidden_cursor_for_cjk_ime = true
+# The reveal also replaces the pane's cursor shape with a block, so limit it
+# to Claude Code; otherwise nvim's insert-mode bar cursor never shows.
+cjk_ime_agents = ["claude"]
 # Switches to an ASCII input source while the prefix (ctrl+g) is held, so
 # pane/tab keys still work in the middle of Japanese input.
 switch_ascii_input_source_in_prefix = true
