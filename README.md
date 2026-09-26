@@ -143,7 +143,7 @@ ast-grep run -l python -p 'f($A)' -r 'g($A)'   # 構文木で検索・置換す�
 モデルは初回だけ手動で取得します(合わせて数十GB)。
 
 ```bash
-ollama pull qwen3.6:27b        # dense 27B、18GB(q4_K_M)
+ollama pull qwen3.8:27b        # dense 27B、18GB(q4_K_M)
 ollama pull qwen3-coder-next   # 80B MoE(3B active)、46GB
 ```
 
@@ -151,7 +151,7 @@ ollama pull qwen3-coder-next   # 80B MoE(3B active)、46GB
 以降は次のコマンドでClaude Codeを起動できます。
 
 ```bash
-claude-q36    # Qwen3.6-27B
+claude-q38    # Qwen3.8-27B
 claude-q3cn   # Qwen3-Coder-Next
 ```
 

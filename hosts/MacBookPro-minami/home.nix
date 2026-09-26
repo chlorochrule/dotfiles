@@ -31,7 +31,7 @@
   ];
 
   # Runs ollama serve as a launchd agent (127.0.0.1:11434); also pulls in
-  # the ollama CLI. Used from Claude Code via claude-q36/claude-q3cn below.
+  # the ollama CLI. Used from Claude Code via claude-q38/claude-q3cn below.
   # See .claude/rules/nix-hosts.md for the context-window setup.
   services.ollama = {
     enable = true;
@@ -49,7 +49,7 @@
         ${pkgs.ollama}/bin/ollama create "$derived" -f "$modelfile" >/dev/null 2>&1 || true
       fi
     }
-    ollamaCreateIfBaseExists "qwen3.6:27b" "qwen3.6-27b-262k" "${./ollama/qwen3.6-27b-262k.Modelfile}"
+    ollamaCreateIfBaseExists "qwen3.8:27b" "qwen3.8-27b-262k" "${./ollama/qwen3.8-27b-262k.Modelfile}"
     ollamaCreateIfBaseExists "qwen3-coder-next" "qwen3-coder-next-262k" "${./ollama/qwen3-coder-next-262k.Modelfile}"
   '';
 
@@ -58,10 +58,10 @@
   # names the 262k-context derived model from the activation above — see
   # .claude/rules/nix-hosts.md for CLAUDE_CODE_MAX_CONTEXT_TOKENS.
   programs.zsh.initContent = ''
-    claude-q36() {
+    claude-q38() {
       ANTHROPIC_BASE_URL=http://localhost:11434 \
       ANTHROPIC_AUTH_TOKEN=ollama \
-      ANTHROPIC_MODEL=qwen3.6-27b-262k \
+      ANTHROPIC_MODEL=qwen3.8-27b-262k \
       CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000 \
       command claude "$@"
     }

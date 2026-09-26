@@ -97,9 +97,9 @@ statusline_expect full "$(jq -nc --arg d "$d" '{
   rate_limits: {five_hour: {used_percentage: 23.5}}, cost: {total_cost_usd: 0.01}
 }')" "Opus high | ${d##*/} | ctx 8% | 5h 23%"
 statusline_expect cost-fallback "$(jq -nc --arg d "$d" '{
-  model: {id: "qwen3.6-27b-262k"}, cwd: $d,
+  model: {id: "qwen3.8-27b-262k"}, cwd: $d,
   context_window: {used_percentage: 83.7}, cost: {total_cost_usd: 1.5}
-}')" "qwen3.6-27b-262k | ${d##*/} | ctx 83% | \$1.50"
+}')" "qwen3.8-27b-262k | ${d##*/} | ctx 83% | \$1.50"
 statusline_expect nulls "$(jq -nc --arg d "$d" '{
   model: {display_name: "Opus"}, workspace: {current_dir: $d},
   context_window: {used_percentage: null}

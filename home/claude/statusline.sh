@@ -4,7 +4,7 @@
 #   <model> <effort> | <dir> (<branch>) [wt:<worktree>] | ctx <n>% | 5h <n>%
 #
 # 5h is the claude.ai rate limit; when it's absent (API key, or a local
-# Ollama model via claude-q36/claude-q3cn) the session cost is shown instead.
+# Ollama model via claude-q38/claude-q3cn) the session cost is shown instead.
 # Fields that Claude Code omits or sends as null are just left out.
 set -u
 

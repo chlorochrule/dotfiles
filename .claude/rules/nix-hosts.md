@@ -24,11 +24,11 @@ Human-facing setup/operation docs are in the repo README; this is the
   num_ctx` baked in. The per-model derived model exists so that pulling a
   different, smaller model into this same Ollama instance later doesn't
   also force 256K context (and its memory cost) onto that model.
-- `CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000` in the `claude-q36`/`claude-q3cn`
+- `CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000` in the `claude-q38`/`claude-q3cn`
   zsh wrappers avoids Claude Code's "unrecognized_model" warning for model
   names outside its catalog — without it, auto-compact assumes 200k and
   can trigger at the wrong point.
-- Memory footprint: ~20GB for Qwen3.6-27B, ~59GB for Qwen3-Coder-Next (both
+- Memory footprint: ~20GB for Qwen3.8-27B, ~59GB for Qwen3-Coder-Next (both
   at 256K context).
 - These wrappers never affect the plain `claude` command (Anthropic's own
   service) — the env vars are wrapper-local.
