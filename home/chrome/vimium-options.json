@@ -1,0 +1,5 @@
+{
+  "keyMappings": "# Insert your preferred key mappings here.\nmap h goBack\nmap l goForward\nmap J scrollPageDown\nmap K scrollPageUp\nmap H previousTab\nmap L nextTab\nmap A firstTab\nmap E lastTab\nmap , moveTabLeft\nmap . moveTabRight\nmap u visitPreviousTab\nmap q removeTab\nmap Q restoreTab",
+  "newTabDestination": "browserNewTabPage",
+  "settingsVersion": "2.4.2"
+}

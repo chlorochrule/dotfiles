@@ -231,12 +231,14 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ├── home/
 │   ├── default.nix              # 全マシン共通のhome-manager設定
 │   │                            # (zsh、git、delta、mise、direnv、fzf、starship、Ghostty等)
-│   └── claude/                  # 全マシン共通の~/.claude/の中身
-│       ├── CLAUDE.md
-│       ├── statusline.sh        # Claude Codeのステータスライン
-│       ├── hooks/               # editorconfig-check.sh、guard-bash.sh、herdr-agent-state.sh
-│       └── skills/              # 全プロジェクトで使うskill
-│                                # commit-message(コミットメッセージの規約)
+│   ├── claude/                  # 全マシン共通の~/.claude/の中身
+│   │   ├── CLAUDE.md
+│   │   ├── statusline.sh        # Claude Codeのステータスライン
+│   │   ├── hooks/               # editorconfig-check.sh、guard-bash.sh、herdr-agent-state.sh
+│   │   └── skills/              # 全プロジェクトで使うskill
+│   │                            # commit-message(コミットメッセージの規約)
+│   └── chrome/
+│       └── vimium-options.json  # VimiumのBackup。手動でRestoreする。Nixの管理外
 ├── .config/nvim/                # Neovimの設定(Lua、lazy.nvim)
 ├── .config/herdr/config.toml    # herdrの設定
 ├── .tigrc, .editorconfig, bin/  # ~/から実ファイルへシンボリックリンクする
@@ -357,6 +359,11 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
   テンプレートは`git clone`と`git init`のときにだけコピーされるので、既存のリポジトリに入れるには、そのリポジトリで`git init`を実行し直してください(既存のフックは上書きされません)。
 - Chrome拡張機能のClaude for Chromeは、Chromeウェブストアから手動でインストールします。
   Nixでは管理していません。
+- Chrome拡張機能のVimiumの設定は、`home/chrome/vimium-options.json`に置いています。
+  Vimiumはファイルから設定を読めないので、rebuildでは反映されません。
+  取り込むときは、Vimiumのオプション画面の「Backup and Restore」でこのファイルをRestoreします。
+  設定を変えたときは、同じ画面のBackupで書き出したファイルでこのファイルを上書きしてコミットしてください。
+  普段のマシン間の同期は、Chromeの同期(`chrome.storage.sync`)に任せています。
 - Ollamaは、nixpkgsのDarwinリリースブランチに収録されたバージョンです。
   新しいモデルが要求するバージョンに届かない場合は、`nixpkgs-unstable`をflakeのinputに追加してください。
   そのうえで、`hosts/<hostname>/darwin.nix`の`nixpkgs.overlays`でollamaだけを差し替えます。
