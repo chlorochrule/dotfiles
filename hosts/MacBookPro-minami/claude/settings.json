@@ -136,7 +136,8 @@
     "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL": "http/protobuf",
     "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT": "http://localhost:9095/api/v1/otlp/v1/metrics",
     "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE": "cumulative",
-    "OTEL_METRICS_INCLUDE_REPOSITORY": "true"
+    "OTEL_METRICS_INCLUDE_REPOSITORY": "true",
+    "NVIM_LOG_FILE": "/dev/null"
   },
   "statusLine": {
     "type": "command",
