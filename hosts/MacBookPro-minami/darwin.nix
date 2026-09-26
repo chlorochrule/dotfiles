@@ -1,4 +1,19 @@
-{ lib, username, ... }: {
+{
+  lib,
+  username,
+  nixpkgs-unstable,
+  ...
+}:
+{
+  # Ollama from unstable: new models (qwen3.8 needs >= 0.32.12) often
+  # require a newer version than the release branch has. Also applies to
+  # home-manager's services.ollama via useGlobalPkgs.
+  nixpkgs.overlays = [
+    (final: prev: {
+      ollama = nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.ollama;
+    })
+  ];
+
   # For cmd-eikana below. The homebrew-cask one is a different upstream
   # (iMasanari's, last released 2017, Intel-only) and was disabled in
   # September 2026 for failing the Gatekeeper check.
