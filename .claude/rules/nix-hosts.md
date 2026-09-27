@@ -18,12 +18,12 @@ Human-facing setup/operation docs are in the repo README; this is the
   definitions alone come close to that on their own (~4016 tokens
   measured), so with the default, the actual user instruction gets crowded
   out and Ollama-backed sessions start responding to unrelated content.
-- Fix has two parts: `OLLAMA_CONTEXT_LENGTH=262144` (256K, both models'
-  real trained context) at the service level, *and* a derived model
-  (`*-262k`) created per base model via `ollama create` with `PARAMETER
-  num_ctx` baked in. The per-model derived model exists so that pulling a
-  different, smaller model into this same Ollama instance later doesn't
-  also force 256K context (and its memory cost) onto that model.
+- Fix: a derived model (`*-262k`) created per base model via `ollama
+  create` with `PARAMETER num_ctx 262144` (256K, both models' real trained
+  context) baked in. This is deliberately *not* set service-wide via
+  `OLLAMA_CONTEXT_LENGTH` on `services.ollama` (d17eed7): that would also
+  force 256K context (and its memory cost) onto any other, smaller model
+  later pulled into this same Ollama instance.
 - `CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000` in the `claude-q38`/`claude-q3cn`
   zsh wrappers avoids Claude Code's "unrecognized_model" warning for model
   names outside its catalog — without it, auto-compact assumes 200k and
