@@ -155,6 +155,13 @@ claude-q38    # Qwen3.8-27B
 claude-q3cn   # Qwen3-Coder-Next
 ```
 
+これらのセッションでのWebSearchは、Ollamaがollama.comの検索APIで代行します。
+使うには、一度`ollama signin`でサインインしておく必要があります。
+また、auto modeの分類器もこのローカルモデルで動くため、時間切れで操作が拒否されることがあります[^ollama-auto]。
+
+[^ollama-auto]: WebSearchは`permissions.allow`で許可しているので、分類器を通りません。
+    理由は`.claude/rules/nix-hosts.md`を参照してください。
+
 [^ollama-ctx]: Ollamaの既定のコンテキスト長(4096)は、Claude Codeのシステムプロンプトだけでほぼ埋まってしまいます。
     詳しくは`.claude/rules/nix-hosts.md`を参照してください。
 

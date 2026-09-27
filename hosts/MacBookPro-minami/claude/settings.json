@@ -1,6 +1,9 @@
 {
   "permissions": {
     "defaultMode": "auto",
+    "allow": [
+      "WebSearch"
+    ],
     "deny": [
       "Read(~/.ssh/**)",
       "Edit(~/.ssh/**)",

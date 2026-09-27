@@ -30,6 +30,22 @@ Human-facing setup/operation docs are in the repo README; this is the
   can trigger at the wrong point.
 - Memory footprint: ~20GB for Qwen3.8-27B, ~59GB for Qwen3-Coder-Next (both
   at 256K context).
+- `OLLAMA_NUM_PARALLEL` is left unset: Ollama 0.34.3 runs these hybrid
+  (linear-attention) models with a single slot regardless ("model
+  architecture does not currently support parallel requests"). Measured
+  with `OLLAMA_NUM_PARALLEL=2` on Qwen3.8-27B: two concurrent requests
+  were still serialized and memory stayed ~20GB. So in auto mode the
+  permission classifier (which also runs on the wrapper's model) queues
+  behind the main request and re-prefills over its KV cache, and times
+  out ("… is temporarily unavailable (timed out), so auto mode cannot
+  determine the safety of …").
+- `"WebSearch"` in `permissions.allow` (`hosts/MacBookPro-minami/claude/settings.json`)
+  is the workaround chosen for that: an explicit allow rule lets WebSearch
+  skip the classifier, while other actions keep going through it (and may
+  still time out under the wrappers). Ollama's Anthropic-compatible API
+  emulates the web_search server tool via https://ollama.com/api/web_search,
+  which needs `ollama signin`; unsigned, the tool result is
+  `web_search_tool_result` with error_code `unavailable`.
 - These wrappers never affect the plain `claude` command (Anthropic's own
   service) — the env vars are wrapper-local.
 
