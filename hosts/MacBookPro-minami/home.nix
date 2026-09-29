@@ -56,6 +56,12 @@
     ollamaCreateIfBaseExists "qwen3-coder-next" "qwen3-coder-next-262k" "${./ollama/qwen3-coder-next-262k.Modelfile}"
   '';
 
+  # pi reads the same Ollama models through its OpenAI-compatible endpoint
+  # (`pi --model ollama/<id>` or /model). pi never writes models.json, so
+  # a read-only store link is fine; settings.json and auth.json stay
+  # pi-managed.
+  home.file.".pi/agent/models.json".source = ./pi/models.json;
+
   # Wrappers to run Claude Code against a local Ollama model instead of
   # Anthropic's service; plain `claude` is unaffected. ANTHROPIC_MODEL
   # names the 262k-context derived model from the activation above — see

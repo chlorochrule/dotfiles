@@ -155,7 +155,15 @@ claude-q38    # Qwen3.8-27B
 claude-q3cn   # Qwen3-Coder-Next
 ```
 
-これらのセッションでのWebSearchは、Ollamaがollama.comの検索APIで代行します。
+同じモデルはpiからも使えます。
+`hosts/MacBookPro-minami/pi/models.json`を`~/.pi/agent/models.json`へリンクしており、piの`/model`で選ぶか、次のように起動します。
+
+```bash
+pi --model ollama/qwen3.8-27b-262k      # thinkingと画像入力に対応
+pi --model ollama/qwen3-coder-next-262k
+```
+
+Claude Codeのセッションでは、WebSearchをOllamaがollama.comの検索APIで代行します。
 使うには、一度`ollama signin`でサインインしておく必要があります。
 また、auto modeの分類器もこのローカルモデルで動くため、時間切れで操作が拒否されることがあります[^ollama-auto]。
 
@@ -233,8 +241,10 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 │       ├── darwin.nix           # (任意)マシン固有のnix-darwin設定。例: Homebrewのcask
 │       ├── home.nix             # (任意)マシン固有のhome-manager設定
 │       │                        # 例: gitのユーザー情報、ローカルLLM(Ollama)関連
-│       └── claude/              # (任意)このマシンだけの~/.claude/の中身
-│           └── settings.json    # このマシンの~/.claude/settings.json
+│       ├── claude/              # (任意)このマシンだけの~/.claude/の中身
+│       │   └── settings.json    # このマシンの~/.claude/settings.json
+│       └── pi/                  # (任意)このマシンの~/.pi/agent/へリンクするファイル
+│           └── models.json      # piから使うOllamaのモデルの定義
 ├── home/
 │   ├── default.nix              # 全マシン共通のhome-manager設定
 │   │                            # (zsh、git、delta、mise、direnv、fzf、starship、Ghostty等)
