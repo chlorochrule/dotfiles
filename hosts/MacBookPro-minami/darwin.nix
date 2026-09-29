@@ -8,10 +8,18 @@
   # Ollama from unstable: new models (qwen3.8 needs >= 0.32.12) often
   # require a newer version than the release branch has. Also applies to
   # home-manager's services.ollama via useGlobalPkgs.
+  # pi-coding-agent from unstable: upstream releases every few days, and
+  # the release branch lags a dozen minor versions behind.
   nixpkgs.overlays = [
-    (final: prev: {
-      ollama = nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.ollama;
-    })
+    (
+      final: prev:
+      let
+        unstable = nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system};
+      in
+      {
+        inherit (unstable) ollama pi-coding-agent;
+      }
+    )
   ];
 
   # For cmd-eikana below. The homebrew-cask one is a different upstream

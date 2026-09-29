@@ -25,9 +25,12 @@
 
   # Playwright CLI/library and its MCP server. Host-specific: scoped to
   # this machine's browser automation / DevTools use.
+  # pi-coding-agent: the pi coding agent (`pi`), overlaid from unstable in
+  # ./darwin.nix.
   home.packages = with pkgs; [
     playwright-test
     playwright-mcp
+    pi-coding-agent
   ];
 
   # Runs ollama serve as a launchd agent (127.0.0.1:11434); also pulls in

@@ -371,9 +371,11 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
   取り込むときは、Vimiumのオプション画面の「Backup and Restore」でこのファイルをRestoreします。
   設定を変えたときは、同じ画面のBackupで書き出したファイルでこのファイルを上書きしてコミットしてください。
   普段のマシン間の同期は、Chromeの同期(`chrome.storage.sync`)に任せています。
-- Ollamaは、flakeのinputの`nixpkgs-unstable`から入れています。
-  新しいモデルが、Darwinリリースブランチのバージョンでは足りないことが多いためです。
-  差し替えは`hosts/MacBookPro-minami/darwin.nix`の`nixpkgs.overlays`で、ollamaだけを対象にしています。
+- Ollamaとpi(コーディングエージェント、`pi-coding-agent`)は、flakeのinputの`nixpkgs-unstable`から入れています。
+  Ollamaは、新しいモデルがDarwinリリースブランチのバージョンでは足りないことが多いためです。
+  piは、上流が数日おきにリリースしており、リリースブランチでは大きく遅れるためです。
+  差し替えは`hosts/MacBookPro-minami/darwin.nix`の`nixpkgs.overlays`で、この2つだけを対象にしています。
+  新しい版を取り込むときは、`nix flake update nixpkgs-unstable`を実行してからrebuildします。
   モデルが要求するバージョンは、`ollama pull`の412エラーや、registryにあるmanifestのconfigの`requires`で確認できます。
 - herdrのメジャーアップデートで統合フックの内容が変わったときは、`herdr integration install claude`を実行し直してください。
   生成されたファイルは`home/claude/hooks/herdr-agent-state.sh`へ反映します。
