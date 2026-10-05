@@ -80,6 +80,29 @@ Human-facing setup/operation docs are in the repo README; this is the
 - These wrappers never affect the plain `claude` command (Anthropic's own
   service) — the env vars are wrapper-local.
 
+## ComfyUI models: bf16/GGUF, not fp8 (`hosts/MacBookPro-minami/darwin.nix`)
+
+- Comfy Desktop's templates default to fp8 weights (`flux2_dev_fp8mixed`,
+  `mistral_3_small_flux2_fp8`). MPS has no fp8 compute path: checked
+  with Comfy Desktop's PyTorch 2.12.1, an fp8 tensor can be moved to
+  `mps` but upcasting it fails with "Trying to convert Float8_e4m3fn to
+  the MPS backend but it does not have support for that dtype". So the
+  FLUX.2 text encoder uses the bf16 file.
+- Qwen-Image 2.1's templates default to `int8_convrot` files. Those
+  weren't tried on MPS; bf16 was picked simply because it fits in 128GB.
+- FLUX.2 [dev]'s own bf16 weights are 64GB and gated (license accept +
+  HF token), so it runs as city96's `flux2-dev-Q8_0.gguf` (35GB,
+  ungated) through the ComfyUI-GGUF custom node.
+- Measured on M5 Max at 1024²: Qwen-Image 2.1 bf16, 25 steps, ~285s
+  cold (including model load). FLUX.2 Q8_0 with the Turbo LoRA, 8 steps,
+  ~165s cold; then 20 steps without the LoRA ~430s warm (models already
+  resident, so ~20s/step).
+- Memory: after the FLUX.2 runs ComfyUI's free memory had dropped from
+  ~108GB to ~61GB (~47GB kept resident). The two FLUX.2 files total
+  ~71GB, so the peak is presumably higher; running it next to Ollama's
+  large models (~50GB loaded at the time) wasn't tried — Ollama was
+  stopped first.
+
 ## node_exporter user home path (`hosts/MacBookPro-minami/darwin.nix`)
 
 - `services.prometheus.exporters.node` creates a

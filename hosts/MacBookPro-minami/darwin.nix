@@ -28,6 +28,10 @@
     "adobe-acrobat-reader"
     "claude"
     "claude-code@latest"
+    # Comfy Desktop (ComfyUI). Models (~/ComfyUI-Shared/models) and the
+    # ComfyUI-GGUF custom node are set up by hand, not by this repo — see
+    # README and .claude/rules/nix-hosts.md for why bf16/GGUF, not fp8.
+    "comfy"
     "discord"
     # ⌘英かな: maps the left/right Command keys to 英数/かな. arm64 build
     # from the maintained fork.

@@ -187,6 +187,54 @@ Claude Codeのセッションでは、WebSearchをOllamaがollama.comの検索AP
 [^ollama-ctx]: Ollamaの既定のコンテキスト長(4096)は、Claude Codeのシステムプロンプトだけでほぼ埋まってしまいます。
     詳しくは`.claude/rules/nix-hosts.md`を参照してください。
 
+### ローカル画像生成(ComfyUI)
+
+ComfyUIは公式のデスクトップアプリ(Homebrewのcask `comfy`)で入れています。
+rebuildの後に一度`/Applications/Comfy Desktop.app`を起動し、初回のウィザードでGPUにMPSを選んでください。
+アプリの起動中は、`127.0.0.1:8188`でサーバーが動きます。
+
+本体は`~/ComfyUI-Installs/`に入ります。
+モデルは`~/ComfyUI-Shared/models/`に、生成した画像は`~/ComfyUI-Shared/output/`に置かれます。
+どちらもdotfilesでは管理していません。
+
+公式テンプレートが既定にしているfp8版は、MacのMPSでは動きません[^comfy-fp8]。
+このため、FLUX.2はGGUF版を、それ以外はbf16版を使います。
+GGUF版を読むカスタムノードのComfyUI-GGUFは、次の手順で入れます。
+
+```bash
+cd ~/ComfyUI-Installs/ComfyUI/ComfyUI
+git clone https://github.com/city96/ComfyUI-GGUF custom_nodes/ComfyUI-GGUF
+.venv/bin/python -m pip install gguf
+```
+
+入れた後は、ComfyUIを再起動してください(アプリのメニューか、Managerの再起動)。
+
+モデルはHugging Faceから手動で取得します(合わせて約105GB)。
+FLUX.2 [dev]のbf16版は利用規約への同意が要るので、同意の要らないQ8_0のGGUF版を使います。
+
+```bash
+cd ~/ComfyUI-Shared/models
+hf=https://huggingface.co
+f2=$hf/Comfy-Org/flux2-dev/resolve/main/split_files
+qi=$hf/Comfy-Org/Qwen-Image-2.1/resolve/main
+# FLUX.2 [dev]
+curl -fLC - -o unet/flux2-dev-Q8_0.gguf $hf/city96/FLUX.2-dev-gguf/resolve/main/flux2-dev-Q8_0.gguf
+curl -fLC - -o text_encoders/mistral_3_small_flux2_bf16.safetensors \
+  $f2/text_encoders/mistral_3_small_flux2_bf16.safetensors
+curl -fLC - -o vae/flux2-vae.safetensors $f2/vae/flux2-vae.safetensors
+# 8ステップで生成するためのLoRA(任意)
+curl -fLC - -o loras/Flux2TurboComfyv2.safetensors $f2/loras/Flux2TurboComfyv2.safetensors
+# Qwen-Image 2.1
+curl -fLC - -o diffusion_models/qwen_image_2.1_bf16.safetensors $qi/diffusion_models/qwen_image_2.1_bf16.safetensors
+curl -fLC - -o text_encoders/qwen3vl_8b_bf16.safetensors $qi/text_encoders/qwen3vl_8b_bf16.safetensors
+curl -fLC - -o vae/qwen_image_2.1_vae_bf16.safetensors $qi/vae/qwen_image_2.1_vae_bf16.safetensors
+```
+
+公式テンプレートを使うときは、FLUX.2のローダーをGGUF版(`UnetLoaderGGUF`)に替え、各モデルを上のファイルに選び直してください。
+FLUX.2のファイルは合わせて約71GBあるので、Ollamaの大きなモデルを読み込んだまま動かすとメモリが足りなくなるおそれがあります。
+
+[^comfy-fp8]: 詳しくは`.claude/rules/nix-hosts.md`を参照してください。
+
 ## コードの整形とCI
 
 Neovimでは、保存時にconform.nvimがLua(stylua)、Nix(nixfmt)、Terraform(`terraform fmt`)のファイルを整形します。
