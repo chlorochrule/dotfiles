@@ -34,6 +34,7 @@
     "dominion525/tap/cmd-eikana"
     "ghostty"
     "google-chrome"
+    "google-drive"
     "intellij-idea"
     "menumeters"
     "nordvpn"
