@@ -140,14 +140,18 @@ ast-grep run -l python -p 'f($A)' -r 'g($A)'   # 構文木で検索・置換す�
 ### ローカルLLM(Ollama)の準備と起動
 
 `hosts/MacBookPro-minami/`は、Claude CodeをローカルのOllamaのモデルで動かすラッパーを定義しています。
+Ollamaは公式アプリ(Homebrewのcask `ollama-app`)で入れています。
+rebuildの後に一度`/Applications/Ollama.app`を起動してください。
+アプリを起動している間、`127.0.0.1:11434`でサーバーが動きます。
+
 モデルは初回だけ手動で取得します(合わせて数十GB)。
 
 ```bash
-ollama pull qwen3.8:27b        # dense 27B、18GB(q4_K_M)
+ollama pull qwen3.8:27b-nvfp4  # dense 27B、18GB(NVFP4、MLXで動く)
 ollama pull qwen3-coder-next   # 80B MoE(3B active)、46GB
 ```
 
-取得した後にもう一度rebuildすると、256Kのコンテキスト長を設定した派生モデル(`*-262k`)が作られます[^ollama-ctx]。
+取得した後に、アプリを起動した状態でもう一度rebuildすると、256Kのコンテキスト長を設定した派生モデル(`*-262k`)が作られます[^ollama-ctx]。
 以降は次のコマンドでClaude Codeを起動できます。
 
 ```bash
@@ -159,7 +163,7 @@ claude-q3cn   # Qwen3-Coder-Next
 `hosts/MacBookPro-minami/pi/models.json`を`~/.pi/agent/models.json`へリンクしており、piの`/model`で選ぶか、次のように起動します。
 
 ```bash
-pi --model ollama/qwen3.8-27b-262k      # thinkingと画像入力に対応
+pi --model ollama/qwen3.8-27b-nvfp4-262k  # thinkingと画像入力に対応
 pi --model ollama/qwen3-coder-next-262k
 ```
 
@@ -381,11 +385,12 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
   取り込むときは、Vimiumのオプション画面の「Backup and Restore」でこのファイルをRestoreします。
   設定を変えたときは、同じ画面のBackupで書き出したファイルでこのファイルを上書きしてコミットしてください。
   普段のマシン間の同期は、Chromeの同期(`chrome.storage.sync`)に任せています。
-- Ollamaとpi(コーディングエージェント、`pi-coding-agent`)は、flakeのinputの`nixpkgs-unstable`から入れています。
-  Ollamaは、新しいモデルがDarwinリリースブランチのバージョンでは足りないことが多いためです。
-  piは、上流が数日おきにリリースしており、リリースブランチでは大きく遅れるためです。
-  差し替えは`hosts/MacBookPro-minami/darwin.nix`の`nixpkgs.overlays`で、この2つだけを対象にしています。
+- pi(コーディングエージェント、`pi-coding-agent`)は、flakeのinputの`nixpkgs-unstable`から入れています。
+  上流が数日おきにリリースしており、Darwinリリースブランチでは大きく遅れるためです。
+  差し替えは`hosts/MacBookPro-minami/darwin.nix`の`nixpkgs.overlays`で、piだけを対象にしています。
   新しい版を取り込むときは、`nix flake update nixpkgs-unstable`を実行してからrebuildします。
+- Ollamaは、nixpkgsではなく公式アプリ(cask `ollama-app`)で入れており、アプリが自分で更新します。
+  NVFP4などのsafetensors形式のモデルはMLXで動き、MLXのランタイムは公式のビルドにしか入っていないためです。
   モデルが要求するバージョンは、`ollama pull`の412エラーや、registryにあるmanifestのconfigの`requires`で確認できます。
 - herdrのメジャーアップデートで統合フックの内容が変わったときは、`herdr integration install claude`を実行し直してください。
   生成されたファイルは`home/claude/hooks/herdr-agent-state.sh`へ反映します。

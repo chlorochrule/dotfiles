@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
     # Only for packages a host overlays from unstable when the release
-    # branch lags behind (e.g. ollama for new models); see README.
+    # branch lags behind (e.g. pi-coding-agent); see README.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # herdr isn't in nixpkgs; see .claude/rules/nix-hosts.md for why this input exists.
     herdr-nix = {

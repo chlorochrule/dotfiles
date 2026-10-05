@@ -33,26 +33,21 @@
     pi-coding-agent
   ];
 
-  # Runs ollama serve as a launchd agent (127.0.0.1:11434); also pulls in
-  # the ollama CLI. Used from Claude Code via claude-q38/claude-q3cn below.
-  # See .claude/rules/nix-hosts.md for the context-window setup.
-  services.ollama = {
-    enable = true;
-  };
-
   # Creates 256K-context derived models (*-262k) from already-pulled base
-  # models — see .claude/rules/nix-hosts.md for why. No-op if the base
-  # model isn't pulled yet; picked up on a later rebuild once it is.
+  # models — see .claude/rules/nix-hosts.md for why. Talks to the Ollama
+  # app (homebrew cask in ./darwin.nix), so it's a no-op unless the app is
+  # running and the base model is pulled; picked up on a later rebuild.
   home.activation.ollamaContextModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ollama=/Applications/Ollama.app/Contents/Resources/ollama
     ollamaCreateIfBaseExists() {
       base="$1"
       derived="$2"
       modelfile="$3"
-      if ${pkgs.ollama}/bin/ollama list 2>/dev/null | grep -qF "$base"; then
-        ${pkgs.ollama}/bin/ollama create "$derived" -f "$modelfile" >/dev/null 2>&1 || true
+      if [ -x "$ollama" ] && "$ollama" list 2>/dev/null | grep -qF "$base"; then
+        "$ollama" create "$derived" -f "$modelfile" >/dev/null 2>&1 || true
       fi
     }
-    ollamaCreateIfBaseExists "qwen3.8:27b" "qwen3.8-27b-262k" "${./ollama/qwen3.8-27b-262k.Modelfile}"
+    ollamaCreateIfBaseExists "qwen3.8:27b-nvfp4" "qwen3.8-27b-nvfp4-262k" "${./ollama/qwen3.8-27b-nvfp4-262k.Modelfile}"
     ollamaCreateIfBaseExists "qwen3-coder-next" "qwen3-coder-next-262k" "${./ollama/qwen3-coder-next-262k.Modelfile}"
   '';
 
@@ -70,7 +65,7 @@
     claude-q38() {
       ANTHROPIC_BASE_URL=http://localhost:11434 \
       ANTHROPIC_AUTH_TOKEN=ollama \
-      ANTHROPIC_MODEL=qwen3.8-27b-262k \
+      ANTHROPIC_MODEL=qwen3.8-27b-nvfp4-262k \
       CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000 \
       command claude "$@"
     }

@@ -12,6 +12,24 @@ Context for working on the Nix (nix-darwin + home-manager) configuration.
 Human-facing setup/operation docs are in the repo README; this is the
 "why" behind choices that aren't obvious from the code itself.
 
+## Ollama from the official app, not nixpkgs (`hosts/MacBookPro-minami/darwin.nix`)
+
+- Qwen3.8-27B runs as `qwen3.8:27b-nvfp4`, a safetensors model that
+  Ollama serves through its MLX engine. nixpkgs' ollama is built with
+  `-DOLLAMA_MLX_BACKENDS=""`, so pulling it fails with "this model
+  requires MLX support, but the MLX runtime is not available". Only the
+  official build ships MLX (`mlx_metal_v3`/`v4` with `mlx.metallib`),
+  hence the `ollama-app` cask instead of `services.ollama`.
+- Measured on M5 Max at 256K context (Ollama 0.34.3), against the
+  previous `qwen3.8:27b` (GGUF Q4_K_M, which is the same blob as
+  `27b-mtp-q4_K_M`): decode ~43 vs ~21 tok/s, prefill ~470 vs ~270 tok/s
+  at ~20K tokens and ~420 vs ~160-200 tok/s at ~80-95K, and 18.5 vs
+  20.7GB loaded. Ollama 0.34.4 also runs MTP speculative decoding on it.
+  Tool calls (pi and `/v1/messages`), thinking and image input work.
+- The cask's binary path, not `ollama` on PATH, is used by the
+  `ollamaContextModels` activation so it never falls back to a nixpkgs
+  build; the activation is a no-op while the app isn't running.
+
 ## Ollama local LLM context window (`hosts/MacBookPro-minami/home.nix`)
 
 - Ollama's default `num_ctx` is 4096. Claude Code's system prompt + tool
@@ -20,20 +38,23 @@ Human-facing setup/operation docs are in the repo README; this is the
   out and Ollama-backed sessions start responding to unrelated content.
 - Fix: a derived model (`*-262k`) created per base model via `ollama
   create` with `PARAMETER num_ctx 262144` (256K, both models' real trained
-  context) baked in. This is deliberately *not* set service-wide via
-  `OLLAMA_CONTEXT_LENGTH` on `services.ollama` (d17eed7): that would also
-  force 256K context (and its memory cost) onto any other, smaller model
-  later pulled into this same Ollama instance.
+  context) baked in. This works the same for the nvfp4 (MLX) base:
+  loaded by name with no options, it reports `context_length` 262144.
+  This is deliberately *not* set server-wide via `OLLAMA_CONTEXT_LENGTH`
+  (d17eed7): that would also force 256K context (and its memory cost)
+  onto any other, smaller model later pulled into this same Ollama
+  instance.
 - `CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000` in the `claude-q38`/`claude-q3cn`
   zsh wrappers avoids Claude Code's "unrecognized_model" warning for model
   names outside its catalog — without it, auto-compact assumes 200k and
   can trigger at the wrong point.
-- Memory footprint: ~20GB for Qwen3.8-27B, ~59GB for Qwen3-Coder-Next (both
-  at 256K context).
-- `OLLAMA_NUM_PARALLEL` is left unset: Ollama 0.34.3 runs these hybrid
-  (linear-attention) models with a single slot regardless ("model
-  architecture does not currently support parallel requests"). Measured
-  with `OLLAMA_NUM_PARALLEL=2` on Qwen3.8-27B: two concurrent requests
+- Memory footprint: ~18.5GB for Qwen3.8-27B (nvfp4), ~59GB for
+  Qwen3-Coder-Next (both at 256K context).
+- `OLLAMA_NUM_PARALLEL` is left unset: Ollama 0.34.3's GGUF engine runs
+  these hybrid (linear-attention) models with a single slot regardless
+  ("model architecture does not currently support parallel requests").
+  Measured with `OLLAMA_NUM_PARALLEL=2` on Qwen3.8-27B Q4_K_M, before the
+  switch to nvfp4/MLX (not re-measured there): two concurrent requests
   were still serialized and memory stayed ~20GB. So in auto mode the
   permission classifier (which also runs on the wrapper's model) queues
   behind the main request and re-prefills over its KV cache, and times

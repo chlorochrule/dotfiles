@@ -5,9 +5,6 @@
   ...
 }:
 {
-  # Ollama from unstable: new models (qwen3.8 needs >= 0.32.12) often
-  # require a newer version than the release branch has. Also applies to
-  # home-manager's services.ollama via useGlobalPkgs.
   # pi-coding-agent from unstable: upstream releases every few days, and
   # the release branch lags a dozen minor versions behind.
   nixpkgs.overlays = [
@@ -17,7 +14,7 @@
         unstable = nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system};
       in
       {
-        inherit (unstable) ollama pi-coding-agent;
+        inherit (unstable) pi-coding-agent;
       }
     )
   ];
@@ -46,6 +43,12 @@
     }
     "menumeters"
     "nordvpn"
+    # Ollama's official app rather than nixpkgs' ollama: only the official
+    # build ships the MLX runtime that safetensors models (qwen3.8's nvfp4)
+    # need — see .claude/rules/nix-hosts.md. It runs `ollama serve` on
+    # 127.0.0.1:11434 while the app is open and updates itself (the cask
+    # sets auto_updates, so no greedy here).
+    "ollama-app"
     "postman-agent"
     "rancher"
     "raycast"

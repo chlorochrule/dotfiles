@@ -7,8 +7,8 @@
       "apiKey": "ollama",
       "models": [
         {
-          "id": "qwen3.8-27b-262k",
-          "name": "Qwen3.8 27B (262K)",
+          "id": "qwen3.8-27b-nvfp4-262k",
+          "name": "Qwen3.8 27B NVFP4 (262K)",
           "reasoning": true,
           "input": ["text", "image"],
           "contextWindow": 262144,
