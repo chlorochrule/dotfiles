@@ -57,6 +57,9 @@
   # pi-managed.
   home.file.".pi/agent/models.json".source = ./pi/models.json;
 
+  # pi extension: web_search tool (DuckDuckGo, no API key) — see file header.
+  home.file.".pi/agent/extensions/web-search.ts".source = ./pi/web-search.ts;
+
   # Wrappers to run Claude Code against a local Ollama model instead of
   # Anthropic's service; plain `claude` is unaffected. ANTHROPIC_MODEL
   # names the 262k-context derived model from the activation above — see

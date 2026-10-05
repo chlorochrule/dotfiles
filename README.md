@@ -167,6 +167,13 @@ pi --model ollama/qwen3.8-27b-nvfp4-262k  # thinkingと画像入力に対応
 pi --model ollama/qwen3-coder-next-262k
 ```
 
+piにはweb検索ツールを提供するextensionを`hosts/MacBookPro-minami/pi/web-search.ts`
+(`~/.pi/agent/extensions/web-search.ts`へリンク)で追加しています。
+DuckDuckGoのHTMLエンドポイントにAPIキーなしでアクセスするため、
+ネットワークによってはボット判定(CAPTCHA)で初回から弾かれることがあります(ベストエフォート)。
+`web_search`ツールは既定で有効で、`pi --tools web_search`で限定、
+`pi --exclude-tools web_search`で無効化できます。
+
 Claude Codeのセッションでは、WebSearchをOllamaがollama.comの検索APIで代行します。
 使うには、一度`ollama signin`でサインインしておく必要があります。
 また、auto modeの分類器もこのローカルモデルで動くため、時間切れで操作が拒否されることがあります[^ollama-auto]。
@@ -248,7 +255,8 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 │       ├── claude/              # (任意)このマシンだけの~/.claude/の中身
 │       │   └── settings.json    # このマシンの~/.claude/settings.json
 │       └── pi/                  # (任意)このマシンの~/.pi/agent/へリンクするファイル
-│           └── models.json      # piから使うOllamaのモデルの定義
+│           ├── models.json      # piから使うOllamaのモデルの定義
+│           └── web-search.ts    # web検索ツール(web_search)を登録するextension
 ├── home/
 │   ├── default.nix              # 全マシン共通のhome-manager設定
 │   │                            # (zsh、git、delta、mise、direnv、fzf、starship、Ghostty等)
@@ -365,7 +373,8 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
 - zapは、アプリ本体だけでなく、caskが定義する設定ディレクトリやキャッシュも削除します。
   リストからcaskを外すときに設定を残したい場合(別のcaskへ移行するときなど)は、先に設定ディレクトリを別の場所へコピーしておいてください。
 - `autoUpdate`と`upgrade`を`true`にしているので、rebuildのたびにHomebrewの情報が更新され、古くなったcaskがアップグレードされます。
-  `homebrew.greedyCasks`も`true`にしているので、アプリ自身に更新機能があるcask(`auto_updates`)やバージョンを持たないcask(`version :latest`)も、rebuild時にHomebrewでアップグレードされます。
+  `homebrew.greedyCasks`も`true`にしているので、アプリ自身に更新機能があるcask(`auto_updates`)や
+  バージョンを持たないcask(`version :latest`)も、rebuild時にHomebrewでアップグレードされます。
   特定のcaskだけHomebrewでの更新から外したい場合は、そのcaskに`greedy = false`を付けてください。
 - 公式以外のtapのcask(例: `dominion525/tap/cmd-eikana`)は、tapも`homebrew.taps`に書いてください。
   zapによるcleanupは、書いていないtapも外します。
