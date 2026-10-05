@@ -30,24 +30,17 @@
     "claude-code@latest"
     "discord"
     # ⌘英かな: maps the left/right Command keys to 英数/かな. arm64 build
-    # from the maintained fork; it updates itself through Sparkle, which is
-    # why its cask sets auto_updates (so no greedy here).
+    # from the maintained fork.
     "dominion525/tap/cmd-eikana"
     "ghostty"
     "google-chrome"
-    # greedy: auto_updates casks are otherwise left to the IDE's own updater;
-    # this also upgrades it on every rebuild (upgrade = true in darwin.nix).
-    {
-      name = "intellij-idea";
-      greedy = true;
-    }
+    "intellij-idea"
     "menumeters"
     "nordvpn"
     # Ollama's official app rather than nixpkgs' ollama: only the official
     # build ships the MLX runtime that safetensors models (qwen3.8's nvfp4)
     # need — see .claude/rules/nix-hosts.md. It runs `ollama serve` on
-    # 127.0.0.1:11434 while the app is open and updates itself (the cask
-    # sets auto_updates, so no greedy here).
+    # 127.0.0.1:11434 while the app is open.
     "ollama-app"
     "postman-agent"
     "rancher"

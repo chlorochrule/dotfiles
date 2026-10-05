@@ -148,6 +148,9 @@
       # Undeclared casks are auto-uninstalled via `brew bundle --zap --force-cleanup`.
       cleanup = "zap";
     };
+    # Also upgrade casks that update themselves (auto_updates) or are
+    # unversioned (version :latest); brew bundle skips them otherwise.
+    greedyCasks = true;
     # casks are declared per-host (hosts/<hostname>/darwin.nix)
   };
 }

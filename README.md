@@ -365,8 +365,8 @@ rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書き�
 - zapは、アプリ本体だけでなく、caskが定義する設定ディレクトリやキャッシュも削除します。
   リストからcaskを外すときに設定を残したい場合(別のcaskへ移行するときなど)は、先に設定ディレクトリを別の場所へコピーしておいてください。
 - `autoUpdate`と`upgrade`を`true`にしているので、rebuildのたびにHomebrewの情報が更新され、古くなったcaskがアップグレードされます。
-  ただし、アプリ自身に更新機能があるcask(`auto_updates`)はHomebrewのアップグレード対象から外れ、アプリ自身の更新機能で更新されます。
-  rebuild時にHomebrewで更新させたいcaskには、`greedy = true`を付けてください(現在は`intellij-idea`だけです)。
+  `homebrew.greedyCasks`も`true`にしているので、アプリ自身に更新機能があるcask(`auto_updates`)やバージョンを持たないcask(`version :latest`)も、rebuild時にHomebrewでアップグレードされます。
+  特定のcaskだけHomebrewでの更新から外したい場合は、そのcaskに`greedy = false`を付けてください。
 - 公式以外のtapのcask(例: `dominion525/tap/cmd-eikana`)は、tapも`homebrew.taps`に書いてください。
   zapによるcleanupは、書いていないtapも外します。
 - 手で入れたアプリをcaskに追加すると、rebuild時にHomebrewがそのアプリをそのまま管理下に取り込みます。
