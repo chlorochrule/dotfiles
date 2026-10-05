@@ -167,6 +167,9 @@ pi --model ollama/qwen3.8-27b-nvfp4-262k  # thinkingと画像入力に対応
 pi --model ollama/qwen3-coder-next-262k
 ```
 
+piでは、Qwen3.8-27Bのコンテキスト長を64Kとして扱い、それを超える手前で要約(compaction)させています。
+キャッシュが効かないときの処理し直しや要約の待ち時間を、数分に抑えるためです(`.claude/rules/nix-hosts.md`)。
+
 piにはweb検索ツールを提供するextensionを`hosts/MacBookPro-minami/pi/web-search.ts`
 (`~/.pi/agent/extensions/web-search.ts`へリンク)で追加しています。
 DuckDuckGoのHTMLエンドポイントにAPIキーなしでアクセスするため、

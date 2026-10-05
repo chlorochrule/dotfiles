@@ -44,6 +44,16 @@ Human-facing setup/operation docs are in the repo README; this is the
   (d17eed7): that would also force 256K context (and its memory cost)
   onto any other, smaller model later pulled into this same Ollama
   instance.
+- pi caps Qwen3.8-27B at 64K anyway (`contextWindow: 65536` in
+  `hosts/MacBookPro-minami/pi/models.json`; the Ollama-side `num_ctx`
+  stays 262144 since it's only a ceiling and memory grows with use).
+  Measured on Ollama 0.35.1 (nvfp4/MLX), a continued turn reuses the
+  prefix cache and starts in <1s at any length, but anything that misses
+  the cache re-prefills everything at ~280-400 tok/s: ~20s at 8K, ~90s
+  at 32K, ~7.5min at 128K. pi's compaction (at contextWindow minus its
+  16K reserve) is such a miss, as is an Ollama restart or a derived-model
+  re-create. Decode also drops with depth (~20 tok/s at 8-32K, ~13 at
+  128K). 64K keeps a miss or compaction to a few minutes.
 - `CLAUDE_CODE_MAX_CONTEXT_TOKENS=256000` in the `claude-q38`/`claude-q3cn`
   zsh wrappers avoids Claude Code's "unrecognized_model" warning for model
   names outside its catalog — without it, auto-compact assumes 200k and

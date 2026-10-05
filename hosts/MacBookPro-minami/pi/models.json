@@ -8,10 +8,10 @@
       "models": [
         {
           "id": "qwen3.8-27b-nvfp4-262k",
-          "name": "Qwen3.8 27B NVFP4 (262K)",
+          "name": "Qwen3.8 27B NVFP4 (64K)",
           "reasoning": true,
           "input": ["text", "image"],
-          "contextWindow": 262144,
+          "contextWindow": 65536,
           "maxTokens": 32768,
           "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
         },
