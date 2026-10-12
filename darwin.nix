@@ -137,8 +137,32 @@
       "com.apple.screencapture" = {
         name = "ss";
       };
+      # Merged with hosts' entries, then written as one whole dict: hotkeys
+      # changed only in System Settings revert to default on rebuild.
+      "com.apple.symbolichotkeys".AppleSymbolicHotKeys = {
+        # Move focus to next window (same app): Option+Tab instead of Cmd+`.
+        # parameters: ASCII code (65535 = none), virtual keycode (48 = Tab),
+        # modifier mask (524288 = Option).
+        "27" = {
+          enabled = true;
+          value = {
+            type = "standard";
+            parameters = [
+              65535
+              48
+              524288
+            ];
+          };
+        };
+      };
     };
   };
+
+  # Apply symbolichotkeys changes without logging out.
+  system.activationScripts.postActivation.text = ''
+    launchctl asuser "$(id -u -- ${username})" sudo --user=${username} -- \
+      /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+  '';
 
   homebrew = {
     enable = true;
