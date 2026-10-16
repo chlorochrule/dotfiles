@@ -1,6 +1,3 @@
-# Grafana's docker-compose.yml/.env live in ../../services/grafana, not
-# here. Admin password: same random-generation approach as langfuse.tf.
-
 locals {
   grafana_dir = "${path.module}/../../services/grafana"
   grafana_url = "http://localhost:3001"
@@ -21,8 +18,6 @@ resource "local_sensitive_file" "grafana_env" {
   EOT
 }
 
-# Same lifecycle pattern as langfuse.tf. `--wait` blocks until Grafana's
-# API is reachable, so later grafana provider resources can rely on it.
 resource "terraform_data" "grafana_compose_up" {
   triggers_replace = {
     env_sha256     = local_sensitive_file.grafana_env.content_sha256
@@ -45,8 +40,7 @@ resource "terraform_data" "grafana_compose_up" {
   depends_on = [local_sensitive_file.grafana_env]
 }
 
-# Basic auth, not a token: grafana_user (cross-org user management) doesn't
-# support API key/service account auth.
+# Basic auth: grafana_user doesn't support token auth.
 provider "grafana" {
   url  = local.grafana_url
   auth = "${var.grafana_admin_user}:${random_password.grafana_admin.result}"
@@ -58,8 +52,6 @@ resource "grafana_folder" "local" {
   depends_on = [terraform_data.grafana_compose_up]
 }
 
-# Built-in TestData source, used by the sample "Welcome" dashboard below.
-# Real data sources: prometheus.tf / langfuse_grafana.tf.
 resource "grafana_data_source" "testdata" {
   type = "grafana-testdata-datasource"
   name = "TestData"
@@ -67,8 +59,6 @@ resource "grafana_data_source" "testdata" {
   depends_on = [terraform_data.grafana_compose_up]
 }
 
-# Sample dashboard proving Terraform management works; just shows
-# TestData's random_walk scenario.
 resource "grafana_dashboard" "welcome" {
   folder = grafana_folder.local.uid
 

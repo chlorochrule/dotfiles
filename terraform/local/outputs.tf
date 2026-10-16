@@ -1,5 +1,3 @@
-# One output namespace per service (langfuse_*/grafana_*/prometheus_*).
-
 output "langfuse_url" {
   value = "http://localhost:3000"
 }

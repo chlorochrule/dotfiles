@@ -1,32 +1,31 @@
 # dotfiles
 
 macOSの環境設定を、Nix(nix-darwin、home-manager)とHomebrewとmiseで宣言的に管理するリポジトリです。
-Claude Codeの設定一式(rules、skills、hooks)の配布、ターミナルマルチプレクサherdrとの連携、操作ログを可視化するローカルの観測スタックも、このリポジトリで管理しています。
+Claude Codeの設定一式、ターミナルマルチプレクサherdrとの連携、ローカルの観測スタックもここで管理しています。
 
 内容は著者(minami)個人の環境設定です。
 `hosts/MacBookPro-minami/`は著者のマシンの定義なので、自分の環境で使う場合は「新しいマシンのセットアップ」の手順で自分のホスト定義を追加してください。
+
+設定ごとの理由は、`.claude/rules/`にまとめています。
 
 ## 管理ツールの分担
 
 | ツール | 役割 |
 |---|---|
-| Nix(nix-darwin、home-manager) | macOSのシステム設定、グローバルなCLIツール、dotfilesの配置、Homebrew自体の設定 |
-| Homebrew | GUIアプリ(cask)のインストールだけに使う。formulaは使わない |
-| mise | プロジェクトごとの言語ランタイム(node、python等)のバージョン管理 |
+| Nix(nix-darwin、home-manager) | macOSのシステム設定、CLIツール、dotfilesの配置、Homebrew自体の設定 |
+| Homebrew | GUIアプリ(cask)のインストールだけに使う |
+| mise | プロジェクトごとの言語ランタイムのバージョン管理 |
 
-ランタイムはmise、CLIツールはNixという分担ですが、`nodejs`だけはNix側に置いています。
-`mason.nvim`がLSPサーバーをnpm経由でインストールするため、ディレクトリに関係なく常に同じ`nodejs`を使える必要があるからです。
-
-## 前提となる環境
-
-- macOS(Apple Silicon、`aarch64-darwin`)
-- ログインシェルがzsh
+`nodejs`だけはNix側に置いています。
+`mason.nvim`がnpm経由でLSPサーバーを入れるため、ディレクトリに関係なく同じ`nodejs`が要るからです。
 
 ## 新しいマシンのセットアップ
 
+前提はApple SiliconのmacOSと、ログインシェルのzshです。
+
 ### 1. Nixのインストール
 
-Nixは、Determinate Nixではなくupstream版を、daemon方式(multi-user)でインストールします。
+upstream版のNixを、daemon方式(multi-user)で入れます。
 
 ```bash
 sh <(curl -L https://nixos.org/nix/install) --daemon
@@ -44,15 +43,8 @@ ln -s ~/src/github.com/chlorochrule/dotfiles ~/.dotfiles
 
 ### 3. ホスト定義の追加
 
-ホスト定義のディレクトリ名には、マシンのホスト名を使います。
-ホスト名は次のコマンドで確認できます。
-
-```bash
-scutil --get LocalHostName
-```
-
-`hosts/<ホスト名>/`を作り、`default.nix`を置きます。
-必須のファイルはこれだけです。
+`hosts/<ホスト名>/default.nix`を作ります。
+ホスト名は`scutil --get LocalHostName`で確認できます。
 
 ```nix
 # hosts/<ホスト名>/default.nix
@@ -63,143 +55,75 @@ scutil --get LocalHostName
 }
 ```
 
-そのマシンだけの設定は、同じディレクトリに次のファイルを置いて書きます。
-どちらも任意です。
+そのマシンだけの設定は、任意で同じディレクトリの`darwin.nix`(caskやDockなど)と`home.nix`(gitのユーザー情報、`~/.claude/settings.json`など)に書きます。
 
-- **`darwin.nix`**：そのマシンだけのnix-darwin設定(Homebrewのcaskの一覧、Dockの構成など)
-- **`home.nix`**：そのマシンだけのhome-manager設定(gitのユーザー情報、`~/.claude/settings.json`など)
-
-最後に、`flake.nix`の`hosts`リストへ追加したディレクトリを1行加えます。
-
-```nix
-hosts = [
-  ./hosts/MacBookPro-minami
-  ./hosts/<ホスト名>
-];
-```
-
-flakeはgit管理下のファイルしか読まないので、追加したファイルは`git add`しておきます。
-
-```bash
-cd ~/.dotfiles
-git add hosts/<ホスト名> flake.nix
-```
+`flake.nix`の`hosts`リストに`./hosts/<ホスト名>`を加え、追加したファイルを`git add`します(flakeはgit管理下のファイルしか読みません)。
 
 ### 4. nix-darwinのブートストラップ
 
-初回は`darwin-rebuild`コマンドがまだ無いので、`nix run`で実行します。
+初回は`darwin-rebuild`がまだ無いので、`nix run`で実行します。
 
 ```bash
 sudo nix --extra-experimental-features "nix-command flakes" \
   run nix-darwin/nix-darwin-26.05#darwin-rebuild -- switch --flake ~/.dotfiles
 ```
 
-`/etc/bashrc`や`/etc/zshrc`のように、nix-darwinが管理するファイルがすでに存在すると、`Unexpected files in /etc`のようなエラーで止まります。
-その場合は、表示される指示に従って対象ファイルを`<ファイル名>.before-nix-darwin`にリネームしてから、もう一度実行してください。
-
-2回目以降は`darwin-rebuild`コマンドを直接使えます。
-home-manager側の設定(zsh、git、mise、Ghostty等)も、このコマンドで一緒に適用されます。
+`Unexpected files in /etc`で止まった場合は、表示に従って対象ファイルを`<ファイル名>.before-nix-darwin`にリネームしてから再実行してください。
 
 ## 日常の運用コマンド
 
 ```bash
-# 設定の変更を適用する(編集したファイルはgit addしておく)
-sudo darwin-rebuild switch --flake ~/.dotfiles
-# nhでも同じことができる。ビルドの進み具合と、変わるパッケージの差分が表示される
-# (flakeの場所は環境変数NH_DARWIN_FLAKEで指定済み。sudoはnhが内部で求める)
-nh darwin switch
-nh darwin build              # 適用せずにビルドと差分の確認だけ行う
+sudo darwin-rebuild switch --flake ~/.dotfiles   # 設定を適用する
+nh darwin switch                                 # 同上。進捗と差分を表示する(flakeとsudoはnhが扱う)
+nh darwin build                                  # 適用せずにビルドと差分の確認だけ行う
 
-# flakeのinputsを最新にする(flake.lockを書き換えるだけなのでsudoは不要)
-nix flake update
-nix flake update <input名>   # 特定のinputだけ
+nix flake update [<input名>]                     # flakeのinputsを更新する
 
-# 世代の一覧とロールバック
-darwin-rebuild --list-generations
-sudo darwin-rebuild switch --rollback
+darwin-rebuild --list-generations                # 世代の一覧
+sudo darwin-rebuild switch --rollback            # ロールバック
+sudo nix-collect-garbage --delete-older-than 30d # GC(毎週日曜3時にも自動で実行)
 
-# ガベージコレクション
-sudo nix-collect-garbage --delete-older-than 30d
+, cowsay hello                                   # 入れていないコマンドを1回だけ実行する
+git dft / git dlog / git dshow                   # difftasticでの構文diff
 ```
 
-ガベージコレクションは、`darwin.nix`の`nix.gc`で毎週日曜3時にも自動で実行されます。
-Nix storeの重複ファイルをまとめる`nix-store --optimise`も、`nix.optimise`で同じ日の4時15分に実行されます。
+存在しないコマンドを打つと、それを含むnixpkgsのパッケージが表示されます。
+常用するなら`nix-env -iA`ではなく、flakeの`home.packages`に追加してください。
 
-### Nixで入れたツールの使い方
+### ローカルLLM(Ollama)
+
+Ollamaは公式アプリ(cask `ollama-app`)で入れています。
+rebuildの後に一度`/Applications/Ollama.app`を起動し、モデルを取得します(合わせて数十GB)。
 
 ```bash
-, cowsay hello        # 入れていないコマンドを、その場で1回だけ実行する(comma)
-git dft               # 構文を解析したdiff(difftastic)。普通のgit diffはdeltaのまま
-git dlog / git dshow  # log -pとshowのdifftastic版
-ast-grep run -l python -p 'f($A)' -r 'g($A)'   # 構文木で検索・置換する
+ollama pull qwen3.8:27b-nvfp4
+ollama pull qwen3-coder-next
 ```
 
-存在しないコマンドを打つと、そのコマンドを含むnixpkgsのパッケージが表示されます(nix-indexのcommand-not-found)。
-表示される`nix-env -iA`での導入は使わず、必要ならflakeの`home.packages`に追加してください。
-
-### ローカルLLM(Ollama)の準備と起動
-
-`hosts/MacBookPro-minami/`は、Claude CodeをローカルのOllamaのモデルで動かすラッパーを定義しています。
-Ollamaは公式アプリ(Homebrewのcask `ollama-app`)で入れています。
-rebuildの後に一度`/Applications/Ollama.app`を起動してください。
-アプリを起動している間、`127.0.0.1:11434`でサーバーが動きます。
-
-モデルは初回だけ手動で取得します(合わせて数十GB)。
+アプリを起動した状態でもう一度rebuildすると、256Kコンテキストの派生モデル(`*-262k`)が作られます。
+以降は次のコマンドで使えます。
 
 ```bash
-ollama pull qwen3.8:27b-nvfp4  # dense 27B、18GB(NVFP4、MLXで動く)
-ollama pull qwen3-coder-next   # 80B MoE(3B active)、46GB
-```
-
-取得した後に、アプリを起動した状態でもう一度rebuildすると、256Kのコンテキスト長を設定した派生モデル(`*-262k`)が作られます[^ollama-ctx]。
-以降は次のコマンドでClaude Codeを起動できます。
-
-```bash
-claude-q38    # Qwen3.8-27B
-claude-q3cn   # Qwen3-Coder-Next
-```
-
-同じモデルはpiからも使えます。
-`hosts/MacBookPro-minami/pi/models.json`を`~/.pi/agent/models.json`へリンクしており、piの`/model`で選ぶか、次のように起動します。
-
-```bash
-pi --model ollama/qwen3.8-27b-nvfp4-262k  # thinkingと画像入力に対応
+claude-q38    # Claude Code + Qwen3.8-27B
+claude-q3cn   # Claude Code + Qwen3-Coder-Next
+pi --model ollama/qwen3.8-27b-nvfp4-262k
 pi --model ollama/qwen3-coder-next-262k
 ```
 
-piでは、Qwen3.8-27Bのコンテキスト長を64Kとして扱い、それを超える手前で要約(compaction)させています。
-キャッシュが効かないときの処理し直しや要約の待ち時間を、数分に抑えるためです(`.claude/rules/nix-hosts.md`)。
-
-piにはweb検索ツールを提供するextensionを`hosts/MacBookPro-minami/pi/web-search.ts`
-(`~/.pi/agent/extensions/web-search.ts`へリンク)で追加しています。
-DuckDuckGoのHTMLエンドポイントにAPIキーなしでアクセスするため、
-ネットワークによってはボット判定(CAPTCHA)で初回から弾かれることがあります(ベストエフォート)。
-`web_search`ツールは既定で有効で、`pi --tools web_search`で限定、
-`pi --exclude-tools web_search`で無効化できます。
-
-Claude Codeのセッションでは、WebSearchをOllamaがollama.comの検索APIで代行します。
-使うには、一度`ollama signin`でサインインしておく必要があります。
-また、auto modeの分類器もこのローカルモデルで動くため、時間切れで操作が拒否されることがあります[^ollama-auto]。
-
-[^ollama-auto]: WebSearchは`permissions.allow`で許可しているので、分類器を通りません。
-    理由は`.claude/rules/nix-hosts.md`を参照してください。
-
-[^ollama-ctx]: Ollamaの既定のコンテキスト長(4096)は、Claude Codeのシステムプロンプトだけでほぼ埋まってしまいます。
-    詳しくは`.claude/rules/nix-hosts.md`を参照してください。
+- Claude CodeのWebSearchを使うには、一度`ollama signin`が必要です。
+- auto modeの分類器もローカルモデルで動くため、時間切れで操作が拒否されることがあります。
+- piの`web_search`ツール(DuckDuckGo)はベストエフォートです。`pi --exclude-tools web_search`で無効にできます。
+- モデルが要求するOllamaのバージョンは、`ollama pull`の412エラーや、manifestのconfigの`requires`で確認できます。
 
 ### ローカル画像生成(ComfyUI)
 
-ComfyUIは公式のデスクトップアプリ(Homebrewのcask `comfy`)で入れています。
+ComfyUIは公式アプリ(cask `comfy`)で入れています。
 rebuildの後に一度`/Applications/Comfy Desktop.app`を起動し、初回のウィザードでGPUにMPSを選んでください。
-アプリの起動中は、`127.0.0.1:8188`でサーバーが動きます。
+起動中は`127.0.0.1:8188`でサーバーが動きます。
+本体は`~/ComfyUI-Installs/`、モデルと出力は`~/ComfyUI-Shared/`に置かれ、どちらもdotfilesの管理外です。
 
-本体は`~/ComfyUI-Installs/`に入ります。
-モデルは`~/ComfyUI-Shared/models/`に、生成した画像は`~/ComfyUI-Shared/output/`に置かれます。
-どちらもdotfilesでは管理していません。
-
-公式テンプレートが既定にしているfp8版は、MacのMPSでは動きません[^comfy-fp8]。
-このため、FLUX.2はGGUF版を、それ以外はbf16版を使います。
-GGUF版を読むカスタムノードのComfyUI-GGUFは、次の手順で入れます。
+MPSではfp8版が動かないので、FLUX.2はGGUF版、それ以外はbf16版を使います。
+GGUF版を読むカスタムノードを入れ、ComfyUIを再起動します。
 
 ```bash
 cd ~/ComfyUI-Installs/ComfyUI/ComfyUI
@@ -207,10 +131,7 @@ git clone https://github.com/city96/ComfyUI-GGUF custom_nodes/ComfyUI-GGUF
 .venv/bin/python -m pip install gguf
 ```
 
-入れた後は、ComfyUIを再起動してください(アプリのメニューか、Managerの再起動)。
-
-モデルはHugging Faceから手動で取得します(合わせて約105GB)。
-FLUX.2 [dev]のbf16版は利用規約への同意が要るので、同意の要らないQ8_0のGGUF版を使います。
+モデルを取得します(合わせて約105GB)。
 
 ```bash
 cd ~/ComfyUI-Shared/models
@@ -230,235 +151,99 @@ curl -fLC - -o text_encoders/qwen3vl_8b_bf16.safetensors $qi/text_encoders/qwen3
 curl -fLC - -o vae/qwen_image_2.1_vae_bf16.safetensors $qi/vae/qwen_image_2.1_vae_bf16.safetensors
 ```
 
-公式テンプレートを使うときは、FLUX.2のローダーをGGUF版(`UnetLoaderGGUF`)に替え、各モデルを上のファイルに選び直してください。
-FLUX.2のファイルは合わせて約71GBあるので、Ollamaの大きなモデルを読み込んだまま動かすとメモリが足りなくなるおそれがあります。
+公式テンプレートを使うときは、FLUX.2のローダーを`UnetLoaderGGUF`に替え、各モデルを上のファイルに選び直してください。
+FLUX.2は約71GBあるので、Ollamaの大きなモデルと同時に動かすとメモリが足りなくなるおそれがあります。
 
-[^comfy-fp8]: 詳しくは`.claude/rules/nix-hosts.md`を参照してください。
+## 検査とCI
 
-## コードの整形とCI
-
-Neovimでは、保存時にconform.nvimがLua(stylua)、Nix(nixfmt)、Terraform(`terraform fmt`)のファイルを整形します。
-これ以外のファイルタイプは、保存しても整形しません。
-
-GitHub Actions(`.github/workflows/check.yml`)は、mainへのpushとプルリクエストのたびに次の検査を実行します。
-
-- `nix flake check`と、全ホストの`darwinConfigurations`の評価
-- nixfmt、styluaによる整形の検査
-- editorconfig-checker、shellcheck、actionlint(ワークフローの検査)による検査
-- Claude Codeの`settings.json`の、schemastoreのスキーマによる検査(Claude Codeは綴りを誤ったキーを黙って無視するため)
-- `docker-compose.yml`と`dependabot.yml`の、スキーマによる検査
-- `tests/claude-scripts.sh`による、Claude Code用スクリプト(`guard-bash.sh`、`statusline.sh`)の回帰テスト
-- gitleaksによる、履歴全体の秘密情報の検査
-
-`terraform fmt`と`terraform validate`だけは、別のワークフロー(`.github/workflows/terraform.yml`)で実行します。
-実行するのは、`terraform/`か`flake.lock`が変わったときだけです。
-terraformはunfreeライセンスなのでNixのバイナリキャッシュに無く、CIでは毎回ソースからビルドされて5分以上かかるためです。
-
-`.github/workflows/update-flake-lock.yml`は、毎週土曜の3時(JST)に`flake.lock`のinputsを更新し、プルリクエストを作ります。
-GitHub Actionsのトークンで作ったプルリクエストでは検査が自動では実行されません。
-そのため、このワークフローが`workflow_dispatch`で`check.yml`と`terraform.yml`を起動します[^flake-lock-pr]。
-Actionsの画面から手動で実行することもできます。
-
-CIの各ステップは`Makefile`のターゲットを呼んでいるだけなので、ローカルでも同じ検査を実行できます。
-検査のツールは`flake.lock`のnixpkgsから取得するので、CIとローカルで同じバージョンが使われます。
+`.github/workflows/`のCIは、各ステップで`Makefile`のターゲットを呼んでいます。
+ローカルでも同じ検査を実行できます。
 
 ```bash
-make check      # CIと同じ検査をすべて実行する
-make nixfmt     # 1つだけ実行する(ターゲットの一覧はMakefileを参照)
-make fmt        # nixfmt、stylua、terraform fmtでの整形を一括で適用する
+make check   # CIと同じ検査をすべて実行する
+make nixfmt  # 1つだけ実行する(ターゲットの一覧はMakefileを参照)
+make fmt     # nixfmt、stylua、terraform fmtで整形する
 ```
 
-GitHub Actionsで使っているアクションのバージョンは、Dependabot(`.github/dependabot.yml`)が毎週まとめて更新のプルリクエストを作ります。
-
-[^flake-lock-pr]: プルリクエストを作れるようにするには、リポジトリの設定を1つ変える必要があります。
-    Settings → Actions → Generalで、「Allow GitHub Actions to create and approve pull requests」を有効にしてください。
-
-リポジトリ全体を一括で整形したコミットは、`.git-blame-ignore-revs`に登録しています。
-GitHubのblame表示はこのファイルを自動で読み込むので、一括整形のコミットは表示されません。
-ローカルの`git blame`でも除外したい場合は、次の設定を一度だけ実行してください。
-
-```bash
-git config blame.ignoreRevsFile .git-blame-ignore-revs
-```
+- `flake.lock`は毎週土曜に自動で更新のプルリクエストが作られます。
+  そのためには、リポジトリのSettings → Actions → Generalで「Allow GitHub Actions to create and approve pull requests」を有効にしておきます。
+- Actionsのバージョンは、Dependabotが毎週更新します。
+- 一括整形のコミットを`git blame`から除外するには、`git config blame.ignoreRevsFile .git-blame-ignore-revs`を一度実行します。
 
 ## ファイル構成
 
 ```
 ~/.dotfiles/
 ├── .claude/
-│   ├── skills/                  # このリポジトリでの作業に使うskill(Claude Codeが自動で検出する)
-│   │                            # ~/.claude/へは配置しない(home/claude/skills/とは別物)
-│   │                            # 例: upgrade-services(services/のバージョンを上げる手順)
-│   └── rules/                   # 各設定の理由をまとめたClaude Code向けの背景情報
-│                                # frontmatterのpathsで、該当ファイルを読んだときだけロードされる
-├── .github/                     # CI、flake.lockの自動更新、Dependabot(「コードの整形とCI」参照)
-├── Makefile                     # CIと同じ検査をローカルで実行する(make check)
-├── .git-blame-ignore-revs       # git blameから除外する一括整形コミット
-├── flake.nix                    # inputsの定義と、hosts/をdarwinConfigurationsへ展開する処理
-├── darwin.nix                   # 全マシン共通のnix-darwin設定
-│                                # (system.defaults、フォント、sudoのTouch ID、Nixの自動GC等)
-├── hosts/
-│   └── <hostname>/
-│       ├── default.nix          # マシン固有の値(hostname、username、system)
-│       ├── darwin.nix           # (任意)マシン固有のnix-darwin設定。例: Homebrewのcask
-│       ├── home.nix             # (任意)マシン固有のhome-manager設定
-│       │                        # 例: gitのユーザー情報、ローカルLLM(Ollama)関連
-│       ├── claude/              # (任意)このマシンだけの~/.claude/の中身
-│       │   └── settings.json    # このマシンの~/.claude/settings.json
-│       └── pi/                  # (任意)このマシンの~/.pi/agent/へリンクするファイル
-│           ├── models.json      # piから使うOllamaのモデルの定義
-│           └── web-search.ts    # web検索ツール(web_search)を登録するextension
+│   ├── rules/              # 設定ごとの理由(該当ファイルを読んだときにClaude Codeがロードする)
+│   └── skills/             # このリポジトリでの作業用のskill(~/.claude/へは配置しない)
+├── .github/, Makefile      # CIと、同じ検査をローカルで実行するMakefile
+├── flake.nix               # inputsと、hosts/をdarwinConfigurationsへ展開する処理
+├── darwin.nix              # 全マシン共通のnix-darwin設定
+├── hosts/<hostname>/
+│   ├── default.nix         # マシン固有の値(hostname、username、system)
+│   ├── darwin.nix          # (任意)マシン固有のnix-darwin設定
+│   ├── home.nix            # (任意)マシン固有のhome-manager設定
+│   ├── claude/             # (任意)このマシンだけの~/.claude/の中身
+│   ├── ollama/             # (任意)Ollamaの派生モデルのModelfile
+│   └── pi/                 # (任意)~/.pi/agent/へリンクするファイル
 ├── home/
-│   ├── default.nix              # 全マシン共通のhome-manager設定
-│   │                            # (zsh、git、delta、mise、direnv、fzf、starship、Ghostty等)
-│   ├── claude/                  # 全マシン共通の~/.claude/の中身
-│   │   ├── CLAUDE.md
-│   │   ├── statusline.sh        # Claude Codeのステータスライン
-│   │   ├── hooks/               # editorconfig-check.sh、guard-bash.sh、herdr-agent-state.sh
-│   │   └── skills/              # 全プロジェクトで使うskill
-│   │                            # commit-message(コミットメッセージの規約)
-│   └── chrome/
-│       └── vimium-options.json  # VimiumのBackup。手動でRestoreする。Nixの管理外
-├── .config/nvim/                # Neovimの設定(Lua、lazy.nvim)
-├── .config/herdr/config.toml    # herdrの設定
-├── .tigrc, .editorconfig, bin/  # ~/から実ファイルへシンボリックリンクする
-├── services/                    # ローカル専用サービス(Docker Compose定義)。Nixの管理外
-│   ├── README.md                # 詳細な手順(「ローカルサービス」参照)
-│   ├── langfuse/
-│   ├── grafana/
-│   └── prometheus/
-├── terraform/local/             # 上の3サービスをプロビジョニングするTerraform。Nixの管理外
-├── tests/claude-scripts.sh      # home/claude/のスクリプトの回帰テスト(CIでも実行する)
-└── CLAUDE.md                    # このリポジトリで作業するClaude Code向けの指示
+│   ├── default.nix         # 全マシン共通のhome-manager設定
+│   ├── claude/             # 全マシン共通の~/.claude/の中身(CLAUDE.md、hooks、skills等)
+│   └── chrome/             # VimiumのBackup(手動でRestoreする)
+├── .config/                # Neovim、herdrの設定
+├── .tigrc, .editorconfig, bin/
+├── services/               # ローカル専用サービスのDocker Compose定義
+├── terraform/local/        # 上のサービスをプロビジョニングするTerraform
+├── tests/                  # home/claude/のスクリプトの回帰テスト
+└── CLAUDE.md               # このリポジトリで作業するClaude Code向けの指示
 ```
 
-`home/`配下や`.tigrc`などの実ファイルは、home-managerの`mkOutOfStoreSymlink`で`~/`からシンボリックリンクされます。
-Nix storeにコピーされないので、編集した内容はrebuildしなくてもすぐに反映されます。
-ただし`~/.claude/settings.json`だけは扱いが異なります(次節)。
+`home/`配下や`.tigrc`などは`~/`からシンボリックリンクされるので、編集はrebuildなしで反映されます。
+ただし、次の2点は例外です。
 
-### `~/.claude/`への配置
+- `~/.claude/`の`commands/`、`skills/`、`agents/`、`hooks/`は、`home/claude/`と`hosts/<hostname>/claude/`をファイル単位でマージしたものです。
+  新しいファイルを追加したときはrebuildが必要です。
+- `~/.claude/settings.json`は実ファイルで、rebuildのたびにリポジトリの内容が上書きマージされます。
+  リポジトリからキーを消しても残るので、無効にしたいときは値を変えてください(例: `"sandbox": {"enabled": false}`)。
 
-`~/.claude/`の`commands/`、`skills/`、`agents/`、`hooks/`は、2つのディレクトリをファイル単位でマージして作ります。
-マージ元は、全マシン共通の`home/claude/<name>/`と、マシン固有の`hosts/<hostname>/claude/<name>/`です。
-同じ名前のファイルがあれば、マシン固有のほうが優先されます。
-リンクはファイル単位で張るので、新しいファイルを追加したときはrebuildが必要です[^claude-merge]。
+## Claude Codeの設定
 
-`~/.claude/CLAUDE.md`と`~/.claude/statusline.sh`は、`home/claude/`の同名のファイルへのシンボリックリンクです。
+`permissions.defaultMode`を`"auto"`にする代わりに、sandbox、`permissions.deny`、`home/claude/hooks/guard-bash.sh`で守りを固めています。
+詳細と理由は`.claude/rules/claude-code.md`にあります。
 
-`~/.claude/settings.json`は、シンボリックリンクではなく実ファイルとして置きます。
-Claude Code自身が実行時にこのファイルへ書き込む(モデルの選択、権限の追加、プラグインの設定など)ためです。
-rebuildのたびに`hosts/<hostname>/claude/settings.json`の内容が上書きマージされ、リポジトリに書いていないキーはそのまま残ります。
-リポジトリに書いたキーは、実行時に変えても次のrebuildで元に戻ります。
-逆に、リポジトリからキーを消しても`~/.claude/settings.json`からは消えません。
-設定を無効にしたいときは、キーを消すのではなく値を変えてください(例: `"sandbox": {"enabled": false}`)。
-
-[^claude-merge]: マージの仕組みは`.claude/rules/nix-hosts.md`を参照してください。
-
-### Claude Codeの安全設定
-
-`hosts/MacBookPro-minami/claude/settings.json`は、`permissions.defaultMode`を`"auto"`にしてコマンドの実行を広く任せる代わりに、次の4つで守りを固めています。
-
-- **sandbox**：Bashのコマンドを、macOSのSeatbeltで隔離して実行します。
-  書き込めるのは作業ディレクトリとセッション用の一時ディレクトリだけで、`~/.ssh`、`~/.aws`、`~/.gnupg`と、GitHubやAWSのトークンの環境変数は読めません。
-  sandboxの中では動かないコマンドは、`excludedCommands`でsandboxの外で実行します。
-  対象は、nix daemonのソケットに接続する`nix`、`darwin-rebuild`、`nh`、`,`(comma)と、Dockerのソケットに接続する`docker`です。
-  `make`も外しています。各ターゲットが`nix run`でツールを取得するためです。
-  Go製で、Seatbelt下では失敗する`gh`と`terraform`も外しています[^sandbox-go]。
-  `git push`などのリモート操作も、sandboxの中からは`~/.ssh`を読めずSSHでの接続に失敗するので外しています。
-  `git init`(と、内部でそれを呼ぶ`uv init`)も外しています。
-  sandboxは`.git/config`と`.git/hooks`への書き込みを常に拒否するからです(この2つはコードを実行させる経路になり得るため)。
-  同じ理由で`git remote add`や`git config`もsandboxの中では失敗しますが、頻度が低いので外していません。
-  失敗したときは、Claude Codeがsandboxの外で実行し直し、auto modeの分類器がその可否を判断します。
-  この一覧は、このリポジトリでの作業と、npmやuvでの一般的な作業で使うコマンドを実際に試して決めたものです。
-  ほかのプロジェクトで失敗するコマンドがあれば、`excludedCommands`に追加してください。
-  ただし、除外が効くのはそのコマンドを単独で実行したときだけです。
-  `cd ... && terraform ...`や`terraform ... | grep ...`のようにほかのコマンドと組み合わせると、sandboxの中で実行されます。
-- **sandboxの書き込み許可**：npm、uv、pip、denoのキャッシュ(`~/.npm`、`~/.cache/uv`など)だけは書き込めるようにしています。
-  これが無いと、`npm install`や`uv add`がキャッシュに書き込めずに失敗します。
-  パッケージマネージャー自体をsandboxの外に出すと、`npm install`のpostinstallスクリプトなども無制限に動いてしまうので、キャッシュだけを許可しています。
-- **`permissions.deny`**：Claude Codeのファイル操作ツールから、上の3つのディレクトリを読み書きできないようにします。
-  このリポジトリの`.claude/settings.json`でも、Terraformが生成するファイルを同じように保護しています。
-  対象は`services/*/.env`と`terraform/local/terraform.tfstate*`で、どちらも秘密情報を含みます。
-- **`home/claude/hooks/guard-bash.sh`**(PreToolUseフック)：危険なコマンドを、権限の設定に関係なく止めます。
-  対象は、ホームディレクトリやルートを対象にした再帰的な`rm`と、`--force-with-lease`ではない強制pushです。
-  コマンドの文字列で判定しているだけなので、`sh -c`やスクリプトの中までは見ません。
-
-[^sandbox-go]: 公式ドキュメントに、Go製のCLIはSeatbelt下でTLSの検証に失敗するという既知の問題として記載されています。
-    このマシンでも、`terraform validate`がsandboxの中ではプラグインを読み込めずに失敗しました。
-
-### Claude Codeのその他の設定
-
-- **auto modeの分類器への前提**:`autoMode.environment`で、分類器にこのマシンの前提を伝えています。
-  個人のMacであること、自分のGitHubアカウント、ローカル専用のサービス、`terraform/local`の範囲、秘密情報の置き場所です。
-  分類器は既定では何も知らないので、これが無いと、ローカルのサービスへの操作を外部への操作と同じように警戒します。
-  書いてあるのは事実の説明だけで、許可のルールで判断を上書きしてはいません。
-- **ステータスライン**：`home/claude/statusline.sh`が、モデル、effort、ディレクトリとブランチ、コンテキストの使用率を表示します。
-  claude.aiのプランで使っているときは5時間枠のレート制限の使用率を、それ以外(APIキーやローカルのOllama)ではセッションのコストを表示します。
-- **MCPサーバー**：Chrome DevTools、Playwright、Context7を、全プロジェクト共通で使えるように`~/.claude.json`へ登録します。
-  登録の処理は`hosts/MacBookPro-minami/home.nix`にあります。
-  Context7は、ライブラリのバージョンごとのドキュメントを返すサービスです。
-  Upstashがホストするエンドポイントに、APIキーなし(匿名のレート制限)で接続します。
-- **Neovimとの連携**：claudecode.nvimで、NeovimをClaude CodeのIDEとして接続できます。
-  Neovimを開いたまま、同じディレクトリで起動したClaude Codeから`/ide`を実行すると、開いているファイル、選択範囲、LSPの診断がClaudeに伝わります。
-  選択範囲の送信は`<Leader>cs`、表示されたdiffの受け入れと拒否は`<Leader>cy`と`<Leader>cn`です。
-- **会話履歴の保持期間**：`cleanupPeriodDays`を180日にしています(既定は30日)。
-  `~/.claude/projects/`に残るセッションの記録で、`/resume`で再開できる範囲であり、過去の作業を読み返せる範囲でもあります。
-- **skill**：`home/claude/skills/`のskillは、全プロジェクトで使えます。
-  `commit-message`は、コミットメッセージとプルリクエスト本文の書き方の規約です。
+- sandboxの外で実行するコマンドは`excludedCommands`に並べています。
+  除外が効くのはコマンドを単独で実行したときだけで、`&&`やパイプで繋ぐとsandboxの中で実行されます。
+  ほかのプロジェクトで失敗するコマンドがあれば追加してください。
+- MCPサーバー(Chrome DevTools、Playwright、Context7)は、`hosts/MacBookPro-minami/home.nix`で`~/.claude.json`へ登録します。
+- claudecode.nvimで、NeovimをIDEとして接続できます。
+  同じディレクトリで起動したClaude Codeから`/ide`を実行します。
+  選択範囲の送信は`<Leader>cs`、diffの受け入れと拒否は`<Leader>cy`と`<Leader>cn`です。
+- herdrの更新で統合フックが変わったときは、`herdr integration install claude`を実行し直し、結果を`home/claude/hooks/herdr-agent-state.sh`へ反映します。
 
 ## 運用上の注意
 
-### Nixとflake
-
-- `darwin-rebuild switch`には`sudo`が必要です。
-  `$HOME is not owned by you`という警告が出ますが、`sudo`で実行したためrootのホームディレクトリが使われているだけで、実害はありません。
-- flakeはgit管理下のファイルしか読みません。
-  新しいファイルを追加したら、rebuildの前に`git add`してください。
-- unfreeライセンスのパッケージ(BSLの`terraform`など)を追加するときは、`darwin.nix`の`nixpkgs.config.allowUnfreePredicate`にパッケージ名も追加してください。
-
-### Homebrewのcask
-
-- `homebrew.onActivation.cleanup`を`"zap"`にしているので、`homebrew.casks`に書いていないcaskはrebuild時にアンインストールされます。
-  caskの一覧は`hosts/<hostname>/darwin.nix`にあります。
-  GUIアプリをHomebrewで入れるときは、必ずこのリストに追加してください。
-- zapは、アプリ本体だけでなく、caskが定義する設定ディレクトリやキャッシュも削除します。
-  リストからcaskを外すときに設定を残したい場合(別のcaskへ移行するときなど)は、先に設定ディレクトリを別の場所へコピーしておいてください。
-- `autoUpdate`と`upgrade`を`true`にしているので、rebuildのたびにHomebrewの情報が更新され、古くなったcaskがアップグレードされます。
-  `homebrew.greedyCasks`も`true`にしているので、アプリ自身に更新機能があるcask(`auto_updates`)や
-  バージョンを持たないcask(`version :latest`)も、rebuild時にHomebrewでアップグレードされます。
-  特定のcaskだけHomebrewでの更新から外したい場合は、そのcaskに`greedy = false`を付けてください。
-- 公式以外のtapのcask(例: `dominion525/tap/cmd-eikana`)は、tapも`homebrew.taps`に書いてください。
-  zapによるcleanupは、書いていないtapも外します。
-- 手で入れたアプリをcaskに追加すると、rebuild時にHomebrewがそのアプリをそのまま管理下に取り込みます。
-  アプリを入れ直す必要はありません。
-
-### その他
-
-- キー配列(CapsLock→Ctrl、F1〜F12をファンクションキーにする設定、🌐キーでの入力ソースの切り替え)は`darwin.nix`で管理しています。
-  システム設定で変えても、rebuildのたびにこちらの値へ戻ります。🌐キーの設定は、再起動するまで反映されません。
-- 全リポジトリ共通のgitleaksのpre-commitフックは、`init.templateDir`で配布しています。
-  テンプレートは`git clone`と`git init`のときにだけコピーされるので、既存のリポジトリに入れるには、そのリポジトリで`git init`を実行し直してください(既存のフックは上書きされません)。
-- Chrome拡張機能のClaude for Chromeは、Chromeウェブストアから手動でインストールします。
-  Nixでは管理していません。
-- Chrome拡張機能のVimiumの設定は、`home/chrome/vimium-options.json`に置いています。
-  Vimiumはファイルから設定を読めないので、rebuildでは反映されません。
-  取り込むときは、Vimiumのオプション画面の「Backup and Restore」でこのファイルをRestoreします。
-  設定を変えたときは、同じ画面のBackupで書き出したファイルでこのファイルを上書きしてコミットしてください。
-  普段のマシン間の同期は、Chromeの同期(`chrome.storage.sync`)に任せています。
-- pi(コーディングエージェント、`pi-coding-agent`)は、flakeのinputの`nixpkgs-unstable`から入れています。
-  上流が数日おきにリリースしており、Darwinリリースブランチでは大きく遅れるためです。
-  差し替えは`hosts/MacBookPro-minami/darwin.nix`の`nixpkgs.overlays`で、piだけを対象にしています。
-  新しい版を取り込むときは、`nix flake update nixpkgs-unstable`を実行してからrebuildします。
-- Ollamaは、nixpkgsではなく公式アプリ(cask `ollama-app`)で入れており、アプリが自分で更新します。
-  NVFP4などのsafetensors形式のモデルはMLXで動き、MLXのランタイムは公式のビルドにしか入っていないためです。
-  モデルが要求するバージョンは、`ollama pull`の412エラーや、registryにあるmanifestのconfigの`requires`で確認できます。
-- herdrのメジャーアップデートで統合フックの内容が変わったときは、`herdr integration install claude`を実行し直してください。
-  生成されたファイルは`home/claude/hooks/herdr-agent-state.sh`へ反映します。
+- `darwin-rebuild switch`の`$HOME is not owned by you`という警告は、`sudo`で実行したためで実害はありません。
+- flakeはgit管理下のファイルしか読みません。新しいファイルはrebuildの前に`git add`してください。
+- unfreeのパッケージを追加するときは、`darwin.nix`の`allowUnfreePredicate`にも名前を加えてください。
+- `homebrew.casks`に無いcaskは、rebuild時に設定ディレクトリごと削除(zap)されます。
+  GUIアプリは必ず`hosts/<hostname>/darwin.nix`の一覧に加え、外すときに設定を残したい場合は先に退避してください。
+  公式以外のtapは`homebrew.taps`にも書いてください。
+  手で入れたアプリは、caskに加えればそのまま管理下に入ります。
+- caskはrebuildのたびに、自動更新するものも含めてアップグレードされます。
+  特定のcaskを外すには`greedy = false`を付けます。
+- キー配列や`com.apple.symbolichotkeys`のショートカットは`darwin.nix`で管理しており、システム設定で変えてもrebuildで戻ります。
+- gitleaksのpre-commitフックは`init.templateDir`で配布しています。
+  既存のリポジトリに入れるには、そのリポジトリで`git init`を実行し直してください(既存のフックは上書きされません)。
+- piは`nixpkgs-unstable`から入れています。新しい版は`nix flake update nixpkgs-unstable`の後にrebuildで取り込みます。
+- Claude for Chromeは手動でインストールします。
+  Vimiumの設定は、オプション画面の「Backup and Restore」で`home/chrome/vimium-options.json`をRestoreします。
+  変更したらBackupで書き出したファイルで上書きしてコミットしてください。
 
 ## ローカルサービス(Langfuse、Grafana、Prometheus)
 
-Claude Codeの操作ログを記録するLangfuse、そのダッシュボードを表示するGrafana、macOSとClaude Codeのメトリクスを集めるPrometheusを、このMacの中だけで動かせます。
-使うかどうかは任意で、3つまとめてTerraformでプロビジョニングします。
+Claude Codeの操作ログを記録するLangfuse、ダッシュボードのGrafana、メトリクスを集めるPrometheusを、このMacの中だけで動かせます。
+使うかどうかは任意です。
 
 ```bash
 cd ~/.dotfiles/terraform/local
@@ -466,4 +251,4 @@ terraform init
 terraform apply
 ```
 
-各サービスの役割、初回セットアップの手順、バージョンアップなどの運用コマンドは、[services/README.md](services/README.md)にまとめています。
+手順と運用コマンドは[services/README.md](services/README.md)にまとめています。

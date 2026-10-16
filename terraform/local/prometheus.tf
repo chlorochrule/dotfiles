@@ -1,14 +1,8 @@
-# Prometheus's docker-compose.yml/prometheus.yml live in
-# ../../services/prometheus. No secrets in the scrape config, so unlike
-# langfuse/grafana there's no .env generation step here.
-
 locals {
   prometheus_dir = "${path.module}/../../services/prometheus"
-  # 9095: 9090 is already used by langfuse's minio.
   prometheus_url = "http://localhost:9095"
 }
 
-# Same lifecycle pattern as langfuse.tf/grafana.tf.
 resource "terraform_data" "prometheus_compose_up" {
   triggers_replace = {
     compose_sha256    = filesha256("${local.prometheus_dir}/docker-compose.yml")
@@ -29,8 +23,6 @@ resource "terraform_data" "prometheus_compose_up" {
   }
 }
 
-# Reached via host.docker.internal from the Grafana container — see
-# .claude/rules/services-terraform.md.
 resource "grafana_data_source" "prometheus" {
   type = "prometheus"
   name = "Prometheus"

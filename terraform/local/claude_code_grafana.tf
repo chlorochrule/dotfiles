@@ -1,23 +1,11 @@
-# Claude Code usage dashboard. Claude Code pushes its OpenTelemetry metrics
-# to Prometheus's OTLP receiver (env in
-# hosts/MacBookPro-minami/claude/settings.json, receiver flags in
-# services/prometheus/docker-compose.yml). Datasource: prometheus.tf's
-# grafana_data_source.prometheus (local.prom_ds in prometheus_grafana.tf).
-#
-# Every session is its own series (session_id label) that starts at 0 and
-# never resets, so "how much in this range" is max - min per series rather
-# than increase(), whose extrapolation overshoots on short-lived series.
-# See .claude/rules/services-terraform.md.
+# Claude Code usage dashboard, from its OTLP metrics in Prometheus.
 
 locals {
-  # Sum over sessions of the increase within the dashboard's time range.
-  cc_range_total = "sum(max_over_time(%s[$__range]) - min_over_time(%s[$__range]))"
-  # Same, split by one label.
+  # max - min per session series, not increase().
+  cc_range_total    = "sum(max_over_time(%s[$__range]) - min_over_time(%s[$__range]))"
   cc_range_total_by = "sum by (%s) (max_over_time(%s[$__range]) - min_over_time(%s[$__range]))"
 
-  # Claude Code pushes every 60s, so a 60s $__rate_interval (Grafana's
-  # default with the datasource's 15s scrape interval) usually holds a single
-  # sample and rate() returns nothing. A 2m panel minimum makes it >= 2m15s.
+  # Claude Code pushes every 60s; a shorter window makes rate() empty.
   cc_rate_min_interval = "2m"
 
   cc_cost     = "claude_code_cost_usage_USD_total"
@@ -170,9 +158,6 @@ resource "grafana_dashboard" "claude_code" {
           options = { excludeByName = { Time = true }, renameByName = { Value = "cost" } }
         }]
       },
-      # vcs_* labels come from OTEL_METRICS_INCLUDE_REPOSITORY; sessions
-      # started outside a git repo with an origin remote have none (the row
-      # with empty owner/repository).
       {
         id          = 10
         title       = "Cost by repository"

@@ -1,4 +1,4 @@
--- Uses the `main` branch — see .claude/rules/nvim.md before touching this file.
+-- Uses the `main` branch, not `master`.
 
 local ensure_installed = {
   "lua",
@@ -18,8 +18,7 @@ local ensure_installed = {
   "toml",
 }
 
--- python: left to vim-python-pep8-indent instead (more accurate for
--- continuation lines than the treesitter indent query).
+-- python: left to vim-python-pep8-indent.
 local indent_disabled_filetypes = { python = true }
 
 return {

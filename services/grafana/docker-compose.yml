@@ -1,10 +1,5 @@
-# Committed directly (not terraform-managed): local-only Grafana, ports
-# restricted to 127.0.0.1. Dashboards/datasources/admin account are
-# Terraform-managed (grafana.tf/prometheus.tf/langfuse_grafana*.tf) — start
-# via `terraform apply` in terraform/local/ (also generates .env and the
-# admin password).
-#
-# See .claude/rules/services-terraform.md for why extra_hosts isn't set here.
+# Committed directly (not terraform-managed): no secrets, local-only. Start
+# via `terraform apply` in terraform/local/.
 services:
   grafana:
     image: docker.io/grafana/grafana:13.0.2
@@ -12,16 +7,10 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin} # CHANGEME
-      # Local-only service: disable telemetry/update checks.
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
-      # Renders Langfuse's ClickHouse trace data (see terraform/local/
-      # langfuse_grafana.tf). Officially signed, so no
-      # GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS needed. SYNC, not the
-      # deprecated GF_INSTALL_PLUGINS or async GF_PLUGINS_PREINSTALL: `docker
-      # compose up --wait` must not pass its healthcheck before the plugin
-      # finishes installing.
+      # SYNC so `up --wait` waits for the plugin install.
       GF_PLUGINS_PREINSTALL_SYNC: grafana-clickhouse-datasource@4.21.2
     ports:
       - 127.0.0.1:3001:3000

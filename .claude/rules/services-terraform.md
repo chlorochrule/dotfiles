@@ -26,6 +26,22 @@ choices that aren't obvious from the code itself.
   container: a container can't see true host CPU/memory/disk metrics. See
   `.claude/rules/nix-hosts.md` for the launchd-specific quirk this hits.
 
+## What's committed directly vs. Terraform-managed
+
+- `services/*/docker-compose.yml` and `services/prometheus/prometheus.yml`
+  hold no secrets and are committed directly. Everything secret or
+  generated (`.env`, the Grafana admin password, ClickHouse's
+  `clickhouse-users.d/grafana-ro.xml`), plus Grafana's datasources,
+  dashboards and admin account, is Terraform-managed. Start everything via
+  `terraform apply` in `terraform/local/`.
+- `services/langfuse/docker-compose.yml` tracks upstream's
+  `langfuse/langfuse` compose file (v4) as-is; the only local change is
+  binding langfuse-web/minio ports to 127.0.0.1. First-time provisioning
+  (`.env`, org/project/API key via `LANGFUSE_INIT_*`) happens on the first
+  `terraform apply`. The `LANGFUSE_INIT_*` defaults
+  (`langfuse_variables.tf`) and `grafana_admin_user` aren't secrets.
+- Grafana disables analytics and update checks (local-only service).
+
 ## Version pinning
 
 - `langfuse`, `langfuse-worker`, `redis`, `postgres`, `clickhouse` (Langfuse)
@@ -49,6 +65,16 @@ choices that aren't obvious from the code itself.
   Chainguard's free tier only serves `latest` (versioned tags need a paid
   plan), and digest-pinning would mean it never gets security patches.
 
+## Generated secrets (`langfuse.tf`)
+
+- `random_id.*.hex` mirrors upstream's `openssl rand -hex <n>`
+  instructions for the CHANGEME values (`ENCRYPTION_KEY` needs a
+  32-byte/64-char AES-256 key).
+- `random_password` uses `special = false`: symbols (`#`, `'`, etc.) break
+  `.env` parsing and shell interpolation (e.g. redis's `command:`).
+- One minio instance backs both root auth and S3 upload credentials, so the
+  same password is reused across several env vars in the compose file.
+
 ## Ports intentionally not published
 
 - `postgres` (5432), `redis` (6379), ClickHouse's native protocol (9000):
@@ -69,6 +95,9 @@ choices that aren't obvious from the code itself.
 - Uses profile `readonly=2`, not `readonly=1`: `readonly=1` also blocks
   `SET` statements, which the Grafana ClickHouse plugin issues for session
   settings like `max_execution_time`.
+- Mounted into the container as a single file, not the whole `users.d`
+  directory: the image's entrypoint writes `default-user.xml` into that
+  directory at startup.
 - The file has to exist before first container creation (compose mounts it
   as a read-only file), which is what forces the `depends_on` ordering in
   `langfuse.tf`.
@@ -95,12 +124,19 @@ choices that aren't obvious from the code itself.
   already covered), Time To First Token / output-tokens-per-second
   (`completion_start_time` is never recorded — the Langfuse UI itself
   always shows "No data" for these).
+- `langfuse_grafana_extra.tf` sets `reduceOptions = { values = true }` on
+  piechart/bargauge panels: their default aggregates all rows into one
+  value, while Langfuse's UI shows one value per row.
+- `grafana.tf`'s TestData datasource and "Welcome" dashboard are only a
+  sample proving Terraform management works.
 - `prometheus_grafana.tf`'s PromQL targets macOS's node_exporter field set
   specifically: no `/proc`, so CPU has no `iowait`/`irq` modes, and memory
   uses `wired`/`active`/`compressed`/`free`/`purgeable` instead of Linux's
   `available`/`buffers`/`cached`. Written against the actual output of
   `127.0.0.1:9100`, not the Linux docs — verify against that endpoint
-  before changing these queries.
+  before changing these queries. The filesystem query scopes by
+  mountpoint (`/` and `/nix`): they're the same APFS container today, but
+  this keeps working if they're split later.
 - `claude_code_grafana.tf` reads Claude Code's own OpenTelemetry metrics,
   pushed to Prometheus's OTLP receiver (`--web.enable-otlp-receiver`;
   client env in `hosts/MacBookPro-minami/claude/settings.json`). Findings
@@ -112,6 +148,12 @@ choices that aren't obvious from the code itself.
     separating concurrent sessions. Don't set
     `OTEL_METRICS_INCLUDE_SESSION_ID=false`: two live sessions would then
     write conflicting cumulative values into one series.
+  - Claude Code pushes instead of being scraped because each session is a
+    short-lived process; its built-in Prometheus exporter would need a
+    fixed port per session. `prometheus.yml` keeps
+    `keep_identifying_resource_attributes` (service.name → job,
+    service.instance.id → instance, also kept on `target_info`) and a 30m
+    `out_of_order_time_window`, since OTLP clients batch and retry.
   - Each session is a new series whose first sample is already non-zero,
     so without `--enable-feature=created-timestamp-zero-ingestion` the
     first export interval's usage never shows up in any delta query.
@@ -120,6 +162,10 @@ choices that aren't obvious from the code itself.
     overshot on short sessions (2.33 for 2 sessions in testing). The
     per-session cost this yields matched `claude -p --output-format json`'s
     `total_cost_usd` exactly.
+  - Claude Code pushes every 60s, so with the datasource's 15s scrape
+    interval Grafana's default `$__rate_interval` (60s) usually holds a
+    single sample and `rate()` returns nothing. The dashboard sets a 2m
+    panel minimum interval (`cc_rate_min_interval`), making it >= 2m15s.
   - `OTEL_METRICS_INCLUDE_REPOSITORY=true` adds `vcs_owner_name` /
     `vcs_repository_name` (from the `origin` remote) for the "Cost by
     repository" panel. Sessions outside a git repo have no vcs_* labels
@@ -135,7 +181,8 @@ choices that aren't obvious from the code itself.
 
 - `langfuse.tf` / `grafana.tf` / `prometheus.tf` each drive their compose
   file via a `terraform_data` resource that shells out to
-  `docker compose up -d --wait` on create and `docker compose down` on
+  `docker compose up -d --wait` on create (`--wait` blocks until the
+  service is healthy, so later provider resources can rely on its API) and `docker compose down` on
   destroy. The compose file itself stays plain Docker Compose YAML — not
   reimplemented as Terraform resources — so it can keep tracking upstream's
   compose file directly.
@@ -143,6 +190,14 @@ choices that aren't obvious from the code itself.
   `self.triggers_replace`, not top-level resource/local references, which
   is why each file threads its working directory through
   `triggers_replace` instead of referencing it directly.
+
+## Grafana plugin install
+
+- `GF_PLUGINS_PREINSTALL_SYNC`, not the deprecated `GF_INSTALL_PLUGINS` or
+  the async `GF_PLUGINS_PREINSTALL`: `docker compose up --wait` must not
+  pass its healthcheck before the ClickHouse plugin finishes installing.
+  The plugin is officially signed, so no
+  `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS` is needed.
 
 ## Grafana provider auth
 

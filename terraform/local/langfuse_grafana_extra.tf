@@ -1,10 +1,7 @@
-# Agent/Cost/Latency dashboards from Langfuse's own Dashboards page, filling
-# in what langfuse_grafana.tf (Home) doesn't cover. See
-# .claude/rules/services-terraform.md for what's excluded and why.
+# Langfuse's Agent/Cost/Latency dashboards.
 
 locals {
-  # piechart/bargauge default to aggregating all rows into one value; this
-  # keeps each row as its own value (matches Langfuse UI's chart style).
+  # One value per row instead of piechart/bargauge's single aggregate.
   multi_value_options = { reduceOptions = { values = true, calcs = [] } }
 
   q_total_tool_calls = <<-SQL

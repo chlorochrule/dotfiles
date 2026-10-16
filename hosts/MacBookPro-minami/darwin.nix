@@ -5,8 +5,7 @@
   ...
 }:
 {
-  # pi-coding-agent from unstable: upstream releases every few days, and
-  # the release branch lags a dozen minor versions behind.
+  # The release branch lags far behind upstream.
   nixpkgs.overlays = [
     (
       final: prev:
@@ -19,22 +18,17 @@
     )
   ];
 
-  # For cmd-eikana below. The homebrew-cask one is a different upstream
-  # (iMasanari's, last released 2017, Intel-only) and was disabled in
-  # September 2026 for failing the Gatekeeper check.
+  # For cmd-eikana; the homebrew-cask one is disabled.
   homebrew.taps = [ "dominion525/tap" ];
 
   homebrew.casks = [
     "adobe-acrobat-reader"
     "claude"
     "claude-code@latest"
-    # Comfy Desktop (ComfyUI). Models (~/ComfyUI-Shared/models) and the
-    # ComfyUI-GGUF custom node are set up by hand, not by this repo — see
-    # README and .claude/rules/nix-hosts.md for why bf16/GGUF, not fp8.
+    # Models and custom nodes are set up by hand (see README).
     "comfy"
     "discord"
-    # ⌘英かな: maps the left/right Command keys to 英数/かな. arm64 build
-    # from the maintained fork.
+    # ⌘英かな
     "dominion525/tap/cmd-eikana"
     "ghostty"
     "google-chrome"
@@ -42,10 +36,7 @@
     "intellij-idea"
     "menumeters"
     "nordvpn"
-    # Ollama's official app rather than nixpkgs' ollama: only the official
-    # build ships the MLX runtime that safetensors models (qwen3.8's nvfp4)
-    # need — see .claude/rules/nix-hosts.md. It runs `ollama serve` on
-    # 127.0.0.1:11434 while the app is open.
+    # Not nixpkgs' ollama: only the official build ships the MLX runtime.
     "ollama-app"
     "postman-agent"
     "rancher"
@@ -57,7 +48,6 @@
     "zoom"
   ];
 
-  # Dock pinned apps, in display order. Host-specific, like casks above.
   system.defaults.dock.persistent-apps = [
     "/Applications/Ghostty.app"
     "/Applications/Slack.app"
@@ -81,18 +71,14 @@
     "/Users/${username}/Downloads"
   ];
 
-  # Provides host (CPU/memory/disk) metrics to terraform/local/'s
-  # Prometheus. Installed as a nix-darwin launchd daemon rather than in a
-  # container, since a container can't see true host metrics and
-  # home-manager has no darwin launchd module for node_exporter. Listens on
-  # 127.0.0.1 only; Prometheus reaches it via host.docker.internal.
+  # Host metrics for terraform/local/'s Prometheus.
   services.prometheus.exporters.node = {
     enable = true;
     listenAddress = "127.0.0.1";
     port = 9100;
   };
 
-  # Works around a home path string mismatch — see .claude/rules/nix-hosts.md.
+  # Matches the home recorded in dscl; nix-darwin can't change it.
   users.users._prometheus-node-exporter.home = lib.mkForce "/private/var/lib/prometheus-node-exporter";
 
   system.defaults.CustomUserPreferences = {

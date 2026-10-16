@@ -1,9 +1,6 @@
 # Generates docker-compose.yml's CHANGEME values.
-# random_id.*.hex mirrors `openssl rand -hex <n>` (ENCRYPTION_KEY needs a
-# 32-byte/64-char AES-256 key).
 
 locals {
-  # docker-compose.yml/.env live in ../../services/langfuse, not here.
   langfuse_dir = "${path.module}/../../services/langfuse"
 }
 
@@ -19,8 +16,7 @@ resource "random_id" "nextauth_secret" {
   byte_length = 32
 }
 
-# special=false: symbols (#, ' etc.) break .env parsing and shell
-# interpolation (e.g. redis's `command:`).
+# special=false: symbols break .env parsing and shell interpolation.
 resource "random_password" "postgres" {
   length  = 32
   special = false
@@ -36,8 +32,6 @@ resource "random_password" "redis" {
   special = false
 }
 
-# One minio instance backs both root auth and S3 upload credentials, so the
-# same password is reused across several env vars in docker-compose.yml.
 resource "random_password" "minio" {
   length  = 32
   special = false
@@ -85,14 +79,11 @@ resource "local_sensitive_file" "env" {
   EOT
 }
 
-# Just runs `docker compose up` after .env exists — see rules for why the
-# compose file itself isn't reimplemented in Terraform.
 resource "terraform_data" "compose_up" {
   triggers_replace = {
     env_sha256     = local_sensitive_file.env.content_sha256
     compose_sha256 = filesha256("${local.langfuse_dir}/docker-compose.yml")
-    # clickhouse-users.d must exist before first container creation (compose
-    # mounts it), and content changes need a container restart — see rules.
+    # A changed users.d file needs a container restart.
     clickhouse_users_xml_sha256 = local_sensitive_file.clickhouse_grafana_ro_users_xml.content_sha256
     # destroy-time provisioners can only read `self`, not top-level locals.
     langfuse_dir = local.langfuse_dir

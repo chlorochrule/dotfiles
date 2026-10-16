@@ -1,18 +1,13 @@
+# Committed directly (not terraform-managed): no secrets.
 global:
   scrape_interval: 15s
 
-# Claude Code pushes its metrics here over OTLP (CLAUDE_CODE_ENABLE_TELEMETRY
-# in hosts/MacBookPro-minami/claude/settings.json) instead of being scraped:
-# each session is a short-lived process, and its built-in Prometheus
-# exporter would need a fixed port per session.
+# Claude Code pushes its metrics over OTLP instead of being scraped.
 otlp:
-  # service.name -> job, service.instance.id -> instance (defaults); also
-  # keep these on target_info.
   keep_identifying_resource_attributes: true
 
 storage:
   tsdb:
-    # OTLP clients batch and retry, so samples can arrive slightly late.
     out_of_order_time_window: 30m
 
 scrape_configs:
@@ -20,9 +15,7 @@ scrape_configs:
     static_configs:
       - targets: ["localhost:9090"]
 
-  # macOS host metrics. node_exporter runs directly on the host via
-  # nix-darwin, not in a container (hosts/MacBookPro-minami/darwin.nix),
-  # listening on 127.0.0.1:9100; reached here via host.docker.internal.
+  # node_exporter on the host (hosts/MacBookPro-minami/darwin.nix).
   - job_name: node
     static_configs:
       - targets: ["host.docker.internal:9100"]

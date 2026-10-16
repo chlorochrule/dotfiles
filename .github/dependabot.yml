@@ -1,7 +1,4 @@
-# Keeps the actions used in .github/workflows/ up to date. Only
-# github-actions: flake inputs are updated by update-flake-lock.yml, and the
-# pinned images in services/ go through .claude/skills/upgrade-services
-# (dashboard checks) instead of blind bumps.
+# github-actions only: see .claude/rules/ci.md.
 version: 2
 updates:
   - package-ecosystem: github-actions

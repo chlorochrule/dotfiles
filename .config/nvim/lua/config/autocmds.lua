@@ -10,12 +10,8 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Pick up files changed outside nvim (e.g. by Claude Code in another herdr
--- pane). 'autoread' alone only reloads when nvim happens to check, which
--- focus events don't reliably trigger inside a multiplexer; CursorHold fires
--- after 'updatetime' (200ms) of idle. Unmodified buffers reload silently;
--- modified ones get nvim's usual W12 conflict prompt instead of being
--- clobbered. Skipped in the command line / cmdwin, where :checktime errors.
+-- Reload files changed outside nvim (e.g. by Claude Code in another pane).
+-- Skipped in the command line / cmdwin, where :checktime errors.
 vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
   group = group,
   callback = function()

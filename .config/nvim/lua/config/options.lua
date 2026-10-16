@@ -25,7 +25,7 @@ opt.softtabstop = 4
 opt.shiftwidth = 4
 opt.expandtab = true
 opt.shiftround = true
--- cindent/smartindent are deliberately not enabled — see .claude/rules/nvim.md.
+-- cindent/smartindent are deliberately not enabled.
 
 -- io
 opt.writebackup = false

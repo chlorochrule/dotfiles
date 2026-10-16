@@ -1,9 +1,4 @@
-# macOS host dashboard (node_exporter, see
-# hosts/MacBookPro-minami/darwin.nix). Datasource:
-# prometheus.tf's grafana_data_source.prometheus.
-#
-# The PromQL here targets darwin's node_exporter field set specifically —
-# see .claude/rules/services-terraform.md before changing these queries.
+# macOS host dashboard. The PromQL targets darwin's node_exporter fields.
 
 locals {
   prom_ds = { type = "prometheus", uid = grafana_data_source.prometheus.uid }
@@ -17,8 +12,6 @@ locals {
       / node_memory_total_bytes * 100
   EOT
 
-  # / and /nix are the same APFS container today (same usage %), but this
-  # scopes by mountpoint so it still works if they're split later.
   pq_filesystem_used_percent = <<-EOT
     100 * (1 - (
       node_filesystem_avail_bytes{mountpoint=~"^(/|/nix)$"}
@@ -175,7 +168,6 @@ resource "grafana_dashboard" "node_exporter" {
           instant = true
           format  = "table"
         }]
-        # Hide noisy columns; keep just mountpoint + used %.
         transformations = [{
           id = "organize"
           options = {

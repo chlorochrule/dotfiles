@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Run by update-flake-lock.yml on its PR branch (see the comment there).
+  # Run by update-flake-lock.yml on its PR branch.
   workflow_dispatch:
 
 permissions:
@@ -12,8 +12,7 @@ permissions:
 
 jobs:
   check:
-    # Linux is enough: nothing here builds the darwin system, it's only
-    # evaluated (drvPath), and eval is platform-independent.
+    # Linux is enough: the darwin system is only evaluated, never built.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -21,10 +20,7 @@ jobs:
           fetch-depth: 0 # gitleaks scans the whole history
       - uses: cachix/install-nix-action@v31
 
-      # Each step is a Makefile target, so `make check` runs the same thing
-      # locally (terraform fmt runs in terraform.yml instead, only when it
-      # can be affected). Tools come from flake.lock's nixpkgs (--inputs-from .), the
-      # same versions as home.packages / conform.nvim.
+      # Each step is a Makefile target, so `make check` runs the same thing.
       - name: nix flake check
         run: make flake-check
 
@@ -55,7 +51,5 @@ jobs:
       - name: Claude Code script tests
         run: make test
 
-      # Also runs as a pre-commit hook locally (init.templateDir), but that
-      # only covers clones made after it was set up.
       - name: gitleaks
         run: make gitleaks

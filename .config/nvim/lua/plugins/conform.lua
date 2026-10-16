@@ -1,6 +1,4 @@
--- Formatters come from home.packages (stylua, nixfmt, terraform). Filetypes
--- not listed here are left alone: no LSP formatting fallback, so opening a
--- JSON/YAML/TS file in another project never reformats it on save.
+-- No LSP formatting fallback: unlisted filetypes are never reformatted.
 return {
   "stevearc/conform.nvim",
   event = "BufWritePre",

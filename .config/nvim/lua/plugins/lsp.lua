@@ -9,8 +9,7 @@ local mason_servers = {
   "terraformls",
 }
 
--- Use the Nix-provided binary instead (not mason-managed).
--- nil_ls: pkgs.nil, so it doesn't need cargo to build via mason.
+-- Nix-provided binaries (not mason-managed).
 local extra_servers = {
   "nil_ls",
 }
@@ -49,8 +48,7 @@ return {
     dependencies = { "mason-org/mason.nvim" },
     opts = {
       ensure_installed = mason_servers,
-      -- Enabled explicitly below instead, so non-mason servers (nil_ls) go
-      -- through the same path and manually-installed mason servers stay off.
+      -- Enabled below, together with extra_servers.
       automatic_enable = false,
     },
   },
@@ -67,10 +65,7 @@ return {
         vim.lsp.enable(server)
       end
 
-      -- jsonls has no schema catalog of its own in nvim (VS Code supplies
-      -- one); yamlls fetches schemastore's by default. The extra entry
-      -- covers this repo's hosts/<host>/claude/settings.json, which the
-      -- catalog's `.claude/settings.json` pattern doesn't match.
+      -- yamlls fetches schemastore's catalog itself; jsonls needs it here.
       vim.lsp.config("jsonls", {
         settings = {
           json = {

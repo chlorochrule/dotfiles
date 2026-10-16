@@ -91,3 +91,18 @@ use Neovim day to day — only when changing these files.
 - The `extra` entry maps `hosts/*/claude/settings.json` to the Claude Code
   settings schema, since the catalog only matches `.claude/settings.json`.
   CI checks the same files against the same schema (`make claude-settings`).
+
+## LSP servers (`lua/plugins/lsp.lua`)
+
+- `nil_ls` uses the Nix-provided `pkgs.nil` instead of mason, so it
+  doesn't need cargo to build.
+- `mason-lspconfig`'s `automatic_enable = false`: servers are enabled
+  explicitly in one loop, so non-mason servers (`nil_ls`) go through the
+  same path and manually-installed mason servers stay off.
+
+## Format on save (`lua/plugins/conform.lua`)
+
+- Formatters (stylua, nixfmt, terraform) come from `home.packages`, the
+  same versions CI uses. Filetypes not listed are left alone and there's
+  no LSP formatting fallback, so opening a JSON/YAML/TS file in another
+  project never reformats it on save.

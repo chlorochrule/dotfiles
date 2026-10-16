@@ -198,3 +198,125 @@ Human-facing setup/operation docs are in the repo README; this is the
   (its own pre-migration default) rather than following `dotDir`, so
   existing shell history isn't orphaned at the old path. Don't remove this
   override without also handling the existing history file.
+
+## `home.packages` notes (`home/default.nix`)
+
+- `ripgrep`/`fd`/`bat` are what fzf-lua uses for grep/files/preview;
+  `nixfmt`/`stylua`/`terraform` are conform.nvim's format-on-save tools;
+  `shellcheck` is also used by bashls in nvim. Removing any of them breaks
+  the nvim side silently.
+- `google-cloud-sdk.withExtraComponents`: nixpkgs disables gcloud's own
+  component manager, so `gcloud components install` doesn't work. Extra
+  components (currently `gke-gcloud-auth-plugin`, which kubectl needs for
+  GKE auth) must be declared here.
+- The herdr zsh completion is generated at build time with `runCommand`
+  because herdr-nix's package ships none, and `eval "$(herdr completion
+  zsh)"` would run on every shell start.
+- `ast-grep` is for syntax-aware rewrites where a regex would also hit
+  strings and comments.
+
+## Shell/tool programs (`home/default.nix`)
+
+- `programs.nh`: `nh darwin switch` wraps darwin-rebuild with
+  nix-output-monitor and a diff of what changes. `nh clean` isn't enabled
+  because `darwin.nix`'s `nix.gc` already does periodic GC.
+- `programs.direnv`: used by `services/*/.envrc` to load per-directory
+  `.env` files; `nix-direnv` gives a cached, GC-rooted `use flake`.
+- zsh `bindkey '^U' backward-kill-line`: zsh's default kills the whole
+  line; this makes it readline-style (only before the cursor).
+- uv/uvx completions are added with `lib.mkOrder 1500` so they run after
+  mise activates, and are guarded with `command -v` because uv isn't on
+  PATH before mise's first install (it'd print "command not found" on
+  every shell start otherwise).
+- `home.activation.herdrReloadConfig` reloads a running herdr server's
+  config after a rebuild; it's a no-op when no server runs.
+
+## git settings (`home/default.nix`)
+
+- The block from `column.ui` on follows "How Core Git Developers Configure
+  Git" (GitButler blog), minus settings that delete data
+  (`fetch.pruneTags`) or change pull behavior.
+- difftastic is used alongside delta, not instead of it: `git dft`/`dlog`/
+  `dshow` set `diff.external=difft` per invocation, so plain `git diff`
+  still goes through delta. `log`/`show` ignore `diff.external` without
+  `--ext-diff`, hence the flag in those aliases.
+  `programs.difftastic.git.enable` is left off because it would set
+  `diff.external` globally and replace delta. `diff.colorMoved = "plain"`
+  is because delta renders moved lines distinctly.
+
+## Ghostty (`home/default.nix`)
+
+- `package = null`: the app comes from the Homebrew cask; Nix only writes
+  the config.
+- `scrollback-limit` is 1GB, which is lazily allocated, i.e. effectively
+  unlimited. `link-url = true` is Ghostty's default, set explicitly.
+- `shell-integration-features = "ssh-env"` sends `TERM=xterm-256color`
+  over ssh, since remotes lack xterm-ghostty's terminfo. `ssh-terminfo`
+  is deliberately off: it installs that terminfo into the remote's
+  `~/.terminfo`, i.e. writes files on hosts that may not be the user's.
+  Listing only `ssh-env` leaves unlisted features at their defaults.
+
+## Host packages and pi (`hosts/MacBookPro-minami/`)
+
+- `pi-coding-agent` is overlaid from `nixpkgs-unstable` in `darwin.nix`:
+  upstream releases every few days, and the release branch lags a dozen
+  minor versions behind. That's the only reason the `nixpkgs-unstable`
+  flake input exists.
+- `playwright-test`/`playwright-mcp` are host-specific (this machine's
+  browser automation / DevTools use).
+- pi reads the same Ollama models through Ollama's OpenAI-compatible
+  endpoint (`pi --model ollama/<id>` or `/model`). pi never writes
+  `models.json`, so a read-only store link is fine; `settings.json` and
+  `auth.json` stay pi-managed. `pi/web-search.ts` (a `web_search` tool
+  backed by DuckDuckGo, no API key) is documented in its own header.
+
+## Claude Code MCP servers (`hosts/MacBookPro-minami/home.nix`)
+
+- `chrome-devtools-mcp` isn't in nixpkgs, so it runs via `npx` on
+  `@latest`, accepting the Chrome DevTools team as a trusted but unpinned
+  upstream.
+- `context7` uses Upstash's hosted endpoint (no local code runs) without an
+  API key, so it's on the anonymous rate limit.
+- `playwright` uses the Nix store binary of `playwright-mcp`.
+
+## Casks (`hosts/MacBookPro-minami/darwin.nix`)
+
+- `cmd-eikana` (⌘英かな: left/right Command → 英数/かな) comes from the
+  `dominion525/tap` arm64 fork. The homebrew-cask `cmd-eikana` is a
+  different upstream (iMasanari's, last released 2017, Intel-only) and was
+  disabled in September 2026 for failing the Gatekeeper check.
+- `ollama-app` runs `ollama serve` on 127.0.0.1:11434 while the app is
+  open (see the Ollama sections above for why not nixpkgs).
+- node_exporter runs as a nix-darwin launchd daemon, not a container (a
+  container can't see true host metrics) and not via home-manager (no
+  darwin launchd module for it). It listens on 127.0.0.1 only; Prometheus
+  reaches it via `host.docker.internal`.
+
+## macOS settings (`darwin.nix`)
+
+- `nix.optimise.automatic` (scheduled) instead of
+  `nix.settings.auto-optimise-store`, which has known store-corruption
+  issues on macOS.
+- `allowUnfreePredicate` lists `terraform` because it's BSL 1.1.
+- `security.pam.services.sudo_local`: Touch ID for sudo, falling back to a
+  password on Macs without it. `reattach` is needed for Touch ID to work
+  inside herdr (a multiplexer).
+- `system.keyboard.remapCapsLockToControl` is applied with `hidutil`
+  without `--matching`, so it covers every keyboard (unlike System
+  Settings' per-device Modifier Keys), both on rebuild and at boot via
+  nix-darwin's activate-system daemon.
+- `"com.apple.keyboard.fnState" = true`: F1-F12 send function keys; media
+  controls need fn. `hitoolbox.AppleFnUsageType`: the globe/fn key
+  switches input source instead of opening the emoji picker (takes effect
+  after a restart).
+- `com.apple.symbolichotkeys` is merged with hosts' entries and written as
+  one whole dict, so hotkeys changed only in System Settings revert to
+  default on rebuild — declare them here instead. Hotkey 27 (move focus to
+  the next window of the same app) is Option+Tab; its parameters are ASCII
+  code (65535 = none), virtual keycode (48 = Tab), modifier mask
+  (524288 = Option). `postActivation` runs `activateSettings -u` so the
+  changes apply without logging out.
+- Homebrew: `cleanup = "zap"` uninstalls undeclared casks (`brew bundle
+  --zap --force-cleanup`). `greedyCasks` also upgrades casks that update
+  themselves (`auto_updates`) or are unversioned (`version :latest`),
+  which `brew bundle` skips otherwise.

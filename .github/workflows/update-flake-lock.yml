@@ -26,10 +26,7 @@ jobs:
           commit-msg: "flake.lock: inputsを更新する"
           pr-title: "flake.lock: inputsを更新する"
 
-      # A PR opened with GITHUB_TOKEN only gets pull_request runs in an
-      # approval-required state, so check.yml wouldn't run on it unattended.
-      # workflow_dispatch always creates a run even from GITHUB_TOKEN, and
-      # that run is reported on the PR's head commit.
+      # pull_request runs from a GITHUB_TOKEN PR need approval; dispatch doesn't.
       - name: Run check.yml and terraform.yml on the PR branch
         if: contains(fromJSON('["created", "updated"]'), steps.update.outputs.pull-request-operation)
         env:

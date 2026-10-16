@@ -3,10 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
-    # Only for packages a host overlays from unstable when the release
-    # branch lags behind (e.g. pi-coding-agent); see README.
+    # Only for packages a host overlays from unstable.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    # herdr isn't in nixpkgs; see .claude/rules/nix-hosts.md for why this input exists.
     herdr-nix = {
       url = "github:herdrdev/herdr-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -19,8 +17,6 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Prebuilt, weekly-updated nix-index database (for `,` and
-    # command-not-found) instead of running nix-index locally.
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -42,8 +38,7 @@
         hostPath:
         let
           host = import hostPath;
-          # darwin.nix/home.nix are optional per-host extras (see README);
-          # include them only if present so a bare host still evaluates.
+          # darwin.nix/home.nix are optional per host.
           optionalHostFile =
             name:
             let

@@ -10,7 +10,7 @@
     email = "minami.polly@gmail.com";
   };
 
-  # Merged in place, not symlinked — see .claude/rules/nix-hosts.md.
+  # Merged in place, not symlinked: Claude Code writes to this file.
   home.activation.claudeSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     claudeSettings="${config.home.homeDirectory}/.claude/settings.json"
     current='{}'
@@ -23,20 +23,13 @@
     mv "$tmp" "$claudeSettings"
   '';
 
-  # Playwright CLI/library and its MCP server. Host-specific: scoped to
-  # this machine's browser automation / DevTools use.
-  # pi-coding-agent: the pi coding agent (`pi`), overlaid from unstable in
-  # ./darwin.nix.
   home.packages = with pkgs; [
     playwright-test
     playwright-mcp
     pi-coding-agent
   ];
 
-  # Creates 256K-context derived models (*-262k) from already-pulled base
-  # models — see .claude/rules/nix-hosts.md for why. Talks to the Ollama
-  # app (homebrew cask in ./darwin.nix), so it's a no-op unless the app is
-  # running and the base model is pulled; picked up on a later rebuild.
+  # No-op unless the Ollama app is running and the base model is pulled.
   home.activation.ollamaContextModels = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ollama=/Applications/Ollama.app/Contents/Resources/ollama
     ollamaCreateIfBaseExists() {
@@ -51,19 +44,11 @@
     ollamaCreateIfBaseExists "qwen3-coder-next" "qwen3-coder-next-262k" "${./ollama/qwen3-coder-next-262k.Modelfile}"
   '';
 
-  # pi reads the same Ollama models through its OpenAI-compatible endpoint
-  # (`pi --model ollama/<id>` or /model). pi never writes models.json, so
-  # a read-only store link is fine; settings.json and auth.json stay
-  # pi-managed.
   home.file.".pi/agent/models.json".source = ./pi/models.json;
 
-  # pi extension: web_search tool (DuckDuckGo, no API key) — see file header.
   home.file.".pi/agent/extensions/web-search.ts".source = ./pi/web-search.ts;
 
-  # Wrappers to run Claude Code against a local Ollama model instead of
-  # Anthropic's service; plain `claude` is unaffected. ANTHROPIC_MODEL
-  # names the 262k-context derived model from the activation above — see
-  # .claude/rules/nix-hosts.md for CLAUDE_CODE_MAX_CONTEXT_TOKENS.
+  # Claude Code against a local Ollama model; plain `claude` is unaffected.
   programs.zsh.initContent = ''
     claude-q38() {
       ANTHROPIC_BASE_URL=http://localhost:11434 \
@@ -82,13 +67,7 @@
     }
   '';
 
-  # User-scoped (all-projects) Claude Code MCP servers, merged into
-  # ~/.claude.json — see .claude/rules/nix-hosts.md for why this is a jq
-  # merge rather than a full-file link. chrome-devtools-mcp: not in
-  # nixpkgs, so run via npx; pinned to @latest, accepting the Chrome
-  # DevTools team as a trusted-but-unpinned upstream. context7: up-to-date,
-  # version-specific library docs; uses Upstash's hosted endpoint (no local
-  # code runs) without an API key, so it's on the anonymous rate limit.
+  # Only mcpServers is merged: ~/.claude.json also holds runtime state.
   home.activation.claudeMcpServers = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     claudeJson="${config.home.homeDirectory}/.claude.json"
     if [ ! -f "$claudeJson" ]; then

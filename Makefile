@@ -1,6 +1,4 @@
-# The checks .github/workflows/check.yml runs, one target per CI step (CI
-# calls these targets, so local and CI runs stay the same). `make check`
-# runs them all; tools come from flake.lock's nixpkgs via --inputs-from.
+# One target per CI step; `make check` runs them all.
 
 # $(CURDIR), not ".": some recipes cd into terraform/local first.
 NIX_RUN := nix run --inputs-from $(CURDIR)

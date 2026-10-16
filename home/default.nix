@@ -10,9 +10,7 @@ let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
   linkDotfile = path: config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
 
-  # Merges home/claude/<name>/ (all machines) with
-  # hosts/<hostname>/claude/<name>/ (this machine only, if present) into
-  # ~/.claude/<name>/ at the file level. See .claude/rules/nix-hosts.md.
+  # Host files win on a name collision; new files need a rebuild.
   claudeDirNames = [
     "commands"
     "skills"
@@ -65,19 +63,16 @@ in
       ghq
       cloc
       tree
-      # Picked up by fzf-lua (grep/files/preview).
       ripgrep
       fd
       bat
       neovim
-      # Required by nvim-treesitter's `main` branch — see .claude/rules/nvim.md.
+      # Required by nvim-treesitter's `main` branch.
       tree-sitter
       jq
       yq
       awscli2
-      # nixpkgs disables gcloud's own component manager, so extra components
-      # are declared here instead of `gcloud components install`.
-      # gke-gcloud-auth-plugin: required by kubectl to authenticate to GKE.
+      # Instead of `gcloud components install`, which nixpkgs disables.
       (google-cloud-sdk.withExtraComponents [
         google-cloud-sdk.components.gke-gcloud-auth-plugin
       ])
@@ -85,25 +80,20 @@ in
       gitleaks
       nodejs
       nil
-      # Format-on-save via conform.nvim (terraform below doubles as one).
       nixfmt
       stylua
       terraform
       pandoc
       editorconfig-checker
-      # Also picked up by bashls (nvim) for diagnostics.
       shellcheck
       gh
       wget
       gnumake
-      # Syntax-aware search/rewrite (`ast-grep run -p 'foo($A)' -r 'bar($A)'`),
-      # for refactors where a regex would also hit strings and comments.
       ast-grep
     ]
     ++ [
       herdr
-      # herdr-nix's package ships no zsh completion; generate it at build
-      # time rather than `eval`ing `herdr completion zsh` on every shell start.
+      # herdr-nix ships no zsh completion.
       (pkgs.runCommand "herdr-zsh-completion" { } ''
         mkdir -p $out/share/zsh/site-functions
         ${herdr}/bin/herdr completion zsh > $out/share/zsh/site-functions/_herdr
@@ -119,28 +109,20 @@ in
     };
   };
 
-  # `nh darwin switch` wraps darwin-rebuild with a build tree
-  # (nix-output-monitor) and a diff of what changes. clean isn't enabled:
-  # darwin.nix's nix.gc already does the periodic GC.
   programs.nh = {
     enable = true;
     darwinFlake = dotfiles;
   };
 
-  # command-not-found suggests which nixpkgs package provides a missing
-  # command; `, <cmd>` runs it once without installing. Both read the
-  # prebuilt database from the nix-index-database flake input.
   programs.nix-index = {
     enable = true;
     enableZshIntegration = true;
   };
   programs.nix-index-database.comma.enable = true;
 
-  # Used by services/langfuse/.envrc etc. to auto-load per-directory .env files.
   programs.direnv = {
     enable = true;
     enableZshIntegration = true;
-    # Cached, GC-rooted `use flake` for per-project flake devShells.
     nix-direnv.enable = true;
   };
 
@@ -158,26 +140,20 @@ in
       fetch.prune = true;
       diff.algorithm = "histogram";
       merge.conflictStyle = "zdiff3";
-      # From "How Core Git Developers Configure Git" (GitButler blog), minus
-      # the ones that delete data (fetch.pruneTags) or change pull behavior.
       column.ui = "auto";
       branch.sort = "-committerdate";
       tag.sort = "version:refname";
-      diff.colorMoved = "plain"; # delta renders moved lines distinctly
+      diff.colorMoved = "plain";
       push.followTags = true;
       help.autocorrect = "prompt";
       commit.verbose = true;
       rebase.autoSquash = true;
       rebase.updateRefs = true;
       alias.get = "!ghq get";
-      # Structural diffs via difftastic, alongside (not instead of) delta:
-      # diff.external is only set per-invocation, so plain `git diff` keeps
-      # going through delta. log/show ignore diff.external without --ext-diff.
       alias.dft = "-c diff.external=difft diff";
       alias.dlog = "-c diff.external=difft log -p --ext-diff";
       alias.dshow = "-c diff.external=difft show --ext-diff";
-      # Distributed via init.templateDir, not programs.git.hooks — see
-      # .claude/rules/nix-hosts.md for why.
+      # Not core.hooksPath: that would disable every repo's own hooks.
       init.templateDir = "${pkgs.writeTextFile {
         name = "git-template";
         destination = "/hooks/pre-commit";
@@ -195,15 +171,14 @@ in
     };
   };
 
-  # Installs difft for the git dft/dlog/dshow aliases above. git.enable is
-  # left off: it would set diff.external globally and replace delta.
+  # git.enable stays off so delta remains the default diff.
   programs.difftastic.enable = true;
 
   programs.delta = {
     enable = true;
     enableGitIntegration = true;
     options = {
-      navigate = true; # n/N jumps between files
+      navigate = true;
       line-numbers = true;
     };
   };
@@ -221,7 +196,7 @@ in
 
   programs.ghostty = {
     enable = true;
-    package = null; # Uses the Homebrew cask app; Nix manages only the config file
+    package = null; # Homebrew cask
     settings = {
       macos-option-as-alt = true;
 
@@ -238,16 +213,13 @@ in
 
       selection-word-chars = "/-+\\\\~_.";
 
-      scrollback-limit = 1000000000; # 1GB, lazily allocated — effectively unlimited in practice
+      scrollback-limit = 1000000000;
 
       unfocused-split-opacity = 0.6;
 
-      link-url = true; # cmd+click opens URLs in the system default app (Ghostty's default; set explicitly)
+      link-url = true;
 
-      # Over ssh, send TERM=xterm-256color (remotes lack xterm-ghostty's
-      # terminfo). ssh-terminfo is left off: it installs that terminfo into
-      # the remote's ~/.terminfo, i.e. writes files on hosts that may not be
-      # mine. Unlisted features (cursor, title, path, ...) keep their defaults.
+      # Not ssh-terminfo: it writes into the remote's ~/.terminfo.
       shell-integration-features = "ssh-env";
 
       keybind = [
@@ -313,7 +285,7 @@ in
     historySubstringSearch.enable = true;
 
     history = {
-      # Kept at the pre-XDG-migration path so existing history isn't orphaned.
+      # Pre-XDG-migration path; don't follow dotDir.
       path = "${config.home.homeDirectory}/.zsh_history";
       size = 1000000;
       save = 1000000;
@@ -367,8 +339,6 @@ in
 
         export GPG_TTY=$TTY
 
-        # zsh's default kills the whole line regardless of cursor position;
-        # override to bash/readline-style (only before the cursor).
         bindkey '^U' backward-kill-line
 
         # herdr ignore keys (keep the 'C-g prefix free of zsh's own zle binding)
@@ -428,17 +398,13 @@ in
         fi
       ''
       (lib.mkOrder 1500 ''
-        # uv (ordered after mise activates). Guarded because uv/uvx aren't
-        # on PATH yet before first provisioning, which prints "command not
-        # found" on every shell start otherwise.
+        # After mise activates; uv may not be installed yet.
         command -v uv >/dev/null 2>&1 && eval "$(uv generate-shell-completion zsh)"
         command -v uvx >/dev/null 2>&1 && eval "$(uvx --generate-shell-completion zsh)"
       '')
     ];
   };
 
-  # Reload a running herdr server's config after a rebuild changes it
-  # (no-op if no server is running).
   home.activation.herdrReloadConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${herdr}/bin/herdr server reload-config >/dev/null 2>&1 || true
   '';

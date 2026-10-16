@@ -1,14 +1,9 @@
-# ClickHouse datasource + dashboards for Langfuse's own trace data
-# (services/langfuse's ClickHouse, events_core table). See
-# .claude/rules/services-terraform.md for the grafana_ro user design and
-# dashboard verification notes.
-
 resource "random_password" "clickhouse_grafana_ro" {
   length  = 32
   special = false
 }
 
-# Defined via ClickHouse's users.d config, not SQL — see rules for why.
+# Not SQL: the bootstrap user lacks ACCESS MANAGEMENT.
 resource "local_sensitive_file" "clickhouse_grafana_ro_users_xml" {
   filename        = "${local.langfuse_dir}/clickhouse-users.d/grafana-ro.xml"
   file_permission = "0600"
@@ -59,9 +54,7 @@ resource "grafana_data_source" "langfuse_clickhouse" {
   ]
 }
 
-# Reproduces Langfuse's Home dashboard as raw SQL against events_core.
-# Verified against the Langfuse UI (http://localhost:3000) via
-# /api/ds/query. Scores panels excluded: no score data in this project.
+# Langfuse's Home dashboard as raw SQL against events_core.
 locals {
   ch_ds = { type = "grafana-clickhouse-datasource", uid = grafana_data_source.langfuse_clickhouse.uid }
 

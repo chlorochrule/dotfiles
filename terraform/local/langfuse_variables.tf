@@ -1,5 +1,4 @@
-# Defaults for LANGFUSE_INIT_* (headless initialization) — not secrets, so
-# safe to commit.
+# LANGFUSE_INIT_* defaults (not secrets).
 # https://langfuse.com/self-hosting/administration/headless-initialization
 
 variable "init_org_id" {

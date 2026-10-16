@@ -24,25 +24,23 @@
     };
     options = "--delete-older-than 30d";
   };
-  # Scheduled rather than nix.settings.auto-optimise-store, which has known
-  # store-corruption issues on macOS.
+  # Not auto-optimise-store: it can corrupt the store on macOS.
   nix.optimise.automatic = true;
 
-  # Cachix binary cache for herdr's prebuilt binary (not in nixpkgs).
+  # herdr's prebuilt binary.
   nix.extraOptions = ''
     extra-substituters = https://herdr.cachix.org
     extra-trusted-public-keys = herdr.cachix.org-1:3nH7IStRsS0ASfdonA0DCRR2ZrSCeWitZ7Kwew0cR4I=
   '';
 
-  # terraform is BSL 1.1 (unfree), so allow it explicitly.
+  # BSL 1.1
   nixpkgs.config.allowUnfreePredicate =
     pkg:
     builtins.elem (lib.getName pkg) [
       "terraform"
     ];
 
-  # Touch ID for sudo (falls back to a password on Macs without it).
-  # reattach: needed for Touch ID to work inside herdr (a multiplexer).
+  # reattach: needed inside herdr.
   security.pam.services.sudo_local = {
     touchIdAuth = true;
     reattach = true;
@@ -60,9 +58,6 @@
     "/opt/homebrew/sbin"
   ];
 
-  # CapsLock -> Left Control. Applied with hidutil (no --matching, so every
-  # keyboard, not one per-device entry like System Settings' Modifier Keys),
-  # both on rebuild and at boot via nix-darwin's activate-system daemon.
   system.keyboard = {
     enableKeyMapping = true;
     remapCapsLockToControl = true;
@@ -72,7 +67,6 @@
     NSGlobalDomain = {
       InitialKeyRepeat = 12;
       KeyRepeat = 1;
-      # F1-F12 send function keys; media controls need fn.
       "com.apple.keyboard.fnState" = true;
       ApplePressAndHoldEnabled = false;
       NSAutomaticQuoteSubstitutionEnabled = false;
@@ -85,8 +79,7 @@
       AppleInterfaceStyle = "Dark";
     };
 
-    # The globe/fn key switches input source (ABC <-> Japanese) instead of
-    # opening the emoji picker. Takes effect after a restart.
+    # Takes effect after a restart.
     hitoolbox.AppleFnUsageType = "Change Input Source";
 
     trackpad = {
@@ -137,12 +130,9 @@
       "com.apple.screencapture" = {
         name = "ss";
       };
-      # Merged with hosts' entries, then written as one whole dict: hotkeys
-      # changed only in System Settings revert to default on rebuild.
+      # Written as one dict: hotkeys set only in System Settings revert.
       "com.apple.symbolichotkeys".AppleSymbolicHotKeys = {
-        # Move focus to next window (same app): Option+Tab instead of Cmd+`.
-        # parameters: ASCII code (65535 = none), virtual keycode (48 = Tab),
-        # modifier mask (524288 = Option).
+        # Next window of the same app: Option+Tab (65535 none, 48 Tab, 524288 Option).
         "27" = {
           enabled = true;
           value = {
@@ -169,11 +159,8 @@
     onActivation = {
       autoUpdate = true;
       upgrade = true;
-      # Undeclared casks are auto-uninstalled via `brew bundle --zap --force-cleanup`.
       cleanup = "zap";
     };
-    # Also upgrade casks that update themselves (auto_updates) or are
-    # unversioned (version :latest); brew bundle skips them otherwise.
     greedyCasks = true;
     # casks are declared per-host (hosts/<hostname>/darwin.nix)
   };

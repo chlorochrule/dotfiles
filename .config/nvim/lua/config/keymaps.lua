@@ -3,8 +3,7 @@ local map = vim.keymap.set
 -- herdr ignore keys (prefix)
 map("", "<C-g>", "<Nop>")
 
--- Cross herdr pane boundaries with Ctrl+h/j/k/l. Only active inside herdr —
--- see .claude/rules/nvim.md.
+-- Cross herdr pane boundaries with Ctrl+h/j/k/l.
 if vim.env.HERDR_SOCKET_PATH then
   local function nav(wincmd, direction)
     return function()
