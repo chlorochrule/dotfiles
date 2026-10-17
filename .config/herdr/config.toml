@@ -33,6 +33,10 @@ height = "90%"
 prompt_new_tab_name = false
 agent_panel_sort = "priority"
 
+[ui.sidebar.agents]
+# `$dir` is reported per pane by home/claude/hooks/herdr-pane-dir.sh.
+rows = [["state_icon", "machine", "$dir", "tab"], ["agent"]]
+
 # Both are for typing Japanese; they're under [experimental], so the key
 # names can change between herdr releases (checked against 0.8.0).
 [experimental]

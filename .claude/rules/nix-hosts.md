@@ -136,7 +136,8 @@ Human-facing setup/operation docs are in the repo README; this is the
 - This is a file-level `home.file` mapping, not a directory symlink, so
   **new files added under either directory need a rebuild to show up**
   (files edited in place update immediately, like any other
-  `mkOutOfStoreSymlink` target).
+  `mkOutOfStoreSymlink` target). The flake only sees git-tracked files,
+  so `git add` a new file before rebuilding or it's silently skipped.
 - `~/.claude/settings.json` and `~/.claude/CLAUDE.md` are exempt from this
   merge — each is handled as a single file instead (see below).
 
